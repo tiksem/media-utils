@@ -1,7 +1,10 @@
 package com.tiksem.media.playback;
 
 import android.app.Service;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
@@ -10,6 +13,7 @@ import com.utils.framework.Cancelable;
 import com.utils.framework.collections.ListSelectedItemPositionManager;
 import com.utils.framework.collections.ListWithSelectedItem;
 import com.utils.framework.collections.SelectedItemPositionManager;
+import com.utilsframework.android.Services;
 import com.utilsframework.android.view.UiMessages;
 
 import java.io.IOException;
@@ -76,10 +80,14 @@ public class AudioPlayerService extends Service {
                 onPlayAudioUrlSuccess();
             }
         });
+
+        mediaPlayer.prepareAsync();
     }
 
     private void onUrlsReady(Iterable<String> audios) {
         urlsIterator = audios.iterator();
+        urlsGettingOperation = null;
+        tryPlayNextAudioUrl();
     }
 
     private void playAudio(Audio audio) {
@@ -130,5 +138,18 @@ public class AudioPlayerService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
+    }
+
+    public static interface Connection {
+        void unbind();
+    }
+
+    public static void start(Context context) {
+        Intent intent = new Intent(context, AudioPlayerService.class);
+        context.startService(intent);
+    }
+
+    public static void bind(Context context, Services.OnBind<PlayerBinder> onBind) {
+        Services.bind(context, AudioPlayerService.class, onBind);
     }
 }
