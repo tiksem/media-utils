@@ -1,24 +1,23 @@
 package com.tiksem.media.playback;
 
 import android.app.Service;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import com.tiksem.media.data.Audio;
 import com.utils.framework.Cancelable;
+import com.utils.framework.CancelableUtils;
 import com.utils.framework.collections.ListSelectedItemPositionManager;
 import com.utils.framework.collections.ListWithSelectedItem;
 import com.utils.framework.collections.SelectedItemPositionManager;
 import com.utilsframework.android.Services;
+import com.utilsframework.android.threading.Tasks;
 import com.utilsframework.android.view.UiMessages;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * User: Tikhonenko.S
@@ -29,10 +28,21 @@ public class AudioPlayerService extends Service {
     private PlayerBinder binder = new PlayerBinder();
     private SelectedItemPositionManager<Audio> selectedItemPositionManager;
     private MediaPlayer mediaPlayer = new MediaPlayer();
+    private boolean isPaused = false;
     private AudioUrlsProvider audioUrlsProvider = new LocalAudioUrlsProvider();
     private Iterator<String> urlsIterator;
 
-    private Cancelable urlsGettingOperation;
+    private Queue<Cancelable> audioPlayingOperations = new ArrayDeque<Cancelable>();
+
+    private Set<PlayBackListener> playBackListeners = new LinkedHashSet<PlayBackListener>();
+
+    public interface PlayBackListener {
+        void onAudioPlayingStarted();
+        void onAudioPlayingComplete();
+        void onAudioPlayingPaused();
+        void onAudioPlayingResumed();
+        void onProgressChanged(int progress);
+    }
 
     private void onPlayAudioUrlFailed() {
         tryPlayNextAudioUrl();
@@ -40,6 +50,10 @@ public class AudioPlayerService extends Service {
 
     private void onPlayAudioUrlSuccess() {
         urlsIterator = null;
+
+        for (PlayBackListener listener : playBackListeners) {
+            listener.onAudioPlayingStarted();
+        }
     }
 
     private void onPlayAudioFailed() {
@@ -76,6 +90,25 @@ public class AudioPlayerService extends Service {
         mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
+                mediaPlayer.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
+                    @Override
+                    public void onBufferingUpdate(MediaPlayer mp, int percent) {
+                        for (PlayBackListener listener : playBackListeners) {
+                            listener.onProgressChanged(percent);
+                        }
+                    }
+                });
+
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        for (PlayBackListener listener : playBackListeners) {
+                            listener.onAudioPlayingComplete();
+                        }
+                        binder.playNext();
+                    }
+                });
+
                 mediaPlayer.start();
                 onPlayAudioUrlSuccess();
             }
@@ -86,23 +119,22 @@ public class AudioPlayerService extends Service {
 
     private void onUrlsReady(Iterable<String> audios) {
         urlsIterator = audios.iterator();
-        urlsGettingOperation = null;
         tryPlayNextAudioUrl();
     }
 
     private void playAudio(Audio audio) {
+        isPaused = false;
         mediaPlayer.reset();
 
-        if (urlsGettingOperation != null) {
-            urlsGettingOperation.cancel();
-        }
+        CancelableUtils.cancelAllAndClearQueue(audioPlayingOperations);
 
-        urlsGettingOperation = audioUrlsProvider.getUrls(audio, new AudioUrlsProvider.OnResult() {
+        Cancelable urlsGettingOperation = audioUrlsProvider.getUrls(audio, new AudioUrlsProvider.OnResult() {
             @Override
             public void onResult(Iterable<String> urls) {
                 onUrlsReady(urls);
             }
         });
+        audioPlayingOperations.add(urlsGettingOperation);
     }
 
     public class PlayerBinder extends Binder {
@@ -125,23 +157,101 @@ public class AudioPlayerService extends Service {
         }
 
         public void playNext() {
-            Audio audio = selectedItemPositionManager.selectNext();
-            AudioPlayerService.this.playAudio(audio);
+            CancelableUtils.cancelAllAndClearQueue(audioPlayingOperations);
+            if (selectedItemPositionManager.canSelectNext()) {
+                Cancelable cancelable = selectedItemPositionManager.selectNextWhenAvailable(
+                        new SelectedItemPositionManager.OnAvailable<Audio>() {
+                    @Override
+                    public void onItemAvailable(Audio audio) {
+                        AudioPlayerService.this.playAudio(audio);
+                    }
+                });
+                audioPlayingOperations.add(cancelable);
+            }
         }
 
         public void playPrev() {
-            Audio audio = selectedItemPositionManager.selectPrev();
-            AudioPlayerService.this.playAudio(audio);
+            CancelableUtils.cancelAllAndClearQueue(audioPlayingOperations);
+            if (selectedItemPositionManager.canSelectPrev()) {
+                Cancelable cancelable = selectedItemPositionManager.selectPrevWhenAvailable(
+                        new SelectedItemPositionManager.OnAvailable<Audio>() {
+                            @Override
+                            public void onItemAvailable(Audio audio) {
+                                AudioPlayerService.this.playAudio(audio);
+                            }
+                        });
+                audioPlayingOperations.add(cancelable);
+            }
+        }
+
+        public void seekTo(int position) {
+            mediaPlayer.seekTo(position);
+        }
+
+        public int getDuration() {
+            return mediaPlayer.getDuration();
+        }
+
+        public boolean isPlaying() {
+            return mediaPlayer.isPlaying();
+        }
+
+        public int getCurrentSeekPosition() {
+            return mediaPlayer.getCurrentPosition();
+        }
+
+        public void addPlayBackListener(PlayBackListener listener) {
+            playBackListeners.add(listener);
+        }
+
+        public void removePlayBackListener(PlayBackListener listener) {
+            playBackListeners.remove(listener);
+        }
+
+        public void togglePausedState() {
+            if(isPaused){
+                resume();
+            } else {
+                pause();
+            }
+        }
+
+        public void pause() {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+                isPaused = true;
+                for (PlayBackListener listener : playBackListeners) {
+                    listener.onAudioPlayingPaused();
+                }
+            }
+        }
+
+        public void resume() {
+            if (isPaused) {
+                mediaPlayer.start();
+                isPaused = false;
+                for (PlayBackListener listener : playBackListeners) {
+                    listener.onAudioPlayingResumed();
+                }
+            }
+        }
+
+        public boolean isPaused() {
+            return isPaused;
+        }
+
+        public Audio getPlayingAudio() {
+            if(!mediaPlayer.isPlaying()){
+                return null;
+            }
+
+            return selectedItemPositionManager.getCurrentSelectedItem();
         }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
-    }
-
-    public static interface Connection {
-        void unbind();
     }
 
     public static void start(Context context) {

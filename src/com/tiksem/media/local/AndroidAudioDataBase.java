@@ -161,7 +161,7 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         if(url == null){
             return null;
         } else {
-            return "file:" + url;
+            return url;
         }
     }
 }
