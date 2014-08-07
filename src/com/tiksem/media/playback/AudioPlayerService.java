@@ -260,6 +260,14 @@ public class AudioPlayerService extends Service {
         public List<Audio> getPlayList() {
             return selectedItemPositionManager.getItems();
         }
+
+        public int getPlayingAudioPosition() {
+            if (!mediaPlayer.isPlaying()) {
+                return -1;
+            }
+
+            return selectedItemPositionManager.getCurrentItemPosition();
+        }
     }
 
     @Override
