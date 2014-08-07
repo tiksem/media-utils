@@ -12,6 +12,7 @@ import com.utils.framework.CancelableUtils;
 import com.utils.framework.collections.ListSelectedItemPositionManager;
 import com.utils.framework.collections.ListWithSelectedItem;
 import com.utils.framework.collections.SelectedItemPositionManager;
+import com.utilsframework.android.Pauseable;
 import com.utilsframework.android.Services;
 import com.utilsframework.android.threading.Tasks;
 import com.utilsframework.android.view.UiMessages;
@@ -137,7 +138,7 @@ public class AudioPlayerService extends Service {
         audioPlayingOperations.add(urlsGettingOperation);
     }
 
-    public class PlayerBinder extends Binder {
+    public class PlayerBinder extends Binder implements Pauseable {
         public void setAudioUrlsProvider(AudioUrlsProvider audioUrlsProvider) {
             AudioPlayerService.this.audioUrlsProvider = audioUrlsProvider;
         }
@@ -216,6 +217,7 @@ public class AudioPlayerService extends Service {
             }
         }
 
+        @Override
         public void pause() {
             if (mediaPlayer.isPlaying()) {
                 mediaPlayer.pause();
@@ -226,6 +228,7 @@ public class AudioPlayerService extends Service {
             }
         }
 
+        @Override
         public void resume() {
             if (isPaused) {
                 mediaPlayer.start();
@@ -236,8 +239,14 @@ public class AudioPlayerService extends Service {
             }
         }
 
+        @Override
         public boolean isPaused() {
             return isPaused;
+        }
+
+        @Override
+        public boolean canPause() {
+            return mediaPlayer.isPlaying();
         }
 
         public Audio getPlayingAudio() {
@@ -246,6 +255,10 @@ public class AudioPlayerService extends Service {
             }
 
             return selectedItemPositionManager.getCurrentSelectedItem();
+        }
+
+        public List<Audio> getPlayList() {
+            return selectedItemPositionManager.getItems();
         }
     }
 
