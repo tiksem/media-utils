@@ -14,7 +14,7 @@ import com.utils.framework.collections.ListWithSelectedItem;
 import com.utils.framework.collections.SelectedItemPositionManager;
 import com.utilsframework.android.Pauseable;
 import com.utilsframework.android.Services;
-import com.utilsframework.android.threading.Tasks;
+import com.utilsframework.android.media.MediaPlayerProgressUpdater;
 import com.utilsframework.android.view.UiMessages;
 
 import java.io.IOException;
@@ -37,12 +37,19 @@ public class AudioPlayerService extends Service {
 
     private Set<PlayBackListener> playBackListeners = new LinkedHashSet<PlayBackListener>();
 
+    private MediaPlayerProgressUpdater mediaPlayerProgressUpdater = new MediaPlayerProgressUpdater() {
+        @Override
+        protected void onProgressChanged(long progress, long max) {
+            callProgressChangedListeners(progress, max);
+        }
+    };
+
     public interface PlayBackListener {
         void onAudioPlayingStarted();
         void onAudioPlayingComplete();
         void onAudioPlayingPaused();
         void onAudioPlayingResumed();
-        void onProgressChanged(int progress);
+        void onProgressChanged(long progress, long max);
     }
 
     private void onPlayAudioUrlFailed() {
@@ -60,6 +67,12 @@ public class AudioPlayerService extends Service {
     private void onPlayAudioFailed() {
         UiMessages.error(this, "Broken audio!");
         binder.playNext();
+    }
+
+    private void callProgressChangedListeners(long progress, long max) {
+        for (PlayBackListener listener : playBackListeners) {
+            listener.onProgressChanged(progress, max);
+        }
     }
 
     private void tryPlayNextAudioUrl() {
@@ -91,15 +104,6 @@ public class AudioPlayerService extends Service {
         mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
-                mediaPlayer.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
-                    @Override
-                    public void onBufferingUpdate(MediaPlayer mp, int percent) {
-                        for (PlayBackListener listener : playBackListeners) {
-                            listener.onProgressChanged(percent);
-                        }
-                    }
-                });
-
                 mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                     @Override
                     public void onCompletion(MediaPlayer mp) {
@@ -272,6 +276,7 @@ public class AudioPlayerService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        mediaPlayerProgressUpdater.setMediaPlayer(mediaPlayer);
         return binder;
     }
 

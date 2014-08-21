@@ -64,8 +64,9 @@ public class AudioPlaybackSeekBar extends SeekBar {
             }
 
             @Override
-            public void onProgressChanged(int progress) {
-                setProgress(progress);
+            public void onProgressChanged(long progress, long max) {
+                setMax(Math.round(max / 1000));
+                setProgress(Math.round(progress / 1000));
             }
         };
         playerBinder.addPlayBackListener(playBackListener);
