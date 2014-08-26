@@ -11,6 +11,8 @@ import com.tiksem.media.playback.AudioPlayerService;
  * Time: 15:39
  */
 public class AudioPlaybackSeekBar extends SeekBar {
+    private static final int SEEK_BAR_COEFFICIENT = 1000;
+
     private AudioPlayerService.PlayerBinder playerBinder;
     private AudioPlayerService.PlayBackListener playBackListener;
 
@@ -65,8 +67,8 @@ public class AudioPlaybackSeekBar extends SeekBar {
 
             @Override
             public void onProgressChanged(long progress, long max) {
-                setMax(Math.round(max / 1000));
-                setProgress(Math.round(progress / 1000));
+                setMax(Math.round(max / SEEK_BAR_COEFFICIENT));
+                setProgress(Math.round(progress / SEEK_BAR_COEFFICIENT));
             }
         };
         playerBinder.addPlayBackListener(playBackListener);
@@ -75,7 +77,7 @@ public class AudioPlaybackSeekBar extends SeekBar {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
-                    playerBinder.seekTo(progress);
+                    playerBinder.seekTo(progress * SEEK_BAR_COEFFICIENT);
                 }
             }
 
