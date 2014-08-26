@@ -17,7 +17,7 @@ public class NamedData extends Identified{
         super(local);
     }
 
-    public NamedData(boolean local, int id) {
+    public NamedData(boolean local, long id) {
         super(local, id);
     }
 
@@ -32,5 +32,25 @@ public class NamedData extends Identified{
     @Override
     public String toString() {
         return name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        NamedData namedData = (NamedData) o;
+
+        if (name != null ? !name.equals(namedData.name) : namedData.name != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        return result;
     }
 }

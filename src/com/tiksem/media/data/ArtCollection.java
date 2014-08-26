@@ -16,7 +16,7 @@ public abstract class ArtCollection extends NamedData implements Serializable{
 
     private String[] arts = new String[ArtSize.values().length];
 
-    public ArtCollection(int id, boolean local){
+    public ArtCollection(long id, boolean local){
         super(local,id);
     }
 

@@ -32,6 +32,7 @@ public class AudioPlayerService extends Service {
     private boolean isPaused = false;
     private AudioUrlsProvider audioUrlsProvider = new LocalAudioUrlsProvider();
     private Iterator<String> urlsIterator;
+    private Object playListTag;
 
     private Queue<Cancelable> audioPlayingOperations = new ArrayDeque<Cancelable>();
 
@@ -153,6 +154,14 @@ public class AudioPlayerService extends Service {
 
         public void setAudios(SelectedItemPositionManager<Audio> selectedItemPositionManager) {
             AudioPlayerService.this.selectedItemPositionManager = selectedItemPositionManager;
+        }
+
+        public Object getPlayListTag() {
+            return playListTag;
+        }
+
+        public void setPlayListTag(Object tag) {
+            playListTag = tag;
         }
 
         public void playAudio(int position) {
