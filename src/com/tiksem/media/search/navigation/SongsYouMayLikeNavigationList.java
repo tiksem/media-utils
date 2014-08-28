@@ -21,7 +21,6 @@ public class SongsYouMayLikeNavigationList extends AsyncNavigationList<Audio> {
     private static final int SONGS_YOU_MAY_LIKE_SAFE_COUNT = 5000;
 
     public static class Params{
-        public Executor asyncTaskExecutor;
         public int songsCount;
         public int songsCountPerPage;
         public List<Audio> userPlaylist;

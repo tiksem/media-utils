@@ -9,7 +9,7 @@ import java.io.IOException;
  * Time: 2:55
  * To change this template use File | Settings | File Templates.
  */
-public class InvalidResponseError extends IOException {
+public class InvalidResponseException extends IOException {
     private String response;
 
     public String getResponse() {
@@ -20,18 +20,18 @@ public class InvalidResponseError extends IOException {
         this.response = response;
     }
 
-    public InvalidResponseError() {
+    public InvalidResponseException() {
     }
 
-    public InvalidResponseError(String detailMessage) {
+    public InvalidResponseException(String detailMessage) {
         super(detailMessage);
     }
 
-    public InvalidResponseError(String message, Throwable cause) {
+    public InvalidResponseException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public InvalidResponseError(Throwable cause) {
+    public InvalidResponseException(Throwable cause) {
         super(cause);
     }
 }

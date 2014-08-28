@@ -24,18 +24,18 @@ public class LastFMSearcher {
                     "&outtype=json" +
                     "&playlistURL=lastfm://playlist/album/";
 
-    private static final TextLoader TEXT_LOADER = TextLoader.getInstance();
+    private TextLoader textLoader;
 
     protected final String search(Map<String, Object> params) throws IOException {
         params.put(ACCESS_TOKEN_KEY, ACCESS_TOKEN);
         params.put("format","json");
-        return TEXT_LOADER.getTextFromUrl(ROOT_URL, params);
+        return textLoader.getTextFromUrl(ROOT_URL, params);
     }
 
     protected final String searchUsingExtensionAPI(Map<String, Object> params) throws IOException{
         params.put(ACCESS_TOKEN_KEY, ACCESS_TOKEN);
         params.put("format","json");
-        return TEXT_LOADER.getTextFromUrl(ROOT_URL, params);
+        return textLoader.getTextFromUrl(ROOT_URL, params);
     }
 
     protected final <T> String search(T params) throws IOException {
@@ -69,7 +69,7 @@ public class LastFMSearcher {
         url.append(ACCESS_TOKEN_KEY);
         url.append('=');
         url.append(ACCESS_TOKEN);
-        return TEXT_LOADER.getTextFromUrl(url.toString());
+        return textLoader.getTextFromUrl(url.toString());
     }
 
     public String searchTracks(String query, LastFMSearchParams searchParams) throws IOException {
@@ -163,5 +163,9 @@ public class LastFMSearcher {
         params.put("method","tag.search");
         params.put("tag", query);
         return search(params);
+    }
+
+    public LastFMSearcher(TextLoader textLoader) {
+        this.textLoader = textLoader;
     }
 }

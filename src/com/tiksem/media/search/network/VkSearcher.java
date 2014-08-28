@@ -14,12 +14,12 @@ import java.util.Map;
 public class VkSearcher {
     private static final String ACCESS_TOKEN = "c5f5835e25dd3d1ec49076302f7a85916ae6acc2e5dae83c90100ced7c199c557d4a8aaeeb08922fbd4f4";
     private static final String ROOT_URL = "https://api.vk.com/method/";
-    private static final TextLoader TEXT_LOADER = TextLoader.getInstance();
+    private TextLoader textLoader;
 
     private String executeMethod(String methodName, Map<String,Object> params) throws IOException {
         String url = ROOT_URL + methodName;
         params.put("access_token", ACCESS_TOKEN);
-        return TEXT_LOADER.getTextFromUrl(url, params);
+        return textLoader.getTextFromUrl(url, params);
     }
 
     public String searchAudios(String query, VkAudioSearchParams params) throws IOException{
@@ -32,5 +32,9 @@ public class VkSearcher {
 
     public String searchAudios(String query) throws IOException {
         return searchAudios(query, new VkAudioSearchParams());
+    }
+
+    public VkSearcher(TextLoader textLoader) {
+        this.textLoader = textLoader;
     }
 }

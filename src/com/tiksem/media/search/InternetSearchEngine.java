@@ -10,6 +10,8 @@ import com.tiksem.media.search.parsers.LastFmResultParser;
 import com.tiksem.media.search.parsers.VkResultParser;
 import com.utils.framework.collections.cache.*;
 import com.utils.framework.collections.queue.PageLazyQueue;
+import com.utils.framework.io.TextLoader;
+import com.utils.framework.io.TextLoaderConfig;
 import com.utilsframework.android.ErrorListener;
 import com.utilsframework.android.string.Strings;
 import org.json.JSONException;
@@ -27,20 +29,20 @@ import java.util.*;
 public class InternetSearchEngine {
     private static final int AUDIO_URLS_COUNT = 200;
 
-    private LastFMSearcher lastFMSearcher = new LastFMSearcher();
+    private LastFMSearcher lastFMSearcher;
     private LastFmResultParser lastFmResultParser = new LastFmResultParser();
     private VkResultParser vkResultParser = new VkResultParser();
-    private VkSearcher vkSearcher = new VkSearcher();
+    private VkSearcher vkSearcher;
     private Cache memoryCache;
     private Cache discCache;
     private CacheCombination cache;
-    private Map<Audio, CorrectedTrackInfo> trackCorrections = new HashMap<Audio, CorrectedTrackInfo>();
+    private TextLoader textLoader;
 
     private void combineCaches(){
         cache = new CacheCombination(memoryCache, discCache);
     }
 
-    public InternetSearchEngine(Cache memoryCache, Cache discCache) {
+    public InternetSearchEngine(Cache memoryCache, Cache discCache, TextLoader textLoader) {
         this.memoryCache = memoryCache;
         this.discCache = discCache;
 
@@ -52,10 +54,19 @@ public class InternetSearchEngine {
             this.memoryCache = new EmptyCache();
         }
 
+        if(textLoader == null){
+            textLoader = new TextLoader(new TextLoaderConfig());
+        }
+        lastFMSearcher = new LastFMSearcher(textLoader);
+        vkSearcher = new VkSearcher(textLoader);
+
         combineCaches();
     }
 
-    public InternetSearchEngine(int memoryCacheSize, int discCacheSize, CacheDirectoryPathGenerator discCacheDir) {
+    public InternetSearchEngine(int memoryCacheSize, int discCacheSize,
+                                CacheDirectoryPathGenerator discCacheDir,
+                                TextLoader textLoader
+                                ) {
         if(memoryCacheSize > 0){
             memoryCache = new ObjectLruCache(memoryCacheSize);
         } else {
@@ -68,11 +79,17 @@ public class InternetSearchEngine {
             discCache = new EmptyCache();
         }
 
+        if(textLoader == null){
+            textLoader = new TextLoader(new TextLoaderConfig());
+        }
+        lastFMSearcher = new LastFMSearcher(textLoader);
+        vkSearcher = new VkSearcher(textLoader);
+
         combineCaches();
     }
 
     public InternetSearchEngine(int memoryCacheSize){
-        this(memoryCacheSize, -1, null);
+        this(memoryCacheSize, -1, null, null);
     }
 
     public InternetSearchEngine(){
@@ -123,7 +140,7 @@ public class InternetSearchEngine {
             return searchResult;
         }
         catch (JSONException e){
-            throw new InvalidResponseError(e.getMessage());
+            throw new InvalidResponseException(e.getMessage());
         }
     }
 
@@ -420,7 +437,7 @@ public class InternetSearchEngine {
         try {
             return lastFmResultParser.getSimilarTracks(response);
         } catch (JSONException e) {
-            throw new InvalidResponseError(e.getMessage());
+            throw new InvalidResponseException(e.getMessage());
         }
     }
 
