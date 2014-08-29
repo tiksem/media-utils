@@ -300,6 +300,10 @@ public class AudioDataManager {
             return getTracksOfAlbum((Album) tag);
         }
 
+        if(tag instanceof PlayList){
+            return getTracksOfPlayList((PlayList) tag);
+        }
+
         throw new RuntimeException("Tag is not supported");
     }
 
