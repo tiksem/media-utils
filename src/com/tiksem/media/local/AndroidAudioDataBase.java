@@ -1,6 +1,7 @@
 package com.tiksem.media.local;
 
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -8,6 +9,7 @@ import com.tiksem.media.data.Album;
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.data.Audio;
 import com.tiksem.media.data.PlayList;
+import com.utilsframework.android.string.Strings;
 
 import java.util.concurrent.Executor;
 
@@ -163,5 +165,23 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         } else {
             return "file://" + url;
         }
+    }
+
+    @Override
+    protected void addPlayListToDatabase(PlayList playList) {
+        Uri uri = MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI;
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.Audio.Playlists.NAME, playList.getName());
+        uri = contentResolver.insert(uri, contentValues);
+        long id = Strings.getLongFromString(uri.toString());
+        playList.setId(id);
+    }
+
+    @Override
+    protected void addAudioToPlayListInDatabase(PlayList playList, Audio audio) {
+        Uri uri = MediaStore.Audio.Playlists.Members.getContentUri("external", playList.getId());
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, audio.getId());
+        contentResolver.insert(uri, contentValues);
     }
 }

@@ -2,6 +2,9 @@ package com.tiksem.media.data;
 
 import com.utils.framework.collections.cache.GlobalStringCache;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Администратор
@@ -51,6 +54,15 @@ public class NamedData extends Identified{
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (name != null ? name.hashCode() : 0);
+        return result;
+    }
+
+    public static <T extends NamedData> List<String> namedDataListToNameList(List<T> namedDatas) {
+        List<String> result = new ArrayList<String>(namedDatas.size());
+        for(NamedData namedData : namedDatas){
+            result.add(namedData.getName());
+        }
+
         return result;
     }
 }

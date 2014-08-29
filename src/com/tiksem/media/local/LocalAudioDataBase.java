@@ -15,25 +15,29 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public interface LocalAudioDataBase {
-    public abstract List<Audio> getSongs();
-    public abstract List<PlayList> getPlayLists();
-    public abstract List<Album> getAlbums();
-    public abstract List<Artist> getArtists();
+    public List<Audio> getSongs();
+    public List<PlayList> getPlayLists();
+    public List<Album> getAlbums();
+    public List<Artist> getArtists();
 
-    public abstract List<Audio> getSongsOfArtist(Artist artist);
-    public abstract List<Audio> getSongsOfAlbum(Album album);
-    public abstract List<Audio> getSongsOfPlayList(PlayList playList);
-    public abstract List<Audio> getSongsWithoutAlbumOfArtist(Artist artist);
-    public abstract List<Album> getAlbumsOfArtist(Artist artist);
+    public List<Audio> getSongsOfArtist(Artist artist);
+    public List<Audio> getSongsOfAlbum(Album album);
+    public List<Audio> getSongsOfPlayList(PlayList playList);
+    public List<Audio> getSongsWithoutAlbumOfArtist(Artist artist);
+    public List<Album> getAlbumsOfArtist(Artist artist);
 
-    public abstract boolean artistHasTracks(Artist artist);
-    public abstract boolean artistHasAlbums(Artist artist);
+    public boolean artistHasTracks(Artist artist);
+    public boolean artistHasAlbums(Artist artist);
 
-    public abstract Audio getSongById(int id);
+    public Audio getSongById(int id);
 
+    public PlayList addPlayList(String name);
+    public boolean addSongToPlayList(Audio audio, PlayList playList);
+    public List<PlayList> getPlayListsWhereSongCanBeAdded(Audio audio);
+    
     public interface OnArtsUpdatingFinished{
         void onFinished();
     }
 
-    public abstract void startAlbumArtsUpdating(OnArtsUpdatingFinished onArtsUpdatingFinishedListener);
+    public void startAlbumArtsUpdating(OnArtsUpdatingFinished onArtsUpdatingFinishedListener);
 }

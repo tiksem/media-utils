@@ -302,4 +302,16 @@ public class AudioDataManager {
 
         throw new RuntimeException("Tag is not supported");
     }
+
+    public PlayList addPlayList(String name) {
+        return localAudioDataBase.addPlayList(name);
+    }
+
+    public boolean addSongToPlayList(Audio audio, PlayList playList) {
+        return localAudioDataBase.addSongToPlayList(audio, playList);
+    }
+
+    public List<PlayList> getPlayListsWhereSongCanBeAdded(Audio audio) {
+        return localAudioDataBase.getPlayListsWhereSongCanBeAdded(audio);
+    }
 }

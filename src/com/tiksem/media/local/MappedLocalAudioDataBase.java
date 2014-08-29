@@ -1,12 +1,12 @@
 package com.tiksem.media.local;
 
-import android.os.AsyncTask;
 import com.tiksem.media.data.*;
+import com.utils.framework.CollectionUtils;
+import com.utils.framework.Predicate;
 import com.utilsframework.android.threading.OnComplete;
 import com.utilsframework.android.threading.Threading;
 
 import java.util.*;
-import java.util.concurrent.Executor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -318,5 +318,46 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
     @Override
     public Audio getSongById(int id) {
         return songsById.get((long)id);
+    }
+
+    @Override
+    public PlayList addPlayList(String name) {
+        PlayList playList = PlayList.createLocalPlayList();
+        playList.setName(name);
+        addPlayListToDatabase(playList);
+        playListsById.put(playList.getId(), playList);
+        return playList;
+    }
+
+    protected abstract void addPlayListToDatabase(PlayList playList);
+    protected abstract void addAudioToPlayListInDatabase(PlayList playList, Audio audio);
+
+    @Override
+    public List<PlayList> getPlayListsWhereSongCanBeAdded(final Audio audio) {
+        return CollectionUtils.findAll(getPlayLists(), new Predicate<PlayList>() {
+            @Override
+            public boolean check(PlayList playList) {
+                return !getSongsOfPlayList(playList).contains(audio);
+            }
+        });
+    }
+
+    @Override
+    public boolean addSongToPlayList(Audio audio, PlayList playList) {
+        Long playListId = playList.getId();
+        List<Audio> audiosOfPlayList = songsByPlayListId.get(playListId);
+        if(audiosOfPlayList == null){
+            audiosOfPlayList = new ArrayList<Audio>();
+            songsByPlayListId.put(playListId, audiosOfPlayList);
+        }
+
+        if(audiosOfPlayList.contains(audio)){
+            return false;
+        }
+
+        audiosOfPlayList.add(audio);
+        addAudioToPlayListInDatabase(playList, audio);
+
+        return true;
     }
 }
