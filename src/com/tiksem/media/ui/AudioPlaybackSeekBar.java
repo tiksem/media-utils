@@ -47,9 +47,6 @@ public class AudioPlaybackSeekBar extends SeekBar {
         playBackListener = new AudioPlayerService.PlayBackListener() {
             @Override
             public void onAudioPlayingStarted() {
-                setProgress(0);
-                setMax(playerBinder.getDuration());
-                setVisibility(VISIBLE);
             }
 
             @Override
@@ -69,6 +66,7 @@ public class AudioPlaybackSeekBar extends SeekBar {
             public void onProgressChanged(long progress, long max) {
                 setMax(Math.round(max / SEEK_BAR_COEFFICIENT));
                 setProgress(Math.round(progress / SEEK_BAR_COEFFICIENT));
+                setVisibility(VISIBLE);
             }
         };
         playerBinder.addPlayBackListener(playBackListener);
