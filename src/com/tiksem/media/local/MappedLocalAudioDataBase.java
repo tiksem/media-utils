@@ -3,6 +3,9 @@ package com.tiksem.media.local;
 import com.tiksem.media.data.*;
 import com.utils.framework.CollectionUtils;
 import com.utils.framework.Predicate;
+import com.utils.framework.collections.map.ListValuesMultiMap;
+import com.utils.framework.collections.map.MultiMap;
+import com.utils.framework.collections.map.SetValuesHashMultiMap;
 import com.utilsframework.android.threading.OnComplete;
 import com.utilsframework.android.threading.Threading;
 
@@ -53,6 +56,7 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         return audio;
     }
 
+    @Override
     public Artist getArtistById(long id){
         return artistsById.get(id);
     }
@@ -71,6 +75,7 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         return artist;
     }
 
+    @Override
     public Album getAlbumById(long id){
         return albumsById.get(id);
     }
@@ -158,7 +163,7 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
     }
 
     protected boolean writeAudioAndAlbumUsingArtist(Audio audio, Album album, Artist artist){
-        boolean albumIsOk = checkAlbumValidationAndWriteItIfSuccess(artist, album);
+        boolean albumIsOk = album != null && checkAlbumValidationAndWriteItIfSuccess(artist, album);
 
         if(albumIsOk){
             String albumName = album.getName();
@@ -179,17 +184,87 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
     }
 
     protected void removeAlbum(long albumId){
+        List<Audio> audios = songsByAlbumId.get(albumId);
+        if(audios != null){
+            for(Audio audio : audios){
+                audio.setAlbumId(-1);
+                audio.setAlbumName(null);
+                setAlbumIdToAudioInDataBase(-1l, audio.getId());
+            }
+            songsByAlbumId.remove(albumId);
+        }
+
         Long artistId = albumIdArtistId.get(albumId);
         if(artistId != null){
             albumIdArtistId.remove(albumId);
             removeAlbumFromArtist(albumId,artistId);
         }
+
+        albumsById.remove(albumId);
+        //removeAlbumFromDataBase(albumId);
     }
 
     protected final void executeInitPlayListsIfNeed(){
         if(playListsById == null){
             playListsById = new LinkedHashMap<Long, PlayList>();
             initPlayLists();
+            removeAlbumsWithSameNames();
+        }
+    }
+
+    private void removeAlbumsWithSameNames() {
+        MultiMap<String, Album> stringAlbumMultiMap = new ListValuesMultiMap<String, Album>();
+        List<Album> albums = getAlbums();
+        for(Album album : albums){
+            stringAlbumMultiMap.put(album.getName(), album);
+        }
+
+        Collection<String> keys = stringAlbumMultiMap.getKeys();
+        for(String key : keys){
+            Collection<Album> albumsByName = stringAlbumMultiMap.getValues(key);
+            if(albumsByName.size() <= 1){
+                continue;
+            }
+
+            Album bestAlbum = Collections.max(albumsByName, new Comparator<Album>() {
+                @Override
+                public int compare(Album a, Album b) {
+                    String aArtUrl = a.getArtUrl(ArtSize.SMALL);
+                    String bArtUrl = b.getArtUrl(ArtSize.SMALL);
+
+                    if(aArtUrl == bArtUrl || (aArtUrl != null && bArtUrl != null)){
+                        Collection<Audio> aSongs = songsByAlbumId.get(a.getId());
+                        Collection<Audio> bSongs = songsByAlbumId.get(b.getId());
+                        int aSize = aSongs == null ? 0 : aSongs.size();
+                        int bSize = bSongs == null ? 0 : bSongs.size();
+                        return aSize - bSize;
+                    } else {
+                        if(aArtUrl != null){
+                            return 1;
+                        } else {
+                            return -1;
+                        }
+                    }
+                }
+            });
+
+            LinkedHashSet<Audio> audiosOfAlbums = new LinkedHashSet<Audio>();
+            long bestAlbumId = bestAlbum.getId();
+            for(Album album : albumsByName){
+                List<Audio> audios = songsByAlbumId.get(album.getId());
+                audiosOfAlbums.addAll(audios);
+
+                if(album != bestAlbum){
+                    removeAlbum(album.getId());
+
+                    for(Audio audio : audios){
+                        audio.setAlbumId(bestAlbumId);
+                        setAlbumIdToAudioInDataBase(bestAlbumId, audio.getId());
+                    }
+                }
+            }
+
+            songsByAlbumId.put(bestAlbumId, new ArrayList<Audio>(audiosOfAlbums));
         }
     }
 
@@ -390,6 +465,8 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
     protected abstract void addArtistToDatabase(Artist artist);
     protected abstract void addAlbumToDatabase(Album album);
     protected abstract void addAudioToPlayListInDatabase(PlayList playList, Audio audio);
+    protected abstract void removeAlbumFromDataBase(long id);
+    protected abstract void setAlbumIdToAudioInDataBase(Long albumId, long audioId);
 
     @Override
     public List<PlayList> getPlayListsWhereSongCanBeAdded(final Audio audio) {

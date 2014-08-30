@@ -63,9 +63,12 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         Artist artist = getOrCreateArtistWithId(artistId);
         artist.setName(artistName);
 
-        Album album = getOrCreateAlbumWithId(albumId);
-        album.setName(albumName);
-        album.setArtistName(artistName);
+        Album album = null;
+        if (albumId > 0) {
+            album = getOrCreateAlbumWithId(albumId);
+            album.setName(albumName);
+            album.setArtistName(artistName);
+        }
 
         Audio audio = useCachedAudio ? getOrCreateAudioWithId(id) : Audio.createLocalAudio(id);
         audio.setName(title);
@@ -179,6 +182,10 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
 
     @Override
     protected String getAlbumArtUrl(long albumId){
+        if(albumId <= 0){
+            return null;
+        }
+
         String[] columns = new String[]{
                 MediaStore.Audio.Albums.ALBUM_ART
         };
@@ -251,9 +258,9 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         }
 
         final Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        final String where = MediaStore.Audio.AudioColumns._ID + "=" + id;
 
         ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.Audio.Media._ID, id);
 
         String name = audio.getName();
         if(!dataBaseAudio.getName().equals(name)){
@@ -292,6 +299,23 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
             }
         }
 
-        contentResolver.insert(uri, contentValues);
+        contentResolver.update(uri, contentValues, where, null);
+    }
+
+    @Override
+    protected void removeAlbumFromDataBase(long id) {
+        final Uri uri = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI;
+        final String where = MediaStore.Audio.Albums._ID + "=" + id;
+        contentResolver.delete(uri, where, null);
+    }
+
+    @Override
+    protected void setAlbumIdToAudioInDataBase(Long albumId, long audioId) {
+        final Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        final String where = MediaStore.Audio.AudioColumns._ID + "=" + audioId;
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.Audio.Media.ALBUM_ID, albumId);
+        contentResolver.update(uri, contentValues, where, null);
     }
 }

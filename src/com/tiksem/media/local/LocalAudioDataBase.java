@@ -16,6 +16,9 @@ import java.util.List;
  */
 public interface LocalAudioDataBase {
     public List<Audio> getSongs();
+
+    Artist getArtistById(long id);
+
     public List<PlayList> getPlayLists();
     public List<Album> getAlbums();
     public List<Artist> getArtists();
@@ -30,6 +33,7 @@ public interface LocalAudioDataBase {
     public boolean artistHasAlbums(Artist artist);
 
     public Audio getSongById(long id);
+    public Album getAlbumById(long id);
 
     public PlayList addPlayList(String name);
     public Artist addArtist(String name);

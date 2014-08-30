@@ -136,10 +136,9 @@ public class AudioDataManager {
         return new GenreArtistsNavigationList(params);
     }
 
-    public NavigationList<Album> getAlbumsOfArtist(Artist artist){
+    public List<Album> getAlbumsOfArtist(Artist artist){
         if(artist.isLocal()){
-            List<Album> local = localAudioDataBase.getAlbumsOfArtist(artist);
-            return NavigationList.decorate(local);
+            return localAudioDataBase.getAlbumsOfArtist(artist);
         } else {
             List<Audio> initialElements = Collections.emptyList();
             String artistName = artist.getName();
@@ -325,5 +324,13 @@ public class AudioDataManager {
 
     public Audio getSongById(long id) {
         return localAudioDataBase.getSongById(id);
+    }
+
+    public Artist getArtistById(long id) {
+        return localAudioDataBase.getArtistById(id);
+    }
+
+    public Album getAlbumById(long id) {
+        return localAudioDataBase.getAlbumById(id);
     }
 }
