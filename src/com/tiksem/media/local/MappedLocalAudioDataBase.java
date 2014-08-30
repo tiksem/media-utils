@@ -208,13 +208,15 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         if(playListsById == null){
             playListsById = new LinkedHashMap<Long, PlayList>();
             initPlayLists();
-            removeAlbumsWithSameNames();
+            for (Artist artist : getArtists()) {
+                removeAlbumsWithSameNames(artist);
+            }
         }
     }
 
-    private void removeAlbumsWithSameNames() {
+    private void removeAlbumsWithSameNames(Artist artist) {
         MultiMap<String, Album> stringAlbumMultiMap = new ListValuesMultiMap<String, Album>();
-        List<Album> albums = getAlbums();
+        List<Album> albums = getAlbumsOfArtist(artist);
         for(Album album : albums){
             stringAlbumMultiMap.put(album.getName(), album);
         }
