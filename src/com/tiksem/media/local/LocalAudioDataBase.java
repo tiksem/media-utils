@@ -29,12 +29,16 @@ public interface LocalAudioDataBase {
     public boolean artistHasTracks(Artist artist);
     public boolean artistHasAlbums(Artist artist);
 
-    public Audio getSongById(int id);
+    public Audio getSongById(long id);
 
     public PlayList addPlayList(String name);
+    public Artist addArtist(String name);
+    public Album addAlbum(String albumName, String artistName);
     public boolean addSongToPlayList(Audio audio, PlayList playList);
     public List<PlayList> getPlayListsWhereSongCanBeAdded(Audio audio);
-    
+
+    public void commitAudioChangesToDataBase(Audio audio);
+
     public interface OnArtsUpdatingFinished{
         void onFinished();
     }

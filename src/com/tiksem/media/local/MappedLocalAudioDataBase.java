@@ -57,6 +57,10 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         return artistsById.get(id);
     }
 
+    protected void removeArtistWithId(long id) {
+        artistsById.remove(id);
+    }
+
     protected Artist getOrCreateArtistWithId(long id){
         Artist artist = getArtistById(id);
         if(artist == null){
@@ -211,10 +215,7 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         return new ArrayList<Audio>(songsById.values());
     }
 
-    private <T> List<T> getElementsOf(Identified identified, Map<Long,List<T>> from){
-        checkLocal(identified);
-
-        Long id = (long)identified.getId();
+    private <T> List<T> getElementsOf(long id, Map<Long,List<T>> from){
         List<T> elements = from.get(id);
         if(elements == null){
             return Collections.emptyList();
@@ -223,9 +224,20 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         return elements;
     }
 
+    private <T> List<T> getElementsOf(Identified identified, Map<Long,List<T>> from){
+        checkLocal(identified);
+
+        Long id = identified.getId();
+        return getElementsOf(id, from);
+    }
+
     @Override
     public List<Audio> getSongsOfArtist(Artist artist) {
         return getElementsOf(artist, songsByArtistId);
+    }
+
+    protected final List<Audio> getSongsByArtistId(long artistId) {
+        return getElementsOf(artistId, songsByArtistId);
     }
 
     @Override
@@ -256,7 +268,11 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
 
     @Override
     public List<Album> getAlbumsOfArtist(Artist artist) {
-        return getElementsOf(artist,albumsByArtistId);
+        return getElementsOf(artist, albumsByArtistId);
+    }
+
+    protected final List<Album> getAlbumsByArtistId(long artistId) {
+        return getElementsOf(artistId, albumsByArtistId);
     }
 
     @Override
@@ -316,12 +332,16 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
     }
 
     @Override
-    public Audio getSongById(int id) {
+    public Audio getSongById(long id) {
         return songsById.get((long)id);
     }
 
     @Override
     public PlayList addPlayList(String name) {
+        if(getPlaylistByName(name) != null){
+            throw new IllegalArgumentException("Playlist exists");
+        }
+
         PlayList playList = PlayList.createLocalPlayList();
         playList.setName(name);
         addPlayListToDatabase(playList);
@@ -329,7 +349,46 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         return playList;
     }
 
+    @Override
+    public Artist addArtist(String name) {
+        if(getArtistByName(name) != null){
+            throw new IllegalArgumentException("Artist exists");
+        }
+
+        Artist artist = Artist.createLocalArtist();
+        artist.setName(name);
+        addArtistToDatabase(artist);
+        artistsById.put(artist.getId(), artist);
+        return artist;
+    }
+
+    @Override
+    public Album addAlbum(String albumName, String artistName) {
+        Artist artist = getArtistByName(artistName);
+        if(artist == null){
+            throw new IllegalArgumentException("Could not find artist with '" + artistName + "' name");
+        }
+
+        long artistId = artist.getId();
+        Album album = getAlbumByNameAndArtistId(albumName, artistId);
+        if(album != null){
+            throw new IllegalArgumentException("Album exists");
+        }
+
+        album = Album.createLocalAlbum();
+        album.setName(albumName);
+        album.setArtistName(artistName);
+        album.setArtistId(artistId);
+        addAlbumToDatabase(album);
+        albumsById.put(album.getId(), album);
+        albumsByArtistId.get(artistId).add(album);
+
+        return album;
+    }
+
     protected abstract void addPlayListToDatabase(PlayList playList);
+    protected abstract void addArtistToDatabase(Artist artist);
+    protected abstract void addAlbumToDatabase(Album album);
     protected abstract void addAudioToPlayListInDatabase(PlayList playList, Audio audio);
 
     @Override
@@ -359,5 +418,44 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         addAudioToPlayListInDatabase(playList, audio);
 
         return true;
+    }
+
+    protected final Artist getArtistByName(final String name) {
+        if(name == null){
+            throw new NullPointerException();
+        }
+
+        return CollectionUtils.find(getArtists(), new Predicate<Artist>() {
+            @Override
+            public boolean check(Artist artist) {
+                return name.equals(artist.getName());
+            }
+        });
+    }
+
+    protected final PlayList getPlaylistByName(final String name) {
+        if(name == null){
+            throw new NullPointerException();
+        }
+
+        return CollectionUtils.find(getPlayLists(), new Predicate<PlayList>() {
+            @Override
+            public boolean check(PlayList playList) {
+                return name.equals(playList.getName());
+            }
+        });
+    }
+
+    protected final Album getAlbumByNameAndArtistId(final String albumName, long artistId) {
+        if(albumName == null){
+            throw new NullPointerException();
+        }
+
+        return CollectionUtils.find(getAlbumsByArtistId(artistId), new Predicate<Album>() {
+            @Override
+            public boolean check(Album album) {
+                return albumName.equals(album.getName());
+            }
+        });
     }
 }

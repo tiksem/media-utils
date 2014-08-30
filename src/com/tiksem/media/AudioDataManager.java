@@ -311,11 +311,19 @@ public class AudioDataManager {
         return localAudioDataBase.addPlayList(name);
     }
 
+    public Artist addArtist(String name) {
+        return localAudioDataBase.addArtist(name);
+    }
+
     public boolean addSongToPlayList(Audio audio, PlayList playList) {
         return localAudioDataBase.addSongToPlayList(audio, playList);
     }
 
     public List<PlayList> getPlayListsWhereSongCanBeAdded(Audio audio) {
         return localAudioDataBase.getPlayListsWhereSongCanBeAdded(audio);
+    }
+
+    public Audio getSongById(long id) {
+        return localAudioDataBase.getSongById(id);
     }
 }

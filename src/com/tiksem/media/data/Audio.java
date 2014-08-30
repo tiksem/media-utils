@@ -22,12 +22,12 @@ public class Audio extends ArtCollection{
         super(local);
     }
 
-    private Audio(boolean local, int id) {
+    private Audio(boolean local, long id) {
         super(id, local);
     }
 
-    public static Audio createLocalAudio(int id){
-        return new Audio(true,id);
+    public static Audio createLocalAudio(long id){
+        return new Audio(true, id);
     }
 
     public static Audio createInternetAudio(int id){
