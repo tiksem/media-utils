@@ -1,14 +1,13 @@
 package com.tiksem.media.search;
 
-import com.tiksem.media.data.Album;
-import com.tiksem.media.data.ArtCollection;
-import com.tiksem.media.data.Artist;
-import com.tiksem.media.data.Audio;
+import com.tiksem.media.data.*;
 import com.tiksem.media.search.correction.CorrectionUtilities;
 import com.tiksem.media.search.network.*;
 import com.tiksem.media.search.parsers.LastFmCorrectedAudioInfoParser;
 import com.tiksem.media.search.parsers.LastFmResultParser;
 import com.tiksem.media.search.parsers.VkResultParser;
+import com.utils.framework.CollectionUtils;
+import com.utils.framework.Equals;
 import com.utils.framework.collections.cache.*;
 import com.utils.framework.collections.queue.PageLazyQueue;
 import com.utils.framework.io.TextLoader;
@@ -644,5 +643,42 @@ public class InternetSearchEngine {
 
         throw new IllegalArgumentException("Unsuuported ArtCollection type " +
                 artCollection.getClass().getCanonicalName());
+    }
+
+    public List<String> getSuggestedArtistNamesByTrackName(String trackName, int maxCount) {
+        try {
+            SearchResult<Audio> searchResult = searchAudios(trackName, maxCount, 0);
+            ArrayList<String> result = new ArrayList<String>();
+            for(Audio audio : searchResult.elements){
+                String artistName = audio.getArtistName();
+                if (artistName != null) {
+                    result.add(artistName);
+                }
+            }
+            return result;
+
+        } catch (IOException e) {
+            return new ArrayList<String>();
+        }
+    }
+
+    public List<Artist> getArtistsByNames(List<String> artistNames) {
+        List<Artist> result = new ArrayList<Artist>(artistNames.size());
+        for(String artistName : artistNames){
+            try {
+                Artist artist = getArtistByName(artistName);
+                result.add(artist);
+            } catch (IOException e) {
+
+            }
+        }
+
+        CollectionUtils.unique(result, NamedData.<Artist>equalsIgnoreCase());
+
+        return result;
+    }
+
+    public List<Artist> getSuggestedArtistsByTrackName(String trackName, int maxCount) {
+        return getArtistsByNames(getSuggestedArtistNamesByTrackName(trackName, maxCount));
     }
 }

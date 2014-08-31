@@ -5,12 +5,17 @@ import com.tiksem.media.data.*;
 import com.tiksem.media.local.LocalAudioDataBase;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.navigation.*;
+import com.utils.framework.CollectionUtils;
+import com.utils.framework.Equals;
+import com.utils.framework.Predicate;
 import com.utils.framework.algorithms.Search;
 import com.utils.framework.collections.NavigationList;
+import com.utils.framework.collections.SetWithPredicates;
 import com.utilsframework.android.ErrorListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -332,5 +337,19 @@ public class AudioDataManager {
 
     public Album getAlbumById(long id) {
         return localAudioDataBase.getAlbumById(id);
+    }
+
+    public List<Artist> getSuggestedArtistsByTrackNameFromInternet(String trackName, int maxCount) {
+        List<Artist> artists = internetSearchEngine.getSuggestedArtistsByTrackName(trackName, maxCount);
+        SetWithPredicates<Artist> artistsSet = new SetWithPredicates<Artist>(
+                new LinkedHashSet(),
+                NamedData.<Artist>equalsIgnoreCase(), NamedData.ignoreCaseHashCodeProvider());
+        artistsSet.addAll(artists);
+
+        for(Artist artist : getArtists()){
+            artistsSet.remove(artist);
+        }
+
+        return new ArrayList<Artist>(artistsSet);
     }
 }

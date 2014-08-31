@@ -1,5 +1,7 @@
 package com.tiksem.media.data;
 
+import com.utils.framework.Equals;
+import com.utils.framework.HashCodeProvider;
 import com.utils.framework.collections.cache.GlobalStringCache;
 
 import java.util.ArrayList;
@@ -15,6 +17,24 @@ import java.util.List;
 public class NamedData extends Identified{
     private static final GlobalStringCache STRING_CACHE = GlobalStringCache.getInstance();
     private String name;
+
+    public static <T extends NamedData> Equals<T> equalsIgnoreCase() {
+        return new Equals<T>() {
+            @Override
+            public boolean equals(T a, T b) {
+                return a.getName().equalsIgnoreCase(b.getName());
+            }
+        };
+    }
+
+    public static HashCodeProvider ignoreCaseHashCodeProvider() {
+        return new HashCodeProvider() {
+            @Override
+            public int getHashCodeOf(Object object) {
+                return ((NamedData)object).getName().toLowerCase().hashCode();
+            }
+        };
+    }
 
     public NamedData(boolean local) {
         super(local);
@@ -65,4 +85,14 @@ public class NamedData extends Identified{
 
         return result;
     }
+
+    public static <T extends NamedData> List<String> namedDataListToLowerCaseNameList(List<T> namedDatas) {
+        List<String> result = new ArrayList<String>(namedDatas.size());
+        for(NamedData namedData : namedDatas){
+            result.add(namedData.getName().toLowerCase());
+        }
+
+        return result;
+    }
 }
+
