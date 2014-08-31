@@ -134,4 +134,10 @@ public class LastFmResultParser {
         LastFmTagParser parser = new LastFmTagParser();
         return parsePageElements(response, parser, "results", "tagmatches", "tag");
     }
+
+    public Album parseAlbum(String response) throws JSONException {
+        LastFmAlbumParser albumParser = new LastFmAlbumParser();
+        JSONObject jsonObject = new JSONObject(response);
+        return albumParser.parse(jsonObject.getJSONObject("album"));
+    }
 }

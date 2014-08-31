@@ -1,5 +1,6 @@
 package com.tiksem.media.local;
 
+import android.graphics.Bitmap;
 import com.tiksem.media.data.*;
 import com.utils.framework.CollectionUtils;
 import com.utils.framework.Predicate;
@@ -537,4 +538,30 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
             }
         });
     }
+
+    @Override
+    public void commitAudioChangesToDataBase(Audio audio) {
+
+    }
+
+    @Override
+    public void setAlbumArt(Bitmap bitmap, long albumId) {
+        String path = saveAlbumArtToDataBase(bitmap, albumId);
+        if(path != null){
+            Album album = albumsById.get(albumId);
+            if(album == null){
+                throw new IllegalArgumentException("Could not find album with " + albumId + " id");
+            }
+
+            album.setUrlForAllArts(path);
+            List<Audio> audios = songsByAlbumId.get(albumId);
+            if (audios != null) {
+                for(Audio audio : audios){
+                    audio.setUrlForAllArts(path);
+                }
+            }
+        }
+    }
+
+    protected abstract String saveAlbumArtToDataBase(Bitmap bitmap, long albumId);
 }

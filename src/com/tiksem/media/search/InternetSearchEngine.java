@@ -563,4 +563,27 @@ public class InternetSearchEngine {
         result.artistName = correctedTrackInfo.artistName;
         return result;
     }
+
+    public Album getAlbumByNameAndArtistName(String albumName, String artistName) throws IOException {
+        String json = lastFMSearcher.getAlbumInfoByNameAndArtistName(albumName, artistName);
+        try {
+            return lastFmResultParser.parseAlbum(json);
+        } catch (JSONException e) {
+            throw new InvalidResponseException(e);
+        }
+    }
+
+    public boolean fillAlbumArts(Album album) {
+        try {
+            Album temp = getAlbumByNameAndArtistName(album.getName(), album.getArtistName());
+            if (temp != null) {
+                album.cloneArtUrlsFrom(temp);
+                return true;
+            }
+
+            return false;
+        } catch (IOException e) {
+            return false;
+        }
+    }
 }

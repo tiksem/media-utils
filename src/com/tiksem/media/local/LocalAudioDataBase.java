@@ -1,5 +1,6 @@
 package com.tiksem.media.local;
 
+import android.graphics.Bitmap;
 import com.tiksem.media.data.Album;
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.data.Audio;
@@ -48,4 +49,5 @@ public interface LocalAudioDataBase {
     }
 
     public void startAlbumArtsUpdating(OnArtsUpdatingFinished onArtsUpdatingFinishedListener);
+    public void setAlbumArt(Bitmap bitmap, long albumId);
 }

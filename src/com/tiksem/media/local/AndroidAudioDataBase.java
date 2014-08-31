@@ -3,7 +3,9 @@ package com.tiksem.media.local;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.MediaStore;
 import com.tiksem.media.data.Album;
 import com.tiksem.media.data.Artist;
@@ -11,8 +13,11 @@ import com.tiksem.media.data.Audio;
 import com.tiksem.media.data.PlayList;
 import com.utilsframework.android.string.Strings;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.Executor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -199,7 +204,12 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         String url = cursor.getString(artColumn);
 
         if(url == null){
-            return null;
+            File file = new File(generateThumbnailPath(albumId));
+            if(file.exists()){
+                return "file://" + file.getAbsolutePath();
+            } else {
+                return null;
+            }
         } else {
             return "file://" + url;
         }
@@ -317,5 +327,32 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         ContentValues contentValues = new ContentValues();
         contentValues.put(MediaStore.Audio.Media.ALBUM_ID, albumId);
         contentResolver.update(uri, contentValues, where, null);
+    }
+
+    private String generateThumbnailPath(long albumId) {
+        return Environment.getExternalStorageDirectory().getAbsolutePath() + "/" +
+                AndroidAudioDataBase.class.getName() + "_arts/"
+                + "art" + albumId;
+    }
+
+    @Override
+    protected String saveAlbumArtToDataBase(Bitmap bitmap, long albumId) {
+        String path = generateThumbnailPath(albumId);
+        File file = new File(path);
+        file.getParentFile().mkdirs();
+
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            return null;
+        }
+
+        try {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, new FileOutputStream(path));
+        } catch (FileNotFoundException e) {
+            return null;
+        }
+
+        return "file://" + path;
     }
 }
