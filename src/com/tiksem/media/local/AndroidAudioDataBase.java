@@ -186,6 +186,16 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
     }
 
     @Override
+    protected String getArtistArtUrl(long artistId) {
+        File file = new File(generateArtistArtPath(artistId));
+        if(file.exists()){
+            return "file://" + file.getAbsolutePath();
+        } else {
+            return null;
+        }
+    }
+
+    @Override
     protected String getAlbumArtUrl(long albumId){
         if(albumId <= 0){
             return null;
@@ -204,7 +214,7 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         String url = cursor.getString(artColumn);
 
         if(url == null){
-            File file = new File(generateThumbnailPath(albumId));
+            File file = new File(generateAlbumArtPath(albumId));
             if(file.exists()){
                 return "file://" + file.getAbsolutePath();
             } else {
@@ -329,15 +339,19 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         contentResolver.update(uri, contentValues, where, null);
     }
 
-    private String generateThumbnailPath(long albumId) {
+    private String generateAlbumArtPath(long albumId) {
         return Environment.getExternalStorageDirectory().getAbsolutePath() + "/" +
                 AndroidAudioDataBase.class.getName() + "_arts/"
                 + "art" + albumId;
     }
 
-    @Override
-    protected String saveAlbumArtToDataBase(Bitmap bitmap, long albumId) {
-        String path = generateThumbnailPath(albumId);
+    private String generateArtistArtPath(long artistId) {
+        return Environment.getExternalStorageDirectory().getAbsolutePath() + "/" +
+                AndroidAudioDataBase.class.getName() + "_arts/"
+                + "artist" + artistId;
+    }
+
+    private String saveArtToDatabase(String path, Bitmap bitmap) {
         File file = new File(path);
         file.getParentFile().mkdirs();
 
@@ -354,5 +368,17 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         }
 
         return "file://" + path;
+    }
+
+    @Override
+    protected String saveAlbumArtToDataBase(Bitmap bitmap, long albumId) {
+        String path = generateAlbumArtPath(albumId);
+        return saveArtToDatabase(path, bitmap);
+    }
+
+    @Override
+    protected String saveArtistArtToDataBase(Bitmap bitmap, long artistId) {
+        String path = generateArtistArtPath(artistId);
+        return saveArtToDatabase(path, bitmap);
     }
 }

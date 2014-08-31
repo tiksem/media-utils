@@ -140,4 +140,10 @@ public class LastFmResultParser {
         JSONObject jsonObject = new JSONObject(response);
         return albumParser.parse(jsonObject.getJSONObject("album"));
     }
+
+    public Artist parseArtist(String response) throws JSONException {
+        LastFmArtistParser artistParser = new LastFmArtistParser();
+        JSONObject jsonObject = new JSONObject(response);
+        return artistParser.parse(jsonObject.getJSONObject("artist"));
+    }
 }

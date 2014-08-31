@@ -104,6 +104,13 @@ public class LastFMSearcher {
         return search(params);
     }
 
+    public String getArtistInfo(String artistName) throws IOException {
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("artist",artistName);
+        params.put("method","artist.getinfo");
+        return search(params);
+    }
+
     public String getTracksByTag(String genre, LastFMSearchParams searchParams) throws IOException {
         Map<String, Object> params = Reflection.objectToPropertyMap(searchParams);
         params.put("method","tag.gettoptracks");

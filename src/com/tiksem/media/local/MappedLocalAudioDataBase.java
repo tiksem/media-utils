@@ -375,6 +375,8 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         return null;
     }
 
+    protected abstract String getArtistArtUrl(long artistId);
+
     private void albumArtUpdateAction(){
         for(Map.Entry<Long,Album> entry : albumsById.entrySet()){
             long id = entry.getKey();
@@ -387,6 +389,12 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
             for(Audio audio : audiosOfAlbum){
                 audio.setUrlForAllArts(artUrl);
             }
+        }
+
+        for(Artist artist : getArtists()){
+            long id = artist.getId();
+            String artUrl = getArtistArtUrl(id);
+            artist.setUrlForAllArts(artUrl);
         }
     }
 
@@ -563,5 +571,29 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         }
     }
 
+    @Override
+    public void setArtistArt(Bitmap bitmap, long artistId) {
+        Artist artist = artistsById.get(artistId);
+        if(artist == null){
+            throw new IllegalArgumentException("Could not find artist with " + artistId + " id");
+        }
+
+        String path = saveArtistArtToDataBase(bitmap, artistId);
+        artist.setUrlForAllArts(path);
+    }
+
+    @Override
+    public void setArt(Bitmap bitmap, ArtCollection artCollection) {
+        if(artCollection instanceof Album){
+            setAlbumArt(bitmap, artCollection.getId());
+        } else if(artCollection instanceof Artist) {
+            setArtistArt(bitmap, artCollection.getId());
+        } else {
+            throw new IllegalArgumentException("Unsuuported ArtCollection type " +
+                    artCollection.getClass().getCanonicalName());
+        }
+    }
+
     protected abstract String saveAlbumArtToDataBase(Bitmap bitmap, long albumId);
+    protected abstract String saveArtistArtToDataBase(Bitmap bitmap, long artistId);
 }

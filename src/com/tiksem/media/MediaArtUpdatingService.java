@@ -5,10 +5,13 @@ import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.util.Log;
 import com.tiksem.media.data.Album;
+import com.tiksem.media.data.ArtCollection;
 import com.tiksem.media.data.ArtSize;
+import com.tiksem.media.data.Artist;
 import com.tiksem.media.local.LocalAudioDataBase;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.utils.framework.io.IOUtilities;
+import com.utilsframework.android.threading.OnComplete;
 import com.utilsframework.android.threading.Threading;
 
 import java.io.IOException;
@@ -23,26 +26,27 @@ public class MediaArtUpdatingService {
     private LocalAudioDataBase localAudioDataBase;
     private InternetSearchEngine internetSearchEngine;
     private volatile boolean isPaused = false;
-    private OnAlbumArtUpdated onAlbumArtUpdated;
     private Handler handler = new Handler();
 
     public interface OnAlbumArtUpdated {
         void onAlbumArtUpdated(Album album);
     }
 
+    public interface OnArtistArtUpdated {
+        void onArtistArtUpdated(Artist artist);
+    }
+
     public MediaArtUpdatingService(LocalAudioDataBase localAudioDataBase,
-                                   InternetSearchEngine internetSearchEngine,
-                                   OnAlbumArtUpdated onAlbumArtUpdated) {
+                                   InternetSearchEngine internetSearchEngine) {
         this.localAudioDataBase = localAudioDataBase;
         this.internetSearchEngine = internetSearchEngine;
-        this.onAlbumArtUpdated = onAlbumArtUpdated;
 
         threadPoolExecutor =
-                new ThreadPoolExecutor(1, 1, 50000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(),
+                new ThreadPoolExecutor(0, 1, 50000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(),
                         Threading.lowPriorityThreadFactory());
     }
 
-    private void updateAlbumArtInternal(final Album album) {
+    private void updateArtInternal(final ArtCollection artCollection, final OnComplete onComplete) {
         while (isPaused) {
             try {
                 Thread.sleep(20);
@@ -51,22 +55,23 @@ public class MediaArtUpdatingService {
             }
         }
 
-        if(album.getArtUrl(ArtSize.SMALL) != null && album.getArtUrl(ArtSize.MEDIUM) != null &&
-                album.getArtUrl(ArtSize.LARGE) != null){
+        if(artCollection.getArtUrl(ArtSize.SMALL) != null && artCollection.getArtUrl(ArtSize.MEDIUM) != null &&
+                artCollection.getArtUrl(ArtSize.LARGE) != null){
             return;
         }
 
-        if (internetSearchEngine.fillAlbumArts(album)) {
-            String largeArtPath = album.getArtUrl(ArtSize.LARGE);
+        if (internetSearchEngine.fillAlbumArts(artCollection)) {
+            String largeArtPath = artCollection.getArtUrl(ArtSize.LARGE);
             try {
                 Bitmap bitmap = BitmapFactory.decodeStream(
                         IOUtilities.getBufferedInputStreamFromUrl(largeArtPath));
-                localAudioDataBase.setAlbumArt(bitmap, album.getId());
-                if(onAlbumArtUpdated != null){
+                localAudioDataBase.setArt(bitmap, artCollection);
+
+                if(onComplete != null){
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            onAlbumArtUpdated.onAlbumArtUpdated(album);
+                            onComplete.onFinish();
                         }
                     });
                 }
@@ -77,22 +82,71 @@ public class MediaArtUpdatingService {
         }
     }
 
-    public void updateAlbumArt(final Album album) {
+    public void updateAlbumArt(final Album album, final OnAlbumArtUpdated onAlbumArtUpdated) {
         threadPoolExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                updateAlbumArtInternal(album);
+                updateArtInternal(album, new OnComplete() {
+                    @Override
+                    public void onFinish() {
+                        if (onAlbumArtUpdated != null) {
+                            onAlbumArtUpdated.onAlbumArtUpdated(album);
+                        }
+                    }
+                });
             }
         });
     }
 
-    public void updateAllAlbumsArt() {
+    public void updateAllAlbumsArt(final OnAlbumArtUpdated onAlbumArtUpdated) {
         threadPoolExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 List<Album> albums = localAudioDataBase.getAlbums();
-                for (Album album : albums) {
-                    updateAlbumArtInternal(album);
+                for (final Album album : albums) {
+                    updateArtInternal(album, new OnComplete() {
+                        @Override
+                        public void onFinish() {
+                            if(onAlbumArtUpdated != null){
+                                onAlbumArtUpdated.onAlbumArtUpdated(album);
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    public void updateArtistArt(final Artist artist, final OnArtistArtUpdated onArtistArtUpdated) {
+        threadPoolExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                updateArtInternal(artist, new OnComplete() {
+                    @Override
+                    public void onFinish() {
+                        if (onArtistArtUpdated != null) {
+                            onArtistArtUpdated.onArtistArtUpdated(artist);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    public void updateAllArtistsArt(final OnArtistArtUpdated onArtistArtUpdated) {
+        threadPoolExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                List<Artist> artists = localAudioDataBase.getArtists();
+                for (final Artist artist : artists) {
+                    updateArtInternal(artist, new OnComplete() {
+                        @Override
+                        public void onFinish() {
+                            if(onArtistArtUpdated != null){
+                                onArtistArtUpdated.onArtistArtUpdated(artist);
+                            }
+                        }
+                    });
                 }
             }
         });

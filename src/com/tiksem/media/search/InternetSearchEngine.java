@@ -1,6 +1,7 @@
 package com.tiksem.media.search;
 
 import com.tiksem.media.data.Album;
+import com.tiksem.media.data.ArtCollection;
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.data.Audio;
 import com.tiksem.media.search.correction.CorrectionUtilities;
@@ -573,6 +574,15 @@ public class InternetSearchEngine {
         }
     }
 
+    public Artist getArtistByName(String artistName) throws IOException {
+        String json = lastFMSearcher.getArtistInfo(artistName);
+        try {
+            return lastFmResultParser.parseArtist(json);
+        } catch (JSONException e) {
+            throw new InvalidResponseException(e);
+        }
+    }
+
     public boolean fillAlbumArts(Album album) {
         try {
             Album temp = getAlbumByNameAndArtistName(album.getName(), album.getArtistName());
@@ -585,5 +595,30 @@ public class InternetSearchEngine {
         } catch (IOException e) {
             return false;
         }
+    }
+
+    public boolean fillAlbumArts(Artist artist) {
+        try {
+            Artist temp = getArtistByName(artist.getName());
+            if (temp != null) {
+                artist.cloneArtUrlsFrom(temp);
+                return true;
+            }
+
+            return false;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    public boolean fillAlbumArts(ArtCollection artCollection) {
+        if(artCollection instanceof Album){
+            return fillAlbumArts((Album)artCollection);
+        } else if(artCollection instanceof Artist) {
+            return fillAlbumArts((Artist)artCollection);
+        }
+
+        throw new IllegalArgumentException("Unsuuported ArtCollection type " +
+                artCollection.getClass().getCanonicalName());
     }
 }
