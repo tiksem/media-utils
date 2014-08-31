@@ -219,7 +219,7 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         MultiMap<String, Album> stringAlbumMultiMap = new ListValuesMultiMap<String, Album>();
         List<Album> albums = getAlbumsOfArtist(artist);
         for(Album album : albums){
-            stringAlbumMultiMap.put(album.getName(), album);
+            stringAlbumMultiMap.put(album.getName().toLowerCase(), album);
         }
 
         Collection<String> keys = stringAlbumMultiMap.getKeys();
@@ -467,7 +467,13 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         album.setArtistId(artistId);
         addAlbumToDatabase(album);
         albumsById.put(album.getId(), album);
-        albumsByArtistId.get(artistId).add(album);
+
+        List<Album> albums = albumsByArtistId.get(artistId);
+        if(albums == null){
+            albums = new ArrayList<Album>();
+            albumsByArtistId.put(artistId, albums);
+        }
+        albums.add(album);
 
         return album;
     }

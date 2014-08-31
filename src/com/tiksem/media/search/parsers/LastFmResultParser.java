@@ -141,6 +141,12 @@ public class LastFmResultParser {
         return albumParser.parse(jsonObject.getJSONObject("album"));
     }
 
+    public Album parseAlbumFromTrackInfo(String response) throws JSONException {
+        LastFmAlbumParser albumParser = new LastFmAlbumParser();
+        JSONObject jsonObject = new JSONObject(response);
+        return albumParser.parse(jsonObject.getJSONObject("track").getJSONObject("album"));
+    }
+
     public Artist parseArtist(String response) throws JSONException {
         LastFmArtistParser artistParser = new LastFmArtistParser();
         JSONObject jsonObject = new JSONObject(response);

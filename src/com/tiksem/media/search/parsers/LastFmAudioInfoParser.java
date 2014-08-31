@@ -37,7 +37,7 @@ public class LastFmAudioInfoParser extends LastFmArtCollectionParser<Audio>{
 
         JSONObject album = track.getJSONObject("album");
         if(album != null){
-            String albumName = album.getString("name");
+            String albumName = album.getString("title");
             audio.setAlbumName(albumName);
 
         }

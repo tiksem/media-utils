@@ -574,6 +574,30 @@ public class InternetSearchEngine {
         }
     }
 
+    public Album getAlbumByArtistNameAndTrackName(String artistName, String trackName) throws IOException {
+        String json = lastFMSearcher.getTrackInfoByNameAndArtistName(trackName, artistName);
+        try {
+            return lastFmResultParser.parseAlbumFromTrackInfo(json);
+        } catch (JSONException e) {
+            throw new InvalidResponseException(e);
+        }
+    }
+
+    public boolean tryFillAlbumName(Audio audio) {
+        try {
+            Album album = getAlbumByArtistNameAndTrackName(audio.getArtistName(), audio.getName());
+            if(album == null || !album.getArtistName().equals(audio.getArtistName())){
+                return false;
+            }
+
+            audio.setAlbumName(album.getName());
+            audio.setAlbumId(-1);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     public Artist getArtistByName(String artistName) throws IOException {
         String json = lastFMSearcher.getArtistInfo(artistName);
         try {
@@ -583,7 +607,7 @@ public class InternetSearchEngine {
         }
     }
 
-    public boolean fillAlbumArts(Album album) {
+    public boolean tryFillAlbumArts(Album album) {
         try {
             Album temp = getAlbumByNameAndArtistName(album.getName(), album.getArtistName());
             if (temp != null) {
@@ -597,7 +621,7 @@ public class InternetSearchEngine {
         }
     }
 
-    public boolean fillAlbumArts(Artist artist) {
+    public boolean tryFillAlbumArts(Artist artist) {
         try {
             Artist temp = getArtistByName(artist.getName());
             if (temp != null) {
@@ -611,11 +635,11 @@ public class InternetSearchEngine {
         }
     }
 
-    public boolean fillAlbumArts(ArtCollection artCollection) {
+    public boolean tryFillAlbumArts(ArtCollection artCollection) {
         if(artCollection instanceof Album){
-            return fillAlbumArts((Album)artCollection);
+            return tryFillAlbumArts((Album) artCollection);
         } else if(artCollection instanceof Artist) {
-            return fillAlbumArts((Artist)artCollection);
+            return tryFillAlbumArts((Artist) artCollection);
         }
 
         throw new IllegalArgumentException("Unsuuported ArtCollection type " +

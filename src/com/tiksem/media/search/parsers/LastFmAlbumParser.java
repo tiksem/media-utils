@@ -13,10 +13,14 @@ import org.json.JSONObject;
 class LastFmAlbumParser extends LastFmArtCollectionInPageParser<Album> {
     @Override
     public Album parse(JSONObject jsonObject) throws JSONException {
-        Integer id = jsonObject.getInt("id");
-        String mbid = jsonObject.getString("mbid");
+        int id = jsonObject.optInt("id", -1);
+        String mbid = jsonObject.optString("mbid");
 
-        final String name = jsonObject.getString("name");
+        String name = jsonObject.optString("name", null);
+        if(name == null){
+            name = jsonObject.getString("title");
+        }
+
         final String artistName = jsonObject.getString("artist");
         final Album album = Album.createInternetAlbum(id);
 

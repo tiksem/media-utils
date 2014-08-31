@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import com.tiksem.media.data.Album;
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.data.Audio;
@@ -17,6 +18,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -59,11 +62,16 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
 
         final String artistName = cursor.getString(artistNameColumn);
         final long artistId = cursor.getLong(artistIdColumn);
-        final String albumName = cursor.getString(albumNameColumn);
-        final long albumId = cursor.getLong(albumIdColumn);
+        String albumName = cursor.getString(albumNameColumn);
+        long albumId = cursor.getLong(albumIdColumn);
         final String title = cursor.getString(titleColumn);
         final long id = cursor.getLong(idColumn);
         final String url = cursor.getString(urlColumn);
+
+        if(TextUtils.isEmpty(albumName)){
+            albumName = null;
+            albumId = -1;
+        }
 
         Artist artist = getOrCreateArtistWithId(artistId);
         artist.setName(artistName);
@@ -77,6 +85,7 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
 
         Audio audio = useCachedAudio ? getOrCreateAudioWithId(id) : Audio.createLocalAudio(id);
         audio.setName(title);
+        audio.setArtistName(artistName);
         audio.setUrl(url);
 
         return new Media(audio, artist, album);
@@ -247,12 +256,12 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
 
     @Override
     protected void addAlbumToDatabase(Album album) {
-        Uri uri = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI;
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.Audio.Albums.ALBUM, album.getName());
-        contentValues.put(MediaStore.Audio.Albums.ARTIST, album.getArtistName());
-        uri = contentResolver.insert(uri, contentValues);
-        long id = Strings.getLongFromString(uri.toString());
+        long id = Collections.max(getSongs(), new Comparator<Audio>() {
+            @Override
+            public int compare(Audio a, Audio b) {
+                return (int) (a.getId() - b.getId());
+            }
+        }).getId() + 1;
         album.setId(id);
     }
 
@@ -288,11 +297,14 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         }
 
         String artistName = audio.getArtistName();
+        Artist artist = getArtistByName(artistName);
+        if(artist == null){
+            throw new IllegalArgumentException("Artist is not registered in database");
+        }
+
+        long artistId = artist.getId();
+
         if(!dataBaseAudio.getArtistName().equals(artistName)){
-            Artist artist = getArtistByName(artistName);
-            if(artist == null){
-                throw new IllegalArgumentException("Artist is not registered in database");
-            }
 
             long prevArtistId = audio.getArtistId();
             List<Audio> prevArtistAudios = getSongsByArtistId(prevArtistId);
@@ -301,22 +313,28 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
                 removeArtistWithId(prevArtistId);
             }
 
-            long artistId = artist.getId();
             audio.setArtistId(artistId);
             contentValues.put(MediaStore.Audio.Media.ARTIST_ID, artistId);
             contentValues.put(MediaStore.Audio.Media.ARTIST, artistName);
             getSongsByArtistId(artistId).add(audio);
+        }
 
-            String albumName = audio.getAlbumName();
-            if(albumName != null){
-                Album album = getAlbumByNameAndArtistId(albumName, artistId);
-                if(album == null){
+        String albumName = audio.getAlbumName();
+        if(albumName != null){
+
+            Album album = getAlbumByNameAndArtistId(albumName, artistId);
+            if(album == null){
+                if(audio.getAlbumId() < 0){
+                    album = addAlbum(albumName, artistName);
+                } else {
                     throw new IllegalArgumentException("Album is not associated with the artist");
                 }
-
-                contentValues.put(MediaStore.Audio.Media.ALBUM_ID, album.getId());
-                contentValues.put(MediaStore.Audio.Media.ALBUM, albumName);
             }
+
+            audio.setAlbumId(album.getId());
+
+            contentValues.put(MediaStore.Audio.Media.ALBUM_ID, album.getId());
+            contentValues.put(MediaStore.Audio.Media.ALBUM, albumName);
         }
 
         contentResolver.update(uri, contentValues, where, null);
