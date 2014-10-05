@@ -3,8 +3,8 @@ package com.tiksem.media.search.suggestions;
 import com.tiksem.media.AudioDataManager;
 import com.tiksem.media.data.Artist;
 import com.utils.framework.suggestions.SuggestionsProvider;
-import com.utils.framework.suggestions.SuggestionsProviderWithHelpWord;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,6 +17,7 @@ import java.util.List;
 public class ArtistSuggestionsProvider implements SuggestionsProvider<Artist> {
     private AudioDataManager audioDataManager;
     private int maxCount;
+    private String trackName;
 
     public ArtistSuggestionsProvider(AudioDataManager audioDataManager, int maxCount) {
         if(maxCount < 1){
@@ -27,8 +28,33 @@ public class ArtistSuggestionsProvider implements SuggestionsProvider<Artist> {
         this.maxCount = maxCount;
     }
 
+    public ArtistSuggestionsProvider(AudioDataManager audioDataManager, int maxCount, String trackName) {
+        this(audioDataManager, maxCount);
+        this.trackName = trackName;
+    }
+
+    public String getTrackName() {
+        return trackName;
+    }
+
+    public void setTrackName(String trackName) {
+        this.trackName = trackName;
+    }
+
     @Override
     public List<Artist> getSuggestions(String query) {
-        return audioDataManager.getArtists(query, maxCount);
+        List<Artist> result = new ArrayList<Artist>();
+        int artistByQueryMaxCount = maxCount;
+
+        if (trackName != null) {
+            List<Artist> artistsByTrack =
+                    audioDataManager.getSuggestedArtistsByTrackName(trackName, maxCount / 3);
+            result.addAll(artistsByTrack);
+            artistByQueryMaxCount -= artistsByTrack.size();
+        }
+
+        List<Artist> artistsByQuery = audioDataManager.getArtists(query, artistByQueryMaxCount);
+        result.addAll(artistsByQuery);
+        return result;
     }
 }

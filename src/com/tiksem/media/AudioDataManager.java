@@ -388,18 +388,18 @@ public class AudioDataManager {
         return localAudioDataBase.getAlbumById(id);
     }
 
-    public List<Artist> getSuggestedArtistsByTrackNameFromInternet(String trackName, int maxCount) {
-        List<Artist> artists = internetSearchEngine.getSuggestedArtistsByTrackName(trackName, maxCount);
-        SetWithPredicates<Artist> artistsSet = new SetWithPredicates<Artist>(
-                new LinkedHashSet(),
-                NamedData.<Artist>equalsIgnoreCase(), NamedData.ignoreCaseHashCodeProvider());
-        artistsSet.addAll(artists);
-
-        for(Artist artist : getArtists()){
-            artistsSet.remove(artist);
+    public List<Artist> getSuggestedArtistsByTrackName(String trackName, int maxCount) {
+        if(maxCount == 0){
+            return new ArrayList<Artist>();
         }
 
-        return new ArrayList<Artist>(artistsSet);
+        if(maxCount < 0){
+            throw new IllegalArgumentException();
+        }
+
+        List<Artist> artists =
+                internetSearchEngine.getSuggestedArtistsByTrackName(trackName, maxCount);
+        return artists;
     }
 
     public void commitAudioChangesToDataBase(Audio audio) {
