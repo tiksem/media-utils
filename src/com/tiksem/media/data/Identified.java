@@ -14,6 +14,10 @@ public class Identified {
     }
 
     public Identified(Identified other) {
+        cloneDataFrom(other);
+    }
+
+    public void cloneDataFrom(Identified other) {
         this.id = other.id;
         this.isLocal = other.isLocal;
     }

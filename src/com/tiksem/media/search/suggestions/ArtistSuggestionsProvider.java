@@ -2,9 +2,12 @@ package com.tiksem.media.search.suggestions;
 
 import com.tiksem.media.AudioDataManager;
 import com.tiksem.media.data.Artist;
+import com.tiksem.media.data.NamedData;
+import com.utils.framework.CollectionUtils;
 import com.utils.framework.suggestions.SuggestionsProvider;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -49,6 +52,7 @@ public class ArtistSuggestionsProvider implements SuggestionsProvider<Artist> {
         if (trackName != null) {
             List<Artist> artistsByTrack =
                     audioDataManager.getSuggestedArtistsByTrackName(trackName, maxCount / 3);
+            artistsByTrack = NamedData.uniqueNames(artistsByTrack);
             result.addAll(artistsByTrack);
             artistByQueryMaxCount -= artistsByTrack.size();
         }

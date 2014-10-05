@@ -4,14 +4,13 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.TextUtils;
-import com.tiksem.media.data.Album;
-import com.tiksem.media.data.Artist;
-import com.tiksem.media.data.Audio;
-import com.tiksem.media.data.PlayList;
+import com.tiksem.media.data.*;
+import com.utils.framework.io.IOUtilities;
 import com.utils.framework.strings.Strings;
 
 import java.io.File;
@@ -337,6 +336,20 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
 
             contentValues.put(MediaStore.Audio.Media.ALBUM_ID, album.getId());
             contentValues.put(MediaStore.Audio.Media.ALBUM, albumName);
+
+            if(album.getArtUrl(ArtSize.LARGE) == null){
+                String audioArtUrl = audio.getArtUrl(ArtSize.LARGE);
+                if(audioArtUrl != null){
+                    try {
+                        Bitmap bitmap = BitmapFactory.decodeStream(
+                                IOUtilities.getBufferedInputStreamFromUrl(audioArtUrl));
+                        setArt(bitmap, album);
+                        audio.cloneArtUrlsFrom(album);
+                    } catch (IOException e) {
+
+                    }
+                }
+            }
         }
 
         if (contentValues.size() > 0) {

@@ -1,5 +1,6 @@
 package com.tiksem.media.data;
 
+import com.utils.framework.CollectionUtils;
 import com.utils.framework.Equals;
 import com.utils.framework.HashCodeProvider;
 import com.utils.framework.collections.cache.GlobalStringCache;
@@ -18,6 +19,11 @@ public class NamedData extends Identified{
     private static final GlobalStringCache STRING_CACHE = GlobalStringCache.getInstance();
     private String name;
 
+    public void cloneDataFrom(NamedData other) {
+        super.cloneDataFrom(other);
+        this.name = other.name;
+    }
+
     public NamedData(NamedData other) {
         super(other);
         this.name = other.name;
@@ -32,6 +38,15 @@ public class NamedData extends Identified{
         };
     }
 
+    public static <T extends NamedData> Equals<T> nameEquals() {
+        return new Equals<T>() {
+            @Override
+            public boolean equals(T a, T b) {
+                return a.getName().equals(b.getName());
+            }
+        };
+    }
+
     public static HashCodeProvider ignoreCaseHashCodeProvider() {
         return new HashCodeProvider() {
             @Override
@@ -39,6 +54,20 @@ public class NamedData extends Identified{
                 return ((NamedData)object).getName().toLowerCase().hashCode();
             }
         };
+    }
+
+    public static HashCodeProvider nameHashCodeProvider() {
+        return new HashCodeProvider() {
+            @Override
+            public int getHashCodeOf(Object object) {
+                return ((NamedData)object).getName().hashCode();
+            }
+        };
+    }
+
+    public static <T extends NamedData> List<T> uniqueNames(List<T> list) {
+        return CollectionUtils.unique(list, NamedData.<T>nameEquals(),
+                NamedData.<T>nameHashCodeProvider());
     }
 
     public NamedData(boolean local) {

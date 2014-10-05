@@ -38,6 +38,18 @@ public class Audio extends ArtCollection{
         this.totalListeningDuration = other.totalListeningDuration;
     }
 
+    public void cloneDataFrom(Audio other) {
+        super.cloneDataFrom(other);
+        this.url = other.url;
+        this.lyrics = other.lyrics;
+        this.albumName = other.albumName;
+        this.albumId = other.albumId;
+        this.artistName = other.artistName;
+        this.artistId = other.artistId;
+        this.duration = other.duration;
+        this.totalListeningDuration = other.totalListeningDuration;
+    }
+
     public static Audio createLocalAudio(long id){
         return new Audio(true, id);
     }
