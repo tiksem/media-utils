@@ -581,7 +581,7 @@ public class InternetSearchEngine {
         }
     }
 
-    public boolean tryFillAlbumName(Audio audio) {
+    public boolean tryFillAlbum(Audio audio) {
         try {
             Album album = getAlbumByArtistNameAndTrackName(audio.getArtistName(), audio.getName());
             if(album == null || !album.getArtistName().equals(audio.getArtistName())){
@@ -590,6 +590,7 @@ public class InternetSearchEngine {
 
             audio.setAlbumName(album.getName());
             audio.setAlbumId(-1);
+            audio.cloneArtUrlsFrom(album);
             return true;
         } catch (IOException e) {
             return false;

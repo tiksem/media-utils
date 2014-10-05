@@ -1,11 +1,13 @@
 package com.tiksem.media.search.suggestions;
 
+import android.text.TextUtils;
 import com.tiksem.media.AudioDataManager;
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.data.Audio;
 import com.utils.framework.suggestions.SuggestionsProvider;
 import com.utils.framework.suggestions.SuggestionsProviderWithHelpWord;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,6 +32,10 @@ public class AudioSuggestionsProvider implements SuggestionsProvider<Audio> {
 
     @Override
     public List<Audio> getSuggestions(String query) {
-        return audioDataManager.getSongs(query, maxCount);
+        if (!TextUtils.isEmpty(query)) {
+            return audioDataManager.getSongs(query, maxCount);
+        } else {
+            return new ArrayList<Audio>();
+        }
     }
 }

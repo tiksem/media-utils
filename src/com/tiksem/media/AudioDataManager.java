@@ -405,4 +405,17 @@ public class AudioDataManager {
     public void commitAudioChangesToDataBase(Audio audio) {
         localAudioDataBase.commitAudioChangesToDataBase(audio);
     }
+
+    public Album getAlbumOfAudioFromInternet(Audio audio) {
+        try {
+            return internetSearchEngine.getAlbumByArtistNameAndTrackName(audio.getArtistName(),
+                    audio.getName());
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    public boolean tryFillAlbum(Audio audio) {
+        return internetSearchEngine.tryFillAlbum(audio);
+    }
 }

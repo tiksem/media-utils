@@ -65,7 +65,7 @@ public class MediaUpdatingService {
     private void updateAlbumOfAudioInternal(Audio audio, final OnAlbumUpdateFinished onComplete) {
         blockIfPaused();
 
-        final boolean success = internetSearchEngine.tryFillAlbumName(audio);
+        final boolean success = internetSearchEngine.tryFillAlbum(audio);
         if(success){
             localAudioDataBase.commitAudioChangesToDataBase(audio);
             updateArtInternal(localAudioDataBase.getAlbumById(audio.getAlbumId()), null);
