@@ -13,6 +13,11 @@ public class Identified {
         isLocal = local;
     }
 
+    public Identified(Identified other) {
+        this.id = other.id;
+        this.isLocal = other.isLocal;
+    }
+
     public long getId() {
         return id;
     }

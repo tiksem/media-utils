@@ -1,7 +1,7 @@
 package com.tiksem.media.search.network;
 
 import com.utils.framework.Reflection;
-import com.utilsframework.android.string.Strings;
+import com.utils.framework.strings.Strings;
 
 import java.util.Map;
 

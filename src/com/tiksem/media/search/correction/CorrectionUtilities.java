@@ -1,6 +1,6 @@
 package com.tiksem.media.search.correction;
 
-import com.utilsframework.android.string.Strings;
+import com.utils.framework.strings.Strings;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

@@ -1,6 +1,6 @@
 package com.tiksem.media.search.parsers;
 
-import com.utilsframework.android.parsers.json.JsonArrayElementParser;
+import com.utils.framework.parsers.json.JsonArrayElementParser;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

@@ -2,7 +2,7 @@ package com.tiksem.media.search.parsers;
 
 import com.tiksem.media.data.Album;
 import com.tiksem.media.data.Audio;
-import com.utilsframework.android.parsers.json.JsonArrayElementParser;
+import com.utils.framework.parsers.json.JsonArrayElementParser;
 import org.json.JSONException;
 import org.json.JSONObject;
 

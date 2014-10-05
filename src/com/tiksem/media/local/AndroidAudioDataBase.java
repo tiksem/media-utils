@@ -12,7 +12,7 @@ import com.tiksem.media.data.Album;
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.data.Audio;
 import com.tiksem.media.data.PlayList;
-import com.utilsframework.android.string.Strings;
+import com.utils.framework.strings.Strings;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -87,6 +87,7 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         audio.setName(title);
         audio.setArtistName(artistName);
         audio.setUrl(url);
+        audio.setArtistId(artistId);
 
         return new Media(audio, artist, album);
     }
@@ -246,19 +247,20 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
 
     @Override
     protected void addArtistToDatabase(Artist artist) {
-        Uri uri = MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI;
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.Audio.Artists.ARTIST, artist.getName());
-        uri = contentResolver.insert(uri, contentValues);
-        long id = Strings.getLongFromString(uri.toString());
+        long id = Collections.max(getArtists(), new Comparator<Artist>() {
+            @Override
+            public int compare(Artist a, Artist b) {
+                return (int) (a.getId() - b.getId());
+            }
+        }).getId() + 1;
         artist.setId(id);
     }
 
     @Override
     protected void addAlbumToDatabase(Album album) {
-        long id = Collections.max(getSongs(), new Comparator<Audio>() {
+        long id = Collections.max(getAlbums(), new Comparator<Album>() {
             @Override
-            public int compare(Audio a, Audio b) {
+            public int compare(Album a, Album b) {
                 return (int) (a.getId() - b.getId());
             }
         }).getId() + 1;
@@ -275,8 +277,8 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
 
     @Override
     public void commitAudioChangesToDataBase(Audio audio) {
-        long id = audio.getId();
-        if(getAudioById(id) != audio){
+        Long id = audio.getId();
+        if(getAudioById(id) == null){
             throw new IllegalArgumentException("Audio is not in database");
         }
 
@@ -306,7 +308,7 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
 
         if(!dataBaseAudio.getArtistName().equals(artistName)){
 
-            long prevArtistId = audio.getArtistId();
+            long prevArtistId = dataBaseAudio.getArtistId();
             List<Audio> prevArtistAudios = getSongsByArtistId(prevArtistId);
             prevArtistAudios.remove(audio);
             if(prevArtistAudios.isEmpty()){
@@ -337,14 +339,14 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
             contentValues.put(MediaStore.Audio.Media.ALBUM, albumName);
         }
 
-        contentResolver.update(uri, contentValues, where, null);
+        if (contentValues.size() > 0) {
+            contentResolver.update(uri, contentValues, where, null);
+        }
     }
 
     @Override
     protected void removeAlbumFromDataBase(long id) {
-        final Uri uri = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI;
-        final String where = MediaStore.Audio.Albums._ID + "=" + id;
-        contentResolver.delete(uri, where, null);
+        new File(generateAlbumArtPath(id)).delete();
     }
 
     @Override

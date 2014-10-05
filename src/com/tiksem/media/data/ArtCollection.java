@@ -24,6 +24,11 @@ public abstract class ArtCollection extends NamedData implements Serializable{
         super(local);
     }
 
+    public ArtCollection(ArtCollection other) {
+        super(other);
+        this.arts = other.arts;
+    }
+
     public String getArtUrl(ArtSize size){
         int index = size.ordinal();
         return arts[index];

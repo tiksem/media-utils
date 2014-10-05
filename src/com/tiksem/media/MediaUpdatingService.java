@@ -8,6 +8,7 @@ import com.tiksem.media.data.*;
 import com.tiksem.media.local.LocalAudioDataBase;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.utils.framework.io.IOUtilities;
+import com.utilsframework.android.threading.HighPriorityRunnable;
 import com.utilsframework.android.threading.OnComplete;
 import com.utilsframework.android.threading.Threading;
 
@@ -37,13 +38,17 @@ public class MediaUpdatingService {
         void onUpdateFinished(Album album, Audio audio);
     }
 
+    public interface OnAlbumUpdateFinished {
+        void onFinish(boolean success);
+    }
+
     public MediaUpdatingService(LocalAudioDataBase localAudioDataBase,
                                 InternetSearchEngine internetSearchEngine) {
         this.localAudioDataBase = localAudioDataBase;
         this.internetSearchEngine = internetSearchEngine;
 
         threadPoolExecutor =
-                new ThreadPoolExecutor(0, 1, 50000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(),
+                new ThreadPoolExecutor(0, 1, 50000, TimeUnit.MILLISECONDS, Threading.highPriorityBlockingQueue(),
                         Threading.lowPriorityThreadFactory());
     }
 
@@ -57,62 +62,54 @@ public class MediaUpdatingService {
         }
     }
 
-    private void updateAlbumOfAudioInternal(Audio audio, final OnComplete onComplete) {
+    private void updateAlbumOfAudioInternal(Audio audio, final OnAlbumUpdateFinished onComplete) {
         blockIfPaused();
 
-        if(audio.getAlbumId() > 0){
-            return;
-        }
-
-        if(internetSearchEngine.tryFillAlbumName(audio)){
+        final boolean success = internetSearchEngine.tryFillAlbumName(audio);
+        if(success){
             localAudioDataBase.commitAudioChangesToDataBase(audio);
             updateArtInternal(localAudioDataBase.getAlbumById(audio.getAlbumId()), null);
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (onComplete != null) {
-                        onComplete.onFinish();
-                    }
-                }
-            });
         }
-    }
 
-    public void updateAlbumOfAudio(final Audio audio, final OnAlbumOfAudioUpdated onAlbumOfAudioUpdated) {
-        threadPoolExecutor.execute(new Runnable() {
+        handler.post(new Runnable() {
             @Override
             public void run() {
-                updateAlbumOfAudioInternal(audio, new OnComplete() {
-                    @Override
-                    public void onFinish() {
-                        if(onAlbumOfAudioUpdated != null){
-                            onAlbumOfAudioUpdated.onUpdateFinished(
-                                    localAudioDataBase.getAlbumById(audio.getAlbumId()), audio);
-                        }
-                    }
-                });
+                if (onComplete != null) {
+                    onComplete.onFinish(success);
+                }
+            }
+        });
+    }
+
+    public void updateAlbumOfAudio(final Audio audio, final OnAlbumUpdateFinished onFinish) {
+        threadPoolExecutor.execute(new HighPriorityRunnable() {
+            @Override
+            public void run() {
+                updateAlbumOfAudioInternal(audio, onFinish);
             }
         });
     }
 
     public void updateAlbumsOfAudios(final OnAlbumOfAudioUpdated onAlbumOfAudioUpdated) {
-        threadPoolExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                List<Audio> audios = localAudioDataBase.getSongs();
-                for(final Audio audio : audios){
-                    updateAlbumOfAudioInternal(audio, new OnComplete() {
-                        @Override
-                        public void onFinish() {
-                            if(onAlbumOfAudioUpdated != null){
-                                onAlbumOfAudioUpdated.onUpdateFinished(
-                                        localAudioDataBase.getAlbumById(audio.getAlbumId()), audio);
+        List<Audio> audios = localAudioDataBase.getSongs();
+        for(final Audio audio : audios){
+            if (audio.getAlbumId() <= 0) {
+                threadPoolExecutor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateAlbumOfAudioInternal(audio, new OnAlbumUpdateFinished() {
+                            @Override
+                            public void onFinish(boolean success) {
+                                if(success && onAlbumOfAudioUpdated != null){
+                                    onAlbumOfAudioUpdated.onUpdateFinished(
+                                            localAudioDataBase.getAlbumById(audio.getAlbumId()), audio);
+                                }
                             }
-                        }
-                    });
-                }
+                        });
+                    }
+                });
             }
-        });
+        }
     }
 
     private void updateArtInternal(final ArtCollection artCollection, final OnComplete onComplete) {

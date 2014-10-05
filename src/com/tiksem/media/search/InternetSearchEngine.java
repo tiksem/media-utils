@@ -7,13 +7,12 @@ import com.tiksem.media.search.parsers.LastFmCorrectedAudioInfoParser;
 import com.tiksem.media.search.parsers.LastFmResultParser;
 import com.tiksem.media.search.parsers.VkResultParser;
 import com.utils.framework.CollectionUtils;
-import com.utils.framework.Equals;
 import com.utils.framework.collections.cache.*;
 import com.utils.framework.collections.queue.PageLazyQueue;
 import com.utils.framework.io.TextLoader;
 import com.utils.framework.io.TextLoaderConfig;
 import com.utilsframework.android.ErrorListener;
-import com.utilsframework.android.string.Strings;
+import com.utils.framework.strings.Strings;
 import org.json.JSONException;
 
 import java.io.IOException;

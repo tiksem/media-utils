@@ -5,8 +5,8 @@ import com.tiksem.media.data.Artist;
 import com.tiksem.media.data.Audio;
 import com.tiksem.media.search.SearchResult;
 import com.utils.framework.Primitive;
-import com.utilsframework.android.parsers.json.ExtendedJSONObject;
-import com.utilsframework.android.parsers.json.JsonArrayElementParser;
+import com.utils.framework.parsers.json.ExtendedJSONObject;
+import com.utils.framework.parsers.json.JsonArrayElementParser;
 import org.json.JSONException;
 import org.json.JSONObject;
 

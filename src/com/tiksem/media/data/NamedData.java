@@ -18,6 +18,11 @@ public class NamedData extends Identified{
     private static final GlobalStringCache STRING_CACHE = GlobalStringCache.getInstance();
     private String name;
 
+    public NamedData(NamedData other) {
+        super(other);
+        this.name = other.name;
+    }
+
     public static <T extends NamedData> Equals<T> equalsIgnoreCase() {
         return new Equals<T>() {
             @Override

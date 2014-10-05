@@ -133,8 +133,7 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
     }
 
     private void addAlbumToArtist(Album album, Artist artist){
-        Long albumId = (long)album.getId();
-        Long artistId = (long)artist.getId();
+        Long artistId = artist.getId();
         List<Album> albums = albumsByArtistId.get(artistId);
         if(albums == null){
             albums = new ArrayList<Album>();
@@ -144,9 +143,14 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         albums.add(album);
     }
 
-    private void removeAlbumFromArtist(long albumId, long artistId){
+    private void removeAlbumFromArtist(final long albumId, long artistId){
         List<Album> albums = albumsByArtistId.get(artistId);
-        albums.remove(albumId);
+        CollectionUtils.removeAll(albums, new Predicate<Album>() {
+            @Override
+            public boolean check(Album item) {
+                return item.getId() == albumId;
+            }
+        });
     }
 
     private boolean checkAlbumValidationAndWriteItIfSuccess(Artist artist, Album album){
@@ -202,7 +206,7 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
         }
 
         albumsById.remove(albumId);
-        //removeAlbumFromDataBase(albumId);
+        removeAlbumFromDataBase(albumId);
     }
 
     protected final void executeInitPlayListsIfNeed(){
@@ -296,7 +300,8 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
     private <T> List<T> getElementsOf(long id, Map<Long,List<T>> from){
         List<T> elements = from.get(id);
         if(elements == null){
-            return Collections.emptyList();
+            elements = new ArrayList<T>();
+            from.put(id, elements);
         }
 
         return elements;

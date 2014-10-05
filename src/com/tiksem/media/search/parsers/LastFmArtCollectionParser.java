@@ -2,7 +2,7 @@ package com.tiksem.media.search.parsers;
 
 import com.tiksem.media.data.ArtCollection;
 import com.tiksem.media.data.ArtSize;
-import com.utilsframework.android.parsers.json.JsonArrayElementParser;
+import com.utils.framework.parsers.json.JsonArrayElementParser;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

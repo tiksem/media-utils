@@ -13,6 +13,7 @@ import com.utils.framework.collections.NavigationList;
 import com.utils.framework.collections.SetWithPredicates;
 import com.utilsframework.android.ErrorListener;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -59,6 +60,22 @@ public class AudioDataManager {
         return songs;
     }
 
+    public List<Audio> getSongs(String query, int maxCount){
+        if(maxCount == 0){
+            return new ArrayList<Audio>();
+        }
+
+        if(maxCount < 0){
+            throw new IllegalArgumentException();
+        }
+
+        try {
+            return internetSearchEngine.searchAudios(query, maxCount, 0).elements;
+        } catch (IOException e) {
+            return new ArrayList<Audio>();
+        }
+    }
+
     public List<PlayList> getPlayLists(){
         List<PlayList> result = new ArrayList<PlayList>();
 
@@ -92,6 +109,22 @@ public class AudioDataManager {
 
     public List<Album> getAlbums(){
         return localAudioDataBase.getAlbums();
+    }
+
+    public List<Album> getAlbums(String query, int maxCount){
+        if(maxCount == 0){
+            return new ArrayList<Album>();
+        }
+
+        if(maxCount < 0){
+            throw new IllegalArgumentException();
+        }
+
+        try {
+            return internetSearchEngine.getAlbumsByName(query, maxCount, 0).elements;
+        } catch (IOException e) {
+            return new ArrayList<Album>();
+        }
     }
 
     public NavigationList<Album> getAlbums(String query){
@@ -176,6 +209,22 @@ public class AudioDataManager {
 
     public List<Artist> getArtists(){
         return localAudioDataBase.getArtists();
+    }
+
+    public List<Artist> getArtists(String query, int count){
+        if(count == 0){
+            return new ArrayList<Artist>();
+        }
+
+        if(count < 0){
+            throw new IllegalArgumentException();
+        }
+
+        try {
+            return internetSearchEngine.searchArtists(query, count, 0).elements;
+        } catch (IOException e) {
+            return new ArrayList<Artist>();
+        }
     }
 
     public NavigationList<Artist> getArtists(String query){
@@ -351,5 +400,9 @@ public class AudioDataManager {
         }
 
         return new ArrayList<Artist>(artistsSet);
+    }
+
+    public void commitAudioChangesToDataBase(Audio audio) {
+        localAudioDataBase.commitAudioChangesToDataBase(audio);
     }
 }
