@@ -58,6 +58,7 @@ public class ArtistSuggestionsProvider implements SuggestionsProvider<Artist> {
         }
 
         List<Artist> artistsByQuery = audioDataManager.getArtists(query, artistByQueryMaxCount);
+        artistsByQuery = NamedData.uniqueNames(artistsByQuery);
         result.addAll(artistsByQuery);
         return result;
     }

@@ -300,7 +300,7 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         String artistName = audio.getArtistName();
         Artist artist = getArtistByName(artistName);
         if(artist == null){
-            throw new IllegalArgumentException("Artist is not registered in database");
+            artist = addArtist(artistName);
         }
 
         long artistId = artist.getId();
@@ -413,5 +413,31 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
     protected String saveArtistArtToDataBase(Bitmap bitmap, long artistId) {
         String path = generateArtistArtPath(artistId);
         return saveArtToDatabase(path, bitmap);
+    }
+
+    private boolean hasTrueArt(Audio audio) {
+        return generateAlbumArtPath(audio.getAlbumId()).equals(audio.getArtUrl(ArtSize.LARGE));
+    }
+
+    private boolean hasTrueArt(Album album) {
+        return generateAlbumArtPath(album.getId()).equals(album.getArtUrl(ArtSize.LARGE));
+    }
+
+    private boolean hasTrueArt(Artist artist) {
+        return generateArtistArtPath(artist.getId()).equals(artist.getArtUrl(ArtSize.LARGE));
+    }
+
+    @Override
+    public boolean hasTrueArt(ArtCollection artCollection) {
+        if(artCollection instanceof Audio){
+            return hasTrueArt((Audio) artCollection);
+        } else if(artCollection instanceof Album) {
+            return hasTrueArt((Album) artCollection);
+        } else if(artCollection instanceof Artist) {
+            return hasTrueArt((Artist) artCollection);
+        } else {
+            throw new IllegalArgumentException("ArtCollection with type " +
+                    artCollection.getClass().getSimpleName() + " is not supported");
+        }
     }
 }

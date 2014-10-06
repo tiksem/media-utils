@@ -49,4 +49,5 @@ public interface LocalAudioDataBase {
     public void setAlbumArt(Bitmap bitmap, long albumId);
     public void setArtistArt(Bitmap bitmap, long artistId);
     public void setArt(Bitmap bitmap, ArtCollection artCollection);
+    public boolean hasTrueArt(ArtCollection artCollection);
 }

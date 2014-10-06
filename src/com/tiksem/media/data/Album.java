@@ -6,7 +6,7 @@ public class Album extends ArtCollection{
     private static final GlobalStringCache STRING_CACHE = GlobalStringCache.getInstance();
 
     private String artistName;
-    private Object artistId;
+    private long artistId = -1;
     private String mbid;
 
     private Album(long id, boolean local) {
@@ -45,7 +45,7 @@ public class Album extends ArtCollection{
         return artistId;
     }
 
-    public void setArtistId(Object artistId) {
+    public void setArtistId(long artistId) {
         this.artistId = artistId;
     }
 
@@ -65,7 +65,7 @@ public class Album extends ArtCollection{
 
         Album album = (Album) o;
 
-        if (artistId != null ? !artistId.equals(album.artistId) : album.artistId != null) return false;
+        if (artistId != album.artistId) return false;
         if (artistName != null ? !artistName.equals(album.artistName) : album.artistName != null) return false;
         if (mbid != null ? !mbid.equals(album.mbid) : album.mbid != null) return false;
 
@@ -76,7 +76,7 @@ public class Album extends ArtCollection{
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (artistName != null ? artistName.hashCode() : 0);
-        result = 31 * result + (artistId != null ? artistId.hashCode() : 0);
+        result = 31 * result + (int) (artistId ^ (artistId >>> 32));
         result = 31 * result + (mbid != null ? mbid.hashCode() : 0);
         return result;
     }

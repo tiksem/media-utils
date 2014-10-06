@@ -145,6 +145,22 @@ public class AudioDataManager {
         }
     }
 
+    public List<Audio> getTracksOfArtist(String artistName, int maxCount){
+        if(maxCount == 0){
+            return new ArrayList<Audio>();
+        }
+
+        if(maxCount < 0){
+            throw new IllegalArgumentException();
+        }
+
+        try {
+            return internetSearchEngine.getSongsOfArtist(artistName, maxCount, 0).elements;
+        } catch (IOException e) {
+            return new ArrayList<Audio>();
+        }
+    }
+
     public NavigationList<Audio> getTracksOfArtist(Artist artist){
         if(artist.isLocal()){
             List<Audio> local = localAudioDataBase.getSongsOfArtist(artist);

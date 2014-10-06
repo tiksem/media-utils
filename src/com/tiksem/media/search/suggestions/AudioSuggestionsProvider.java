@@ -4,6 +4,7 @@ import android.text.TextUtils;
 import com.tiksem.media.AudioDataManager;
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.data.Audio;
+import com.tiksem.media.data.NamedData;
 import com.utils.framework.suggestions.SuggestionsProvider;
 import com.utils.framework.suggestions.SuggestionsProviderWithHelpWord;
 
@@ -20,6 +21,15 @@ import java.util.List;
 public class AudioSuggestionsProvider implements SuggestionsProvider<Audio> {
     private AudioDataManager audioDataManager;
     private int maxCount;
+    private String artistName;
+
+    public String getArtistName() {
+        return artistName;
+    }
+
+    public void setArtistName(String artistName) {
+        this.artistName = artistName;
+    }
 
     public AudioSuggestionsProvider(AudioDataManager audioDataManager, int maxCount) {
         if(maxCount < 1){
@@ -32,10 +42,20 @@ public class AudioSuggestionsProvider implements SuggestionsProvider<Audio> {
 
     @Override
     public List<Audio> getSuggestions(String query) {
-        if (!TextUtils.isEmpty(query)) {
-            return audioDataManager.getSongs(query, maxCount);
-        } else {
-            return new ArrayList<Audio>();
+        List<Audio> result = new ArrayList<Audio>();
+        int artistByQueryMaxCount = maxCount;
+
+        if (artistName != null) {
+            List<Audio> audiosByArtist =
+                    audioDataManager.getTracksOfArtist(artistName, maxCount / 3);
+            audiosByArtist = NamedData.uniqueNames(audiosByArtist);
+            result.addAll(audiosByArtist);
+            artistByQueryMaxCount -= audiosByArtist.size();
         }
+
+        List<Audio> audiosByQuery = audioDataManager.getSongs(query, artistByQueryMaxCount);
+        audiosByQuery = NamedData.uniqueNames(audiosByQuery);
+        result.addAll(audiosByQuery);
+        return result;
     }
 }

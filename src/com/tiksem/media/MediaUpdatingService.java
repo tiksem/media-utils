@@ -117,7 +117,9 @@ public class MediaUpdatingService {
 
         if(artCollection.getArtUrl(ArtSize.SMALL) != null && artCollection.getArtUrl(ArtSize.MEDIUM) != null &&
                 artCollection.getArtUrl(ArtSize.LARGE) != null){
-            return;
+            if(localAudioDataBase.hasTrueArt(artCollection)){
+                return;
+            }
         }
 
         if (internetSearchEngine.tryFillAlbumArts(artCollection)) {
