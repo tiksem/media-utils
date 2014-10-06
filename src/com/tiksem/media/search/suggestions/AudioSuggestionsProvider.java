@@ -42,20 +42,47 @@ public class AudioSuggestionsProvider implements SuggestionsProvider<Audio> {
 
     @Override
     public List<Audio> getSuggestions(String query) {
-        List<Audio> result = new ArrayList<Audio>();
-        int artistByQueryMaxCount = maxCount;
+        List<Audio> audiosByArtist = null;
 
         if (artistName != null) {
-            List<Audio> audiosByArtist =
-                    audioDataManager.getTracksOfArtist(artistName, maxCount / 3);
+            audiosByArtist =
+                    audioDataManager.getSongs(artistName + " " + query, maxCount);
             audiosByArtist = NamedData.uniqueNames(audiosByArtist);
-            result.addAll(audiosByArtist);
-            artistByQueryMaxCount -= audiosByArtist.size();
         }
 
-        List<Audio> audiosByQuery = audioDataManager.getSongs(query, artistByQueryMaxCount);
+        List<Audio> audiosByQuery = audioDataManager.getSongs(query, maxCount);
         audiosByQuery = NamedData.uniqueNames(audiosByQuery);
-        result.addAll(audiosByQuery);
-        return result;
+
+        if(audiosByArtist != null){
+            int audiosByArtistCount = maxCount / 3;
+            int audiosByQueryCount = maxCount - audiosByArtistCount;
+
+            if(audiosByQuery.size() < audiosByQueryCount){
+                audiosByArtistCount = maxCount - audiosByQuery.size();
+            }
+
+            if(audiosByArtist.size() < audiosByArtistCount){
+                audiosByQueryCount = maxCount - audiosByArtist.size();
+            }
+
+            audiosByArtistCount = Math.min(audiosByArtistCount, audiosByArtist.size());
+            audiosByQueryCount = Math.min(audiosByQueryCount, audiosByQuery.size());
+
+            if(audiosByQuery.size() != audiosByQueryCount){
+                audiosByQuery = audiosByQuery.subList(0, audiosByQueryCount);
+            }
+
+            if(audiosByArtist.size() != audiosByArtistCount){
+                audiosByArtist = audiosByArtist.subList(0, audiosByArtistCount);
+            }
+
+            ArrayList<Audio> result = new ArrayList<Audio>();
+            result.addAll(audiosByArtist);
+            result.addAll(audiosByQuery);
+            return result;
+
+        } else {
+            return audiosByQuery;
+        }
     }
 }
