@@ -127,7 +127,9 @@ public class MediaUpdatingService {
             try {
                 Bitmap bitmap = BitmapFactory.decodeStream(
                         IOUtilities.getBufferedInputStreamFromUrl(largeArtPath));
-                localAudioDataBase.setArt(bitmap, artCollection);
+                if (bitmap != null) {
+                    localAudioDataBase.setArt(bitmap, artCollection);
+                }
 
                 if(onComplete != null){
                     handler.post(new Runnable() {
