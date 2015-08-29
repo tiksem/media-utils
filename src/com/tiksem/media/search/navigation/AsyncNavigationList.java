@@ -3,7 +3,9 @@ package com.tiksem.media.search.navigation;
 import android.os.AsyncTask;
 import android.os.Handler;
 import com.tiksem.media.search.SearchResult;
+import com.utils.framework.OnError;
 import com.utils.framework.collections.NavigationList;
+import com.utils.framework.collections.OnLoadingFinished;
 import com.utilsframework.android.ErrorListener;
 
 import java.util.Collections;
@@ -27,8 +29,8 @@ public abstract class AsyncNavigationList<T> extends NavigationList<T> {
     }
 
     @Override
-    protected void getElementsOfPage(final int pageNumber,
-                                     final OnPageLoadingFinished<T> onPageLoadingFinished)
+    public void getElementsOfPage(final int pageNumber,
+                                  final OnLoadingFinished<T> onPageLoadingFinished, OnError onError)
     {
         new AsyncTask<Void, Void, SearchResult<T>>(){
             @Override

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
+import com.example.media_utils.R;
 import com.tiksem.media.data.Audio;
 import com.utils.framework.Cancelable;
 import com.utils.framework.CancelableUtils;
@@ -15,7 +16,7 @@ import com.utils.framework.collections.SelectedItemPositionManager;
 import com.utilsframework.android.Pauseable;
 import com.utilsframework.android.Services;
 import com.utilsframework.android.media.MediaPlayerProgressUpdater;
-import com.utilsframework.android.view.UiMessages;
+import com.utilsframework.android.view.Toasts;
 
 import java.io.IOException;
 import java.util.*;
@@ -66,7 +67,7 @@ public class AudioPlayerService extends Service {
     }
 
     private void onPlayAudioFailed() {
-        UiMessages.error(this, "Broken audio!");
+        Toasts.error(this, R.string.broken_audio);
         binder.playNext();
     }
 

@@ -3,6 +3,7 @@ package com.tiksem.media.search.network;
 import com.utils.framework.Reflection;
 import com.utils.framework.strings.Strings;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 
 /**
@@ -56,8 +57,7 @@ public class EchoNestSongsSearchParams {
     public Map<String,Object> toMap(){
         return Reflection.objectToPropertyMap(this, new Reflection.ParamTransformer() {
             @Override
-            public Object transform(String paramName, Object value) {
-
+            public Object transform(Field field, Object value) {
                 if (value.getClass() == Sort.class) {
                     String valueAsString = value.toString();
                     int index = valueAsString.lastIndexOf('_');
