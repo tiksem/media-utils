@@ -3,8 +3,8 @@ package com.tiksem.media.local;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import com.tiksem.media.data.*;
-import com.utils.framework.CollectionUtils;
-import com.utils.framework.Predicate;
+import com.utils.framework.*;
+import com.utils.framework.Objects;
 import com.utils.framework.collections.map.ListValuesMultiMap;
 import com.utils.framework.collections.map.MultiMap;
 import com.utilsframework.android.threading.OnComplete;
@@ -239,7 +239,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
                     String aArtUrl = a.getArtUrl(ArtSize.SMALL);
                     String bArtUrl = b.getArtUrl(ArtSize.SMALL);
 
-                    if(aArtUrl == bArtUrl || (aArtUrl != null && bArtUrl != null)){
+                    if(Objects.equals(aArtUrl, bArtUrl) || (aArtUrl != null && bArtUrl != null)){
                         Collection<Audio> aSongs = songsByAlbumId.get(a.getId());
                         Collection<Audio> bSongs = songsByAlbumId.get(b.getId());
                         int aSize = aSongs == null ? 0 : aSongs.size();
