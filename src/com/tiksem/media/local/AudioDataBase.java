@@ -1,6 +1,7 @@
 package com.tiksem.media.local;
 
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import com.tiksem.media.data.*;
 
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.List;
  * Time: 3:04
  * To change this template use File | Settings | File Templates.
  */
-public interface LocalAudioDataBase {
+public interface AudioDataBase {
     public List<Audio> getSongs();
 
     Artist getArtistById(long id);
@@ -45,7 +46,7 @@ public interface LocalAudioDataBase {
         void onFinished();
     }
 
-    public void startAlbumArtsUpdating(OnArtsUpdatingFinished onArtsUpdatingFinishedListener);
+    public AsyncTask startAlbumArtsUpdating(OnArtsUpdatingFinished onArtsUpdatingFinishedListener);
     public void setAlbumArt(Bitmap bitmap, long albumId);
     public void setArtistArt(Bitmap bitmap, long artistId);
     public void setArt(Bitmap bitmap, ArtCollection artCollection);

@@ -3,7 +3,7 @@ package com.tiksem.media.search.correction;
 import android.os.Handler;
 import com.tiksem.media.data.Audio;
 import com.tiksem.media.data.Identified;
-import com.tiksem.media.local.LocalAudioDataBase;
+import com.tiksem.media.local.AudioDataBase;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.network.CorrectedTrackInfo;
 import com.utilsframework.android.db.RandomAccessDataBase;
@@ -27,7 +27,7 @@ public class AudioDatabaseCorrectionService{
 
     private static final int PAUSE_UPDATING_INTERVAL = 100;
 
-    private LocalAudioDataBase audioDataBase;
+    private AudioDataBase audioDataBase;
     private InternetSearchEngine internetSearchEngine;
     private RandomAccessDatabaseFactory databaseFactory;
     private Executor backgroundTaskExecutor;
@@ -57,7 +57,7 @@ public class AudioDatabaseCorrectionService{
 
     }
 
-    public static void init(LocalAudioDataBase audioDataBase,
+    public static void init(AudioDataBase audioDataBase,
                             InternetSearchEngine internetSearchEngine,
                             RandomAccessDatabaseFactory databaseFactory,
                             Executor threadPoolExecutor){

@@ -1,12 +1,12 @@
 package com.tiksem.media.local;
 
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import com.tiksem.media.data.*;
 import com.utils.framework.CollectionUtils;
 import com.utils.framework.Predicate;
 import com.utils.framework.collections.map.ListValuesMultiMap;
 import com.utils.framework.collections.map.MultiMap;
-import com.utils.framework.collections.map.SetValuesHashMultiMap;
 import com.utilsframework.android.threading.OnComplete;
 import com.utilsframework.android.threading.Threading;
 
@@ -19,7 +19,7 @@ import java.util.*;
  * Time: 19:09
  * To change this template use File | Settings | File Templates.
  */
-public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
+public abstract class MappedLocalAudioDataBase implements AudioDataBase {
     private Map<Long,Audio> songsById;
     private Map<Long,Artist> artistsById = new LinkedHashMap<Long, Artist>();
     private Map<Long,Album> albumsById = new LinkedHashMap<Long, Album>();
@@ -404,7 +404,7 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
     }
 
     @Override
-    public void startAlbumArtsUpdating(final OnArtsUpdatingFinished onArtsUpdatingFinishedListener) {
+    public AsyncTask startAlbumArtsUpdating(final OnArtsUpdatingFinished onArtsUpdatingFinishedListener) {
         OnComplete onComplete = new OnComplete() {
             @Override
             public void onFinish() {
@@ -414,7 +414,7 @@ public abstract class MappedLocalAudioDataBase implements LocalAudioDataBase{
             }
         };
 
-        Threading.runOnBackground(new Runnable() {
+        return Threading.runOnBackground(new Runnable() {
             @Override
             public void run() {
                 albumArtUpdateAction();

@@ -5,7 +5,7 @@ import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.util.Log;
 import com.tiksem.media.data.*;
-import com.tiksem.media.local.LocalAudioDataBase;
+import com.tiksem.media.local.AudioDataBase;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.utils.framework.io.IOUtilities;
 import com.utilsframework.android.threading.HighPriorityRunnable;
@@ -21,7 +21,7 @@ import java.util.concurrent.*;
  */
 public class MediaUpdatingService {
     private final ThreadPoolExecutor threadPoolExecutor;
-    private LocalAudioDataBase localAudioDataBase;
+    private AudioDataBase localAudioDataBase;
     private InternetSearchEngine internetSearchEngine;
     private volatile boolean isPaused = false;
     private Handler handler = new Handler();
@@ -42,7 +42,7 @@ public class MediaUpdatingService {
         void onFinish(boolean success);
     }
 
-    public MediaUpdatingService(LocalAudioDataBase localAudioDataBase,
+    public MediaUpdatingService(AudioDataBase localAudioDataBase,
                                 InternetSearchEngine internetSearchEngine) {
         this.localAudioDataBase = localAudioDataBase;
         this.internetSearchEngine = internetSearchEngine;

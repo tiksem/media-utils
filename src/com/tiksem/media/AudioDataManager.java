@@ -2,23 +2,17 @@ package com.tiksem.media;
 
 import android.text.TextUtils;
 import com.tiksem.media.data.*;
-import com.tiksem.media.local.LocalAudioDataBase;
+import com.tiksem.media.local.AudioDataBase;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.navigation.*;
-import com.utils.framework.CollectionUtils;
-import com.utils.framework.Equals;
-import com.utils.framework.Predicate;
 import com.utils.framework.algorithms.Search;
 import com.utils.framework.collections.NavigationList;
-import com.utils.framework.collections.SetWithPredicates;
 import com.utilsframework.android.ErrorListener;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.concurrent.Executor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -32,7 +26,7 @@ public class AudioDataManager {
     private static final float SONGS_YOU_MAY_LIKE_COUNT_COEFFICIENT = 2.0f;
     private static final int GENRES_OF_COUNTRY_MAX_COUNT = 150;
 
-    private LocalAudioDataBase localAudioDataBase;
+    private AudioDataBase localAudioDataBase;
     private InternetSearchEngine internetSearchEngine;
 
     private ErrorListener errorListener = new ErrorListener() {
@@ -42,7 +36,7 @@ public class AudioDataManager {
         }
     };
 
-    public AudioDataManager(LocalAudioDataBase localAudioDataBase, InternetSearchEngine internetSearchEngine) {
+    public AudioDataManager(AudioDataBase localAudioDataBase, InternetSearchEngine internetSearchEngine) {
         this.localAudioDataBase = localAudioDataBase;
         this.internetSearchEngine = internetSearchEngine;
     }
@@ -346,7 +340,7 @@ public class AudioDataManager {
         return new MultiTagsArtistNavigationList(params);
     }
 
-    public void startAlbumArtsUpdating(LocalAudioDataBase.OnArtsUpdatingFinished onArtsUpdatingFinished){
+    public void startAlbumArtsUpdating(AudioDataBase.OnArtsUpdatingFinished onArtsUpdatingFinished){
         localAudioDataBase.startAlbumArtsUpdating(onArtsUpdatingFinished);
     }
 
