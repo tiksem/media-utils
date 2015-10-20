@@ -338,6 +338,14 @@ public class AudioPlayerService extends Service {
         public int getDuration() {
             return AudioPlayerService.this.getDuration();
         }
+
+        public int getPosition() {
+            return position;
+        }
+
+        public List<String> getPlayList() {
+            return playList;
+        }
     }
 
     @Override
