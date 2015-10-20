@@ -3,23 +3,18 @@ package com.tiksem.media.playback;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.MediaPlayer;
-import android.os.Binder;
 import android.os.IBinder;
-import com.example.media_utils.R;
-import com.tiksem.media.data.Audio;
-import com.utils.framework.Cancelable;
-import com.utils.framework.CancelableUtils;
-import com.utils.framework.collections.ListSelectedItemPositionManager;
 import com.utils.framework.collections.ListWithSelectedItem;
-import com.utils.framework.collections.SelectedItemPositionManager;
-import com.utilsframework.android.Pauseable;
 import com.utilsframework.android.Services;
 import com.utilsframework.android.media.MediaPlayerProgressUpdater;
-import com.utilsframework.android.view.Toasts;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * User: Tikhonenko.S
@@ -27,275 +22,356 @@ import java.util.*;
  * Time: 22:19
  */
 public class AudioPlayerService extends Service {
-    private PlayerBinder binder = new PlayerBinder();
-    private SelectedItemPositionManager<Audio> selectedItemPositionManager;
-    private MediaPlayer mediaPlayer = new MediaPlayer();
-    private boolean isPaused = false;
-    private AudioUrlsProvider audioUrlsProvider = new LocalAudioUrlsProvider();
-    private Iterator<String> urlsIterator;
-    private Object playListTag;
+    private MediaPlayer mediaPlayer;
+    private Status status = Status.IDLE;
+    private List<String> playList;
+    private int position;
+    private MediaPlayerProgressUpdater mediaPlayerProgressUpdater;
+    private Set<PositionChangedListener> positionChangedListeners = new LinkedHashSet<>();
+    private Set<PlaybackErrorListener> errorListeners = new LinkedHashSet<>();
+    private Set<StateChangedListener> stateListeners = new LinkedHashSet<>();
+    private Set<ProgressChangedListener> progressChangedListeners;
 
-    private Queue<Cancelable> audioPlayingOperations = new ArrayDeque<Cancelable>();
-
-    private Set<PlayBackListener> playBackListeners = new LinkedHashSet<PlayBackListener>();
-
-    private MediaPlayerProgressUpdater mediaPlayerProgressUpdater = new MediaPlayerProgressUpdater() {
-        @Override
-        protected void onProgressChanged(long progress, long max) {
-            callProgressChangedListeners(progress, max);
+    void play(List<String> urls, int position) {
+        if (urls == null) {
+            throw new NullPointerException();
         }
-    };
 
-    public interface PlayBackListener {
-        void onAudioPlayingStarted();
-        void onAudioPlayingComplete();
-        void onAudioPlayingPaused();
-        void onAudioPlayingResumed();
-        void onProgressChanged(long progress, long max);
+        playList = urls;
+        this.position = position;
+
+        tryPlayCurrentUrl();
     }
 
-    private void onPlayAudioUrlFailed() {
-        tryPlayNextAudioUrl();
-    }
-
-    private void onPlayAudioUrlSuccess() {
-        urlsIterator = null;
-
-        for (PlayBackListener listener : playBackListeners) {
-            listener.onAudioPlayingStarted();
+    private void onPositionChanged() {
+        for (PositionChangedListener listener : positionChangedListeners) {
+            listener.onPositionChanged();
         }
     }
 
-    private void onPlayAudioFailed() {
-        Toasts.error(this, R.string.broken_audio);
-        binder.playNext();
-    }
+    private void goNext() {
+        int size = playList.size();
+        if (size >= 2) {
+            if (position < size - 1) {
+                position++;
+            } else {
+                position = 0;
+            }
 
-    private void callProgressChangedListeners(long progress, long max) {
-        for (PlayBackListener listener : playBackListeners) {
-            listener.onProgressChanged(progress, max);
+            onPositionChanged();
         }
     }
 
-    private void tryPlayNextAudioUrl() {
-        if(urlsIterator == null){
-            return;
-        }
+    private void goPrev() {
+        int size = playList.size();
+        if (size >= 2) {
+            if (position == 0) {
+                position = size - 1;
+            } else {
+                position--;
+            }
 
-        if(!urlsIterator.hasNext()){
-            onPlayAudioFailed();
-            return;
+            onPositionChanged();
         }
+    }
 
-        String url = urlsIterator.next();
-        mediaPlayer.reset();
+    private void onError(String url) {
+        for (PlaybackErrorListener listener : errorListeners) {
+            listener.onError(url);
+        }
+    }
+
+    private void tryPlayCurrentUrl() {
+        final String url = playList.get(position);
         try {
+            setStatus(Status.PREPARING);
+            mediaPlayer.reset();
             mediaPlayer.setDataSource(url);
+
+            mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                @Override
+                public boolean onError(MediaPlayer mp, int what, int extra) {
+                    onPlayingUrlError(url);
+                    return true;
+                }
+            });
+
+            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    playNext();
+                }
+            });
+
+            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    setStatus(Status.PLAYING);
+                    mp.start();
+                }
+            });
+            mediaPlayer.prepareAsync();
+
         } catch (IOException e) {
-            onPlayAudioUrlFailed();
+            onPlayingUrlError(url);
         }
-
-        mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-            @Override
-            public boolean onError(MediaPlayer mp, int what, int extra) {
-                onPlayAudioUrlFailed();
-                return true;
-            }
-        });
-
-        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                    @Override
-                    public void onCompletion(MediaPlayer mp) {
-                        for (PlayBackListener listener : playBackListeners) {
-                            listener.onAudioPlayingComplete();
-                        }
-                        binder.playNext();
-                    }
-                });
-
-                mediaPlayer.start();
-                onPlayAudioUrlSuccess();
-            }
-        });
-
-        mediaPlayer.prepareAsync();
     }
 
-    private void onUrlsReady(Iterable<String> audios) {
-        urlsIterator = audios.iterator();
-        tryPlayNextAudioUrl();
+    private void onPlayingUrlError(String url) {
+        onError(url);
+        goNext();
+        tryPlayCurrentUrl();
     }
 
-    private void playAudio(Audio audio) {
-        isPaused = false;
-        mediaPlayer.reset();
+    void changePlayList(List<String> newPlayListUrls) {
+        if (playList == null) {
+            throw new IllegalStateException("Unable to change playlist, no playlist set. Call play before");
+        }
 
-        CancelableUtils.cancelAllAndClearQueue(audioPlayingOperations);
+        String currentPlayingUrl = playList.get(position);
+        int newPosition = newPlayListUrls.indexOf(currentPlayingUrl);
+        if (newPosition < 0) {
+            throw new IllegalArgumentException("new playList should contain current playing url");
+        }
 
-        Cancelable urlsGettingOperation = audioUrlsProvider.getUrls(audio, new AudioUrlsProvider.OnResult() {
-            @Override
-            public void onResult(Iterable<String> urls) {
-                onUrlsReady(urls);
-            }
-        });
-        audioPlayingOperations.add(urlsGettingOperation);
+        position = newPosition;
+        onPositionChanged();
+        playList = newPlayListUrls;
     }
 
-    public class PlayerBinder extends Binder implements Pauseable {
-        public void setAudioUrlsProvider(AudioUrlsProvider audioUrlsProvider) {
-            AudioPlayerService.this.audioUrlsProvider = audioUrlsProvider;
+    void pause() {
+        if (status != Status.PLAYING) {
+            throw new IllegalStateException("pause can be called only in PLAYING state");
         }
 
-        public void setAudios(ListWithSelectedItem<Audio> audios){
-            selectedItemPositionManager = new ListSelectedItemPositionManager<Audio>(audios);
+        mediaPlayer.pause();
+        setStatus(Status.PAUSED);
+    }
+
+    void resume() {
+        if (status != Status.PAUSED) {
+            throw new IllegalStateException("resume can be called only in PAUSED state");
         }
 
-        public void setAudios(SelectedItemPositionManager<Audio> selectedItemPositionManager) {
-            AudioPlayerService.this.selectedItemPositionManager = selectedItemPositionManager;
+        mediaPlayer.start();
+        setStatus(Status.PLAYING);
+    }
+
+    void togglePauseState() {
+        if (status == Status.PLAYING) {
+            pause();
+        } else if(status == Status.PAUSED) {
+            resume();
+        } else {
+            throw new IllegalStateException("togglePauseState can be called only in PAUSED or PLAYING state");
+        }
+    }
+
+    void playNext() {
+        goNext();
+        tryPlayCurrentUrl();
+    }
+
+    void playPrev() {
+        goPrev();
+        tryPlayCurrentUrl();
+    }
+
+    boolean isPaused() {
+        return status == Status.PAUSED;
+    }
+    
+    boolean isPlaying() {
+        return status == Status.PLAYING;
+    }
+
+    void addProgressChangedListener(ProgressChangedListener listener) {
+        if (progressChangedListeners == null) {
+            progressChangedListeners = new LinkedHashSet<>();
+            mediaPlayerProgressUpdater = new ProgressUpdater();
+            mediaPlayerProgressUpdater.setMediaPlayer(mediaPlayer);
+        }
+        
+        progressChangedListeners.add(listener);
+    }
+    
+    void removeProgressChangedListener(ProgressChangedListener listener) {
+        if (progressChangedListeners != null) {
+            progressChangedListeners.remove(listener);
+            destroyProgressUpdaterIfEmptyListeners();
+        }
+    }
+
+    private void destroyProgressUpdaterIfEmptyListeners() {
+        if (progressChangedListeners.isEmpty()) {
+            progressChangedListeners = null;
+            mediaPlayerProgressUpdater.destroy();
+            mediaPlayerProgressUpdater = null;
+        }
+    }
+
+    void seekTo(int progress) {
+        mediaPlayer.seekTo(progress);
+    }
+
+    int getDuration() {
+        return mediaPlayer.getDuration();
+    }
+
+    private void setStatus(Status status) {
+        this.status = status;
+
+        for (StateChangedListener listener : stateListeners) {
+            listener.onStateChanged(status);
+        }
+    }
+
+    public class Binder extends android.os.Binder implements Services.OnUnbind {
+        private Set<PositionChangedListener> currentPositionChangedListeners = new HashSet<>();
+        private Set<PlaybackErrorListener> currentErrorListeners = new HashSet<>();
+        private Set<ProgressChangedListener> currentProgressChangedListeners = new HashSet<>();
+        private Set<StateChangedListener> currentStateListeners = new HashSet<>();
+
+        public void play(List<String> urls, int position) {
+            AudioPlayerService.this.play(urls, position);
         }
 
-        public Object getPlayListTag() {
-            return playListTag;
+        public void play(int position) {
+            play(playList, position);
         }
 
-        public void setPlayListTag(Object tag) {
-            playListTag = tag;
+        public void play(List<String> urls) {
+            play(urls, 0);
         }
 
-        public void playAudio(int position) {
-            selectedItemPositionManager.setCurrentItemPosition(position);
-            Audio audio = selectedItemPositionManager.getCurrentSelectedItem();
-            AudioPlayerService.this.playAudio(audio);
+        public void changePlayList(List<String> newPlayListUrls) {
+            AudioPlayerService.this.changePlayList(newPlayListUrls);
         }
 
-        public void playNext() {
-            CancelableUtils.cancelAllAndClearQueue(audioPlayingOperations);
-            if (selectedItemPositionManager.canSelectNext()) {
-                Cancelable cancelable = selectedItemPositionManager.selectNextWhenAvailable(
-                        new SelectedItemPositionManager.OnAvailable<Audio>() {
-                    @Override
-                    public void onItemAvailable(Audio audio) {
-                        AudioPlayerService.this.playAudio(audio);
-                    }
-                });
-                audioPlayingOperations.add(cancelable);
-            }
+        public void pause() {
+            AudioPlayerService.this.pause();
         }
 
-        public void playPrev() {
-            CancelableUtils.cancelAllAndClearQueue(audioPlayingOperations);
-            if (selectedItemPositionManager.canSelectPrev()) {
-                Cancelable cancelable = selectedItemPositionManager.selectPrevWhenAvailable(
-                        new SelectedItemPositionManager.OnAvailable<Audio>() {
-                            @Override
-                            public void onItemAvailable(Audio audio) {
-                                AudioPlayerService.this.playAudio(audio);
-                            }
-                        });
-                audioPlayingOperations.add(cancelable);
-            }
+        public void resume() {
+            AudioPlayerService.this.resume();
         }
 
-        public void seekTo(int position) {
-            mediaPlayer.seekTo(position);
+        public void togglePauseState() {
+            AudioPlayerService.this.togglePauseState();
         }
 
-        public int getDuration() {
-            return mediaPlayer.getDuration();
+        public boolean isPaused() {
+            return AudioPlayerService.this.isPaused();
         }
 
         public boolean isPlaying() {
-            return mediaPlayer.isPlaying();
+            return AudioPlayerService.this.isPlaying();
         }
 
-        public int getCurrentSeekPosition() {
-            return mediaPlayer.getCurrentPosition();
+        public Status getStatus() {
+            return status;
         }
 
-        public void addPlayBackListener(PlayBackListener listener) {
-            playBackListeners.add(listener);
+        public void playNext() {
+            AudioPlayerService.this.playNext();
         }
 
-        public void removePlayBackListener(PlayBackListener listener) {
-            playBackListeners.remove(listener);
+        public void playPrev() {
+            AudioPlayerService.this.playPrev();
         }
 
-        public void togglePausedState() {
-            if(isPaused){
-                resume();
-            } else {
-                pause();
+        public void addPositionChangedListener(PositionChangedListener listener) {
+            currentPositionChangedListeners.add(listener);
+            positionChangedListeners.add(listener);
+        }
+
+        public void removePositionChangedListener(PositionChangedListener listener) {
+            currentPositionChangedListeners.remove(listener);
+            positionChangedListeners.remove(listener);
+        }
+
+        public void addPlayBackErrorListener(PlaybackErrorListener listener) {
+            currentErrorListeners.add(listener);
+            errorListeners.add(listener);
+        }
+
+        public void removePlayBackErrorListener(PlaybackErrorListener listener) {
+            currentErrorListeners.remove(listener);
+            errorListeners.remove(listener);
+        }
+
+        public void addStateChangedListener(StateChangedListener listener) {
+            currentStateListeners.add(listener);
+            stateListeners.add(listener);
+        }
+
+        public void removeStateChangedListener(StateChangedListener listener) {
+            currentStateListeners.remove(listener);
+            stateListeners.remove(listener);
+        }
+
+        public void addProgressChangedListener(ProgressChangedListener listener) {
+            AudioPlayerService.this.addProgressChangedListener(listener);
+            currentProgressChangedListeners.add(listener);
+        }
+
+        public void removeProgressChangedListener(ProgressChangedListener listener) {
+            AudioPlayerService.this.removeProgressChangedListener(listener);
+            currentProgressChangedListeners.remove(listener);
+        }
+        
+        public void onUnbind() {
+            positionChangedListeners.removeAll(currentPositionChangedListeners);
+            errorListeners.removeAll(currentErrorListeners);
+            stateListeners.removeAll(currentStateListeners);
+
+            if (progressChangedListeners != null) {
+                progressChangedListeners.removeAll(currentProgressChangedListeners);
+                destroyProgressUpdaterIfEmptyListeners();
             }
         }
 
-        @Override
-        public void pause() {
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.pause();
-                isPaused = true;
-                for (PlayBackListener listener : playBackListeners) {
-                    listener.onAudioPlayingPaused();
-                }
-            }
+        public void seekTo(int msec) {
+            AudioPlayerService.this.seekTo(msec);
         }
 
-        @Override
-        public void resume() {
-            if (isPaused) {
-                mediaPlayer.start();
-                isPaused = false;
-                for (PlayBackListener listener : playBackListeners) {
-                    listener.onAudioPlayingResumed();
-                }
-            }
-        }
-
-        @Override
-        public boolean isPaused() {
-            return isPaused;
-        }
-
-        @Override
-        public boolean canPause() {
-            return mediaPlayer.isPlaying();
-        }
-
-        public Audio getPlayingAudio() {
-            if(!mediaPlayer.isPlaying()){
-                return null;
-            }
-
-            return selectedItemPositionManager.getCurrentSelectedItem();
-        }
-
-        public List<Audio> getPlayList() {
-            return selectedItemPositionManager.getItems();
-        }
-
-        public int getPlayingAudioPosition() {
-            if (!mediaPlayer.isPlaying()) {
-                return -1;
-            }
-
-            return selectedItemPositionManager.getCurrentItemPosition();
+        public int getDuration() {
+            return AudioPlayerService.this.getDuration();
         }
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        mediaPlayerProgressUpdater.setMediaPlayer(mediaPlayer);
-        return binder;
+    public void onCreate() {
+        super.onCreate();
+        mediaPlayer = new MediaPlayer();
     }
 
-    public static void start(Context context) {
-        Intent intent = new Intent(context, AudioPlayerService.class);
-        context.startService(intent);
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mediaPlayer.release();
+        
+        if (mediaPlayerProgressUpdater != null) {
+            mediaPlayerProgressUpdater.destroy();
+        }
     }
 
-    public static void bind(Context context, Services.OnBind<PlayerBinder> onBind) {
+    public static void bind(Context context, Services.OnBind<Binder> onBind) {
+        Services.start(context, AudioPlayerService.class);
         Services.bind(context, AudioPlayerService.class, onBind);
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return new Binder();
+    }
+
+    private class ProgressUpdater extends MediaPlayerProgressUpdater {
+        @Override
+        protected void onProgressChanged(long progress, long max) {
+            for (ProgressChangedListener listener : progressChangedListeners) {
+                listener.onProgressChanged(progress, max);
+            }
+        }
     }
 }

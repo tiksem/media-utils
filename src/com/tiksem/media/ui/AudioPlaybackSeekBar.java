@@ -4,6 +4,9 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.SeekBar;
 import com.tiksem.media.playback.AudioPlayerService;
+import com.tiksem.media.playback.ProgressChangedListener;
+import com.tiksem.media.playback.StateChangedListener;
+import com.tiksem.media.playback.Status;
 
 /**
  * User: Tikhonenko.S
@@ -13,8 +16,9 @@ import com.tiksem.media.playback.AudioPlayerService;
 public class AudioPlaybackSeekBar extends SeekBar {
     private static final int SEEK_BAR_COEFFICIENT = 1000;
 
-    private AudioPlayerService.PlayerBinder playerBinder;
-    private AudioPlayerService.PlayBackListener playBackListener;
+    private AudioPlayerService.Binder playerBinder;
+    private ProgressChangedListener progressChangedListener;
+    private StateChangedListener stateChangedListener;
 
     public AudioPlaybackSeekBar(Context context) {
         super(context);
@@ -28,11 +32,7 @@ public class AudioPlaybackSeekBar extends SeekBar {
         super(context, attrs, defStyle);
     }
 
-    public AudioPlayerService.PlayerBinder getPlayerBinder() {
-        return playerBinder;
-    }
-
-    public void setPlayerBinder(final AudioPlayerService.PlayerBinder playerBinder) {
+    public void setPlayerBinder(final AudioPlayerService.Binder playerBinder) {
         if(playerBinder == null){
             throw new NullPointerException();
         }
@@ -44,32 +44,23 @@ public class AudioPlaybackSeekBar extends SeekBar {
         this.playerBinder = playerBinder;
         setVisibility(GONE);
 
-        playBackListener = new AudioPlayerService.PlayBackListener() {
-            @Override
-            public void onAudioPlayingStarted() {
-            }
-
-            @Override
-            public void onAudioPlayingComplete() {
-                setVisibility(GONE);
-            }
-
-            @Override
-            public void onAudioPlayingPaused() {
-            }
-
-            @Override
-            public void onAudioPlayingResumed() {
-            }
-
+        progressChangedListener = new ProgressChangedListener() {
             @Override
             public void onProgressChanged(long progress, long max) {
                 setMax(Math.round(max / SEEK_BAR_COEFFICIENT));
                 setProgress(Math.round(progress / SEEK_BAR_COEFFICIENT));
-                setVisibility(VISIBLE);
             }
         };
-        playerBinder.addPlayBackListener(playBackListener);
+        playerBinder.addProgressChangedListener(progressChangedListener);
+
+        stateChangedListener = new StateChangedListener() {
+            @Override
+            public void onStateChanged(Status status) {
+                setVisibility(status == Status.PLAYING || status == Status.PAUSED ? VISIBLE : GONE);
+            }
+        };
+        playerBinder.addStateChangedListener(stateChangedListener);
+        stateChangedListener.onStateChanged(playerBinder.getStatus());
 
         super.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
             @Override
@@ -93,7 +84,8 @@ public class AudioPlaybackSeekBar extends SeekBar {
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         if(playerBinder != null){
-            playerBinder.removePlayBackListener(playBackListener);
+            playerBinder.removeProgressChangedListener(progressChangedListener);
+            playerBinder.removeStateChangedListener(stateChangedListener);
         }
     }
 
