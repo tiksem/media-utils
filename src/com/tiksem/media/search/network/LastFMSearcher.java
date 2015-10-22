@@ -1,7 +1,7 @@
 package com.tiksem.media.search.network;
 
 import com.utils.framework.Reflection;
-import com.utils.framework.io.TextLoader;
+import com.utils.framework.network.RequestExecutor;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -24,18 +24,18 @@ public class LastFMSearcher {
                     "&outtype=json" +
                     "&playlistURL=lastfm://playlist/album/";
 
-    private TextLoader textLoader;
+    private RequestExecutor requestExecutor;
 
     protected final String search(Map<String, Object> params) throws IOException {
         params.put(ACCESS_TOKEN_KEY, ACCESS_TOKEN);
         params.put("format","json");
-        return textLoader.getTextFromUrl(ROOT_URL, params);
+        return requestExecutor.executeRequest(ROOT_URL, params);
     }
 
     protected final String searchUsingExtensionAPI(Map<String, Object> params) throws IOException{
         params.put(ACCESS_TOKEN_KEY, ACCESS_TOKEN);
         params.put("format","json");
-        return textLoader.getTextFromUrl(ROOT_URL, params);
+        return requestExecutor.executeRequest(ROOT_URL, params);
     }
 
     protected final <T> String search(T params) throws IOException {
@@ -62,14 +62,8 @@ public class LastFMSearcher {
     }
 
     public String getTracksByAlbumId(int id) throws IOException {
-        StringBuilder url = new StringBuilder();
-        url.append(PLAYLIST_FETCH_URL);
-        url.append(id);
-        url.append('&');
-        url.append(ACCESS_TOKEN_KEY);
-        url.append('=');
-        url.append(ACCESS_TOKEN);
-        return textLoader.getTextFromUrl(url.toString());
+        return requestExecutor.executeRequest(PLAYLIST_FETCH_URL + id + '&' +
+                ACCESS_TOKEN_KEY + '=' + ACCESS_TOKEN, null);
     }
 
     public String searchTracks(String query, LastFMSearchParams searchParams) throws IOException {
@@ -172,7 +166,7 @@ public class LastFMSearcher {
         return search(params);
     }
 
-    public LastFMSearcher(TextLoader textLoader) {
-        this.textLoader = textLoader;
+    public LastFMSearcher(RequestExecutor requestExecutor) {
+        this.requestExecutor = requestExecutor;
     }
 }

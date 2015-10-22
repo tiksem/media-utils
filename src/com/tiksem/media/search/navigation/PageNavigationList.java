@@ -1,6 +1,7 @@
 package com.tiksem.media.search.navigation;
 
 import com.tiksem.media.search.InternetSearchEngine;
+import com.utilsframework.android.network.RequestManager;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,17 +19,16 @@ public abstract class PageNavigationList<T> extends AsyncNavigationList<T> {
     private String query;
     private int elementsOfPageCount;
 
-    public static class InitParams<T> {
+    public static class InitParams {
         public InternetSearchEngine internetSearchEngine;
-        public List<T> initialElements = Collections.emptyList();
         public int elementsOfPageCount = 50;
-        public int maxElementsCount = 500;
         public String query;
+        public RequestManager requestManager;
     }
 
-    public PageNavigationList(InitParams<T> initialParams)
+    public PageNavigationList(InitParams initialParams)
     {
-        super(initialParams.initialElements, initialParams.maxElementsCount);
+        super(initialParams.requestManager);
         this.internetSearchEngine = initialParams.internetSearchEngine;
 
         elementsOfPageCount = initialParams.elementsOfPageCount;

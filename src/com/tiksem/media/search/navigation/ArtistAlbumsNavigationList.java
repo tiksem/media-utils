@@ -4,6 +4,7 @@ import com.tiksem.media.data.Album;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.SearchResult;
 
+import java.io.IOException;
 import java.util.concurrent.Executor;
 
 /**
@@ -14,13 +15,13 @@ import java.util.concurrent.Executor;
  * To change this template use File | Settings | File Templates.
  */
 public class ArtistAlbumsNavigationList extends PageNavigationList<Album>{
-    public ArtistAlbumsNavigationList(InitParams<Album> initialParams)
+    public ArtistAlbumsNavigationList(InitParams initialParams)
     {
         super(initialParams);
     }
 
     @Override
-    protected SearchResult<Album> search(int pageNumber) throws Exception{
+    protected SearchResult<Album> search(int pageNumber) throws IOException {
         InternetSearchEngine internetSearchEngine = getInternetSearchEngine();
         String artistName = getQuery();
         int elementsOfPageCount = getElementsOfPageCount();

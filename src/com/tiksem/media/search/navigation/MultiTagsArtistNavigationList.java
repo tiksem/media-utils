@@ -3,6 +3,8 @@ package com.tiksem.media.search.navigation;
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.search.SearchResult;
 
+import java.io.IOException;
+
 /**
  * Created with IntelliJ IDEA.
  * User: CM
@@ -16,7 +18,7 @@ public class MultiTagsArtistNavigationList extends MultiTagNavigationList<Artist
     }
 
     @Override
-    protected SearchResult<Artist> searchByTag(String tag, int pageNumber) throws Exception {
+    protected SearchResult<Artist> searchByTag(String tag, int pageNumber) throws IOException {
         return getInternetSearchEngine().getArtistsByTag(tag, getElementsPerPage(), pageNumber);
     }
 }

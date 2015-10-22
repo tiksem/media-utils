@@ -11,6 +11,7 @@ import com.utils.framework.collections.cache.*;
 import com.utils.framework.collections.queue.PageLazyQueue;
 import com.utils.framework.io.TextLoader;
 import com.utils.framework.io.TextLoaderConfig;
+import com.utils.framework.network.RequestExecutor;
 import com.utilsframework.android.ErrorListener;
 import com.utils.framework.strings.Strings;
 import org.json.JSONException;
@@ -32,67 +33,10 @@ public class InternetSearchEngine {
     private LastFmResultParser lastFmResultParser = new LastFmResultParser();
     private VkResultParser vkResultParser = new VkResultParser();
     private VkSearcher vkSearcher;
-    private Cache memoryCache;
-    private Cache discCache;
-    private CacheCombination cache;
-    private TextLoader textLoader;
 
-    private void combineCaches(){
-        cache = new CacheCombination(memoryCache, discCache);
-    }
-
-    public InternetSearchEngine(Cache memoryCache, Cache discCache, TextLoader textLoader) {
-        this.memoryCache = memoryCache;
-        this.discCache = discCache;
-
-        if(discCache == null){
-            this.discCache = new EmptyCache();
-        }
-
-        if(memoryCache == null){
-            this.memoryCache = new EmptyCache();
-        }
-
-        if(textLoader == null){
-            textLoader = new TextLoader(new TextLoaderConfig());
-        }
-        lastFMSearcher = new LastFMSearcher(textLoader);
-        vkSearcher = new VkSearcher(textLoader);
-
-        combineCaches();
-    }
-
-    public InternetSearchEngine(int memoryCacheSize, int discCacheSize,
-                                CacheDirectoryPathGenerator discCacheDir,
-                                TextLoader textLoader
-                                ) {
-        if(memoryCacheSize > 0){
-            memoryCache = new ObjectLruCache(memoryCacheSize);
-        } else {
-            memoryCache = new EmptyCache();
-        }
-
-        if(discCacheSize > 0){
-            discCache = new ObjectLruDiskCache(discCacheSize, discCacheDir);
-        } else {
-            discCache = new EmptyCache();
-        }
-
-        if(textLoader == null){
-            textLoader = new TextLoader(new TextLoaderConfig());
-        }
-        lastFMSearcher = new LastFMSearcher(textLoader);
-        vkSearcher = new VkSearcher(textLoader);
-
-        combineCaches();
-    }
-
-    public InternetSearchEngine(int memoryCacheSize){
-        this(memoryCacheSize, -1, null, null);
-    }
-
-    public InternetSearchEngine(){
-        this(-1);
+    public InternetSearchEngine(RequestExecutor requestExecutor) {
+        lastFMSearcher = new LastFMSearcher(requestExecutor);
+        vkSearcher = new VkSearcher(requestExecutor);
     }
 
     private interface LastFmSearchResultProvider<T>{
@@ -126,17 +70,8 @@ public class InternetSearchEngine {
         lastFMSearchParams.page = lastFmParams.page;
 
         try{
-            String key = Strings.joinObjects("_", lastFmParams.methodName, lastFmParams.query,
-                    lastFmParams.maxCount, lastFmParams.page).toString();
-            SearchResult<T> searchResult = CacheUtils.saveGet(cache, key);
-
-            if(searchResult == null){
-                String response = lastFmParams.resultProvider.search(lastFmParams.query, lastFMSearchParams);
-                searchResult = lastFmParams.resultProvider.parse(response);
-                cache.put(key, searchResult);
-            }
-
-            return searchResult;
+            String response = lastFmParams.resultProvider.search(lastFmParams.query, lastFMSearchParams);
+            return lastFmParams.resultProvider.parse(response);
         }
         catch (JSONException e){
             throw new InvalidResponseException(e.getMessage());
@@ -145,16 +80,8 @@ public class InternetSearchEngine {
 
     private <T> T getResult(ResultParams<T> resultParams) {
         try{
-            String key = Strings.joinObjects("_", resultParams.methodName, resultParams.query).toString();
-            T searchResult = CacheUtils.saveGet(cache, key);
-
-            if(searchResult == null){
-                String response = resultParams.resultProvider.search(resultParams.query);
-                searchResult = resultParams.resultProvider.parse(response);
-                cache.put(key, searchResult);
-            }
-
-            return searchResult;
+            String response = resultParams.resultProvider.search(resultParams.query);
+            return resultParams.resultProvider.parse(response);
         }
         catch (Exception e){
             return null;

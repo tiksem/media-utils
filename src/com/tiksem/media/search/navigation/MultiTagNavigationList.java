@@ -3,7 +3,9 @@ package com.tiksem.media.search.navigation;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.SearchResult;
 import com.utils.framework.CollectionUtils;
+import com.utilsframework.android.network.RequestManager;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -18,9 +20,9 @@ import java.util.concurrent.Executor;
  */
 public abstract class MultiTagNavigationList<T> extends AsyncNavigationList<T> {
     public static class Params{
-        public int maxElementsCount = 1000;
         public int elementsPerPage = 25;
         public String[] tags;
+        public RequestManager requestManager;
         public InternetSearchEngine internetSearchEngine;
     }
 
@@ -37,17 +39,17 @@ public abstract class MultiTagNavigationList<T> extends AsyncNavigationList<T> {
     }
 
     public MultiTagNavigationList(Params params) {
-        super(Collections.<T>emptyList(), params.maxElementsCount);
+        super(params.requestManager);
 
         elementsPerPage = params.elementsPerPage;
         tags = params.tags;
         internetSearchEngine = params.internetSearchEngine;
     }
 
-    protected abstract SearchResult<T> searchByTag(String tag, int pageNumber) throws Exception;
+    protected abstract SearchResult<T> searchByTag(String tag, int pageNumber) throws IOException;
 
     @Override
-    protected SearchResult<T> search(int pageNumber) throws Exception {
+    protected SearchResult<T> search(int pageNumber) throws IOException {
         SearchResult<T> result = new SearchResult();
         result.isLastPage = true;
         List<List<T>> resultsByTag = new ArrayList(tags.length);

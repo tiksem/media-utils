@@ -87,16 +87,13 @@ public class AudioDataManager {
         return Search.filter(playLists, query, maxCount);
     }
 
-    private <T> PageNavigationList.InitParams<T> getPageNavigationListInitialParams(
+    private <T> PageNavigationList.InitParams getPageNavigationListInitialParams(
             List<T> localElements,
             String query)
     {
-        localElements = Search.filter(localElements, query);
-
-        PageNavigationList.InitParams<T> initParams = new PageNavigationList.InitParams();
+        PageNavigationList.InitParams initParams = new PageNavigationList.InitParams();
         initParams.query = query;
         initParams.internetSearchEngine = internetSearchEngine;
-        initParams.initialElements = localElements;
 
         return initParams;
     }

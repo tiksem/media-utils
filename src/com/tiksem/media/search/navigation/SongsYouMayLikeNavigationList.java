@@ -6,7 +6,9 @@ import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.SearchResult;
 import com.utils.framework.algorithms.ObjectCoefficientProvider;
 import com.utils.framework.algorithms.ObjectProbabilityRangeMap;
+import com.utilsframework.android.network.RequestManager;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Executor;
 
@@ -25,6 +27,7 @@ public class SongsYouMayLikeNavigationList extends AsyncNavigationList<Audio> {
         public int songsCountPerPage;
         public List<Audio> userPlaylist;
         public InternetSearchEngine internetSearchEngine;
+        public RequestManager requestManager;
     }
 
     private AudioNameArtistNameUniqueSet songsYouMayLike;
@@ -77,7 +80,7 @@ public class SongsYouMayLikeNavigationList extends AsyncNavigationList<Audio> {
     }
 
     public SongsYouMayLikeNavigationList(Params params) {
-        super(Collections.<Audio>emptyList(), params.songsCount);
+        super(params.requestManager);
 
         songsYouMayLike = new AudioNameArtistNameUniqueSet();
         userPlayListAsSet = new AudioNameArtistNameUniqueSet(new LinkedHashSet());
@@ -94,7 +97,7 @@ public class SongsYouMayLikeNavigationList extends AsyncNavigationList<Audio> {
     }
 
     @Override
-    protected SearchResult<Audio> search(int pageNumber) throws Exception {
+    protected SearchResult<Audio> search(int pageNumber) throws IOException {
         SearchResult<Audio> searchResult = new SearchResult<Audio>();
         searchResult.isLastPage = isLastPage();
         if(searchResult.isLastPage){

@@ -4,6 +4,8 @@ import com.tiksem.media.data.Audio;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.SearchResult;
 
+import java.io.IOException;
+
 /**
  * Created with IntelliJ IDEA.
  * User: CM
@@ -12,13 +14,13 @@ import com.tiksem.media.search.SearchResult;
  * To change this template use File | Settings | File Templates.
  */
 public class ArtistSongsNavigationList extends PageNavigationList<Audio> {
-    public ArtistSongsNavigationList(InitParams<Audio> initialParams)
+    public ArtistSongsNavigationList(InitParams initialParams)
     {
         super(initialParams);
     }
 
     @Override
-    protected SearchResult<Audio> search(int pageNumber) throws Exception{
+    protected SearchResult<Audio> search(int pageNumber) throws IOException {
         InternetSearchEngine internetSearchEngine = getInternetSearchEngine();
         String artistName = getQuery();
         int elementsOfPageCount = getElementsOfPageCount();

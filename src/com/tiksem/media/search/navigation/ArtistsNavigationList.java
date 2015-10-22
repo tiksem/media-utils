@@ -3,6 +3,7 @@ import com.tiksem.media.data.Artist;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.SearchResult;
 
+import java.io.IOException;
 import java.util.concurrent.Executor;
 
 /**
@@ -12,12 +13,12 @@ import java.util.concurrent.Executor;
  * Time: 7:26 PM
  */
 public class ArtistsNavigationList extends PageNavigationList<Artist>{
-    public ArtistsNavigationList(InitParams<Artist> initialParams) {
+    public ArtistsNavigationList(InitParams initialParams) {
         super(initialParams);
     }
 
     @Override
-    protected SearchResult<Artist> search(int pageNumber) throws Exception{
+    protected SearchResult<Artist> search(int pageNumber) throws IOException {
         InternetSearchEngine internetSearchEngine = getInternetSearchEngine();
         String query = getQuery();
         int elementsOfPageCount = getElementsOfPageCount();

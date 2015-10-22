@@ -7,7 +7,10 @@ import com.utils.framework.OnError;
 import com.utils.framework.collections.NavigationList;
 import com.utils.framework.collections.OnLoadingFinished;
 import com.utilsframework.android.ErrorListener;
+import com.utilsframework.android.network.RequestManager;
+import com.utilsframework.android.threading.Threading;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -21,51 +24,37 @@ import java.util.concurrent.Executor;
  */
 public abstract class AsyncNavigationList<T> extends NavigationList<T> {
     private ErrorListener errorListener;
+    private RequestManager requestManager;
 
-    protected AsyncNavigationList(List<T> initialElements,
-                                  int maxElementsCount)
-    {
-        super(initialElements, maxElementsCount);
+    protected AsyncNavigationList(RequestManager requestManager) {
+        this.requestManager = requestManager;
     }
 
     @Override
     public void getElementsOfPage(final int pageNumber,
-                                  final OnLoadingFinished<T> onPageLoadingFinished, OnError onError)
-    {
-        new AsyncTask<Void, Void, SearchResult<T>>(){
+                                  final OnLoadingFinished<T> onPageLoadingFinished, OnError onError) {
+        requestManager.execute(new Threading.Task<IOException, SearchResult<T>>() {
             @Override
-            protected void onPostExecute(SearchResult<T> searchResult) {
+            public SearchResult<T> runOnBackground() throws IOException {
+                if(isAllDataLoaded()){
+                    return null;
+                }
+                SearchResult<T> result = search(pageNumber);
+                if(result.elements == null){
+                    throw new NullPointerException();
+                }
+                return result;
+            }
+
+            @Override
+            public void onComplete(SearchResult<T> searchResult, IOException error) {
                 if (searchResult != null) {
                     onPageLoadingFinished.onLoadingFinished(searchResult.elements, searchResult.isLastPage);
+                } else if(errorListener != null) {
+                    errorListener.onError(error);
                 }
             }
-
-            @Override
-            protected SearchResult<T> doInBackground(Void... params) {
-                try {
-                    if(isAllDataLoaded()){
-                        return null;
-                    }
-                    SearchResult<T> result = search(pageNumber);
-                    if(result.elements == null){
-                        throw new NullPointerException();
-                    }
-                    return result;
-                }
-                catch (Exception e) {
-                    if(errorListener != null){
-                        errorListener.onError(e);
-                    }
-
-                    SearchResult<T> searchResult = new SearchResult<T>();
-                    searchResult.elements = Collections.emptyList();
-                    searchResult.isLastPage = true;
-                    return searchResult;
-                }
-
-
-            }
-        }.execute();
+        });
     }
 
     public ErrorListener getErrorListener() {
@@ -76,5 +65,5 @@ public abstract class AsyncNavigationList<T> extends NavigationList<T> {
         this.errorListener = errorListener;
     }
 
-    protected abstract SearchResult<T> search(int pageNumber) throws Exception;
+    protected abstract SearchResult<T> search(int pageNumber) throws IOException;
 }
