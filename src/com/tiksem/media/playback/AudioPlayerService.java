@@ -51,6 +51,7 @@ public class AudioPlayerService extends Service implements Player.Listener {
         }
 
         urlsProviderListPlayer = new UrlsProviderListPlayer(mediaPlayer, requestManager, urlsProviders);
+        setupPlayer(urlsProviderListPlayer);
         urlsProviderListPlayer.play(position);
     }
 
@@ -141,6 +142,10 @@ public class AudioPlayerService extends Service implements Player.Listener {
 
         public void play(List<String> urls, int position) {
             AudioPlayerService.this.play(urls, position);
+        }
+
+        public void playUrlsProviders(List<UrlsProvider> urlsProviders, int position) {
+            AudioPlayerService.this.playUrlProviders(urlsProviders, position);
         }
 
         public void play(int position) {

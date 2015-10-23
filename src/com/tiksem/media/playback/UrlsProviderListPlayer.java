@@ -39,7 +39,7 @@ public class UrlsProviderListPlayer extends Player {
 
                 @Override
                 public void onComplete(List<String> urlList, IOException error) {
-                    if (error != null) {
+                    if (error == null) {
                         if (urlList.isEmpty()) {
                             onError(null);
                             playNext();

@@ -13,7 +13,7 @@ import java.util.Map;
  * Time: 6:06 PM
  */
 public class VkSearcher {
-    private static final String ACCESS_TOKEN = "c5f5835e25dd3d1ec49076302f7a85916ae6acc2e5dae83c90100ced7c199c557d4a8aaeeb08922fbd4f4";
+    private static final String ACCESS_TOKEN = "9c97dd8c8516b4412ccd36543491ec399b9f95505c39a75e722ba0efe38cf54e1cab52045fc83144fa461";
     private static final String ROOT_URL = "https://api.vk.com/method/";
     private RequestExecutor requestExecutor;
 

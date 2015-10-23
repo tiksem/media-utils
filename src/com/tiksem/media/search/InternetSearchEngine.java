@@ -296,7 +296,7 @@ public class InternetSearchEngine {
     }
 
     public List<UrlsProvider> getUrlsProviders(List<Audio> audios) {
-        return CollectionUtils.transform(audios, new CollectionUtils.Transformer<Audio, UrlsProvider>() {
+        return CollectionUtils.transformNonCopy(audios, new CollectionUtils.Transformer<Audio, UrlsProvider>() {
             @Override
             public UrlsProvider get(final Audio audio) {
                 return new UrlsProvider() {
