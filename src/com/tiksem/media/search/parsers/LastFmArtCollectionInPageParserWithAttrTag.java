@@ -12,23 +12,6 @@ import org.json.JSONObject;
  * To change this template use File | Settings | File Templates.
  */
 abstract class LastFmArtCollectionInPageParserWithAttrTag<T extends ArtCollection>
-        extends LastFmArtCollectionInPageParser<T>
-{
-    @Override
-    protected String getItemsPerPageFiledName() throws JSONException {
-        return "perPage";
-    }
+        extends LastFmArtCollectionInPageParser<T> {
 
-    @Override
-    protected String getTotalResultsFiledName() throws JSONException {
-        return "total";
-    }
-
-    @Override
-    protected int getStartIndex(String filedName, JSONObject statisticsObject) throws JSONException {
-        int page = statisticsObject.getInt("page") - 1;
-        int perPage = getItemsPerPage(getItemsPerPageFiledName(), statisticsObject);
-
-        return page * perPage;
-    }
 }

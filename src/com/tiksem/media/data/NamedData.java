@@ -1,5 +1,6 @@
 package com.tiksem.media.data;
 
+import android.os.Parcel;
 import com.utils.framework.CollectionUtils;
 import com.utils.framework.Equals;
 import com.utils.framework.HashCodeProvider;
@@ -128,5 +129,23 @@ public class NamedData extends Identified{
 
         return result;
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeString(this.name);
+    }
+
+    protected NamedData(Parcel in) {
+        super(in);
+        this.name = in.readString();
+    }
+
 }
 

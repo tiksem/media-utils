@@ -16,9 +16,4 @@ public class LastFmArtistTrackParser extends LastFmArtCollectionInPageParserWith
     public Audio parse(JSONObject jsonObject) throws JSONException {
         return LastFmAudioParser.parseAudio(this, jsonObject);
     }
-
-    @Override
-    protected String[] getResultsStatisticObjectPath() throws JSONException {
-        return new String[]{"toptracks","@attr"};
-    }
 }

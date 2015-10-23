@@ -1,6 +1,9 @@
 package com.tiksem.media.data;
 
-public class Identified {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Identified implements Parcelable {
     private long id = -1;
     private boolean isLocal;
 
@@ -57,4 +60,22 @@ public class Identified {
         result = 31 * result + (isLocal ? 1 : 0);
         return result;
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(this.id);
+        dest.writeByte(isLocal ? (byte) 1 : (byte) 0);
+    }
+
+    protected Identified(Parcel in) {
+        this.id = in.readLong();
+        this.isLocal = in.readByte() != 0;
+    }
+
 }

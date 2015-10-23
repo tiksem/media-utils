@@ -31,7 +31,7 @@ abstract class LastFmArtCollectionParser<T> extends JsonArrayElementParser<T> {
 
     protected boolean fillAlbumArts(JSONObject jsonObject, ArtCollection album){
         try {
-            JSONArray albumArts = jsonObject.getJSONArray("image");
+                        JSONArray albumArts = jsonObject.getJSONArray("image");
             for (int i = 0; i < ArtSize.values().length; i++) {
                 String url = getAlbumArtUrlByIndex(albumArts, i);
                 if (!url.isEmpty()) {

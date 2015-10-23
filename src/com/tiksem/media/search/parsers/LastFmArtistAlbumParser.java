@@ -27,9 +27,4 @@ class LastFmArtistAlbumParser extends LastFmArtCollectionInPageParserWithAttrTag
 
         return album;
     }
-
-    @Override
-    protected String[] getResultsStatisticObjectPath() throws JSONException {
-        return new String[]{"topalbums","@attr"};
-    }
 }

@@ -1,5 +1,6 @@
 package com.tiksem.media.data;
 
+import android.os.Parcel;
 import com.utils.framework.collections.cache.GlobalStringCache;
 
 import java.io.Serializable;
@@ -46,5 +47,22 @@ public abstract class ArtCollection extends NamedData implements Serializable{
 
     public void cloneArtUrlsFrom(ArtCollection artCollection){
         arts = artCollection.arts.clone();
+    }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeStringArray(this.arts);
+    }
+
+    protected ArtCollection(Parcel in) {
+        super(in);
+        this.arts = in.createStringArray();
     }
 }
