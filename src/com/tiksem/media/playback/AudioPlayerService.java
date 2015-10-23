@@ -3,12 +3,12 @@ package com.tiksem.media.playback;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.IBinder;
-import com.utils.framework.collections.ListWithSelectedItem;
 import com.utilsframework.android.Services;
 import com.utilsframework.android.media.MediaPlayerProgressUpdater;
+import com.utilsframework.android.network.AsyncRequestExecutorManager;
+import com.utilsframework.android.network.RequestManager;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -21,168 +21,76 @@ import java.util.Set;
  * Date: 17.07.14
  * Time: 22:19
  */
-public class AudioPlayerService extends Service {
+public class AudioPlayerService extends Service implements Player.Listener {
     private MediaPlayer mediaPlayer;
-    private Status status = Status.IDLE;
-    private List<String> playList;
-    private int position;
     private MediaPlayerProgressUpdater mediaPlayerProgressUpdater;
     private Set<PositionChangedListener> positionChangedListeners = new LinkedHashSet<>();
     private Set<PlaybackErrorListener> errorListeners = new LinkedHashSet<>();
     private Set<StateChangedListener> stateListeners = new LinkedHashSet<>();
     private Set<ProgressChangedListener> progressChangedListeners;
+    private UrlListPlayer urlListPlayer;
+    private UrlsProviderListPlayer urlsProviderListPlayer;
+    private RequestManager requestManager;
 
-    void play(List<String> urls, int position) {
-        if (urls == null) {
-            throw new NullPointerException();
-        }
-
-        playList = urls;
-        this.position = position;
-
-        tryPlayCurrentUrl();
+    private void setupPlayer(Player player) {
+        player.setListener(this);
     }
 
-    private void onPositionChanged() {
+    void play(List<String> urls, int position) {
+        urlsProviderListPlayer = null;
+        urlListPlayer = new UrlListPlayer(mediaPlayer, urls);
+        setupPlayer(urlListPlayer);
+        urlListPlayer.play(position);
+    }
+
+    void playUrlProviders(List<UrlsProvider> urlsProviders, int position) {
+        urlListPlayer = null;
+
+        if (requestManager == null) {
+            requestManager = new AsyncRequestExecutorManager();
+        }
+
+        urlsProviderListPlayer = new UrlsProviderListPlayer(mediaPlayer, requestManager, urlsProviders);
+        urlsProviderListPlayer.play(position);
+    }
+
+    @Override
+    public void onPositionChanged() {
         for (PositionChangedListener listener : positionChangedListeners) {
             listener.onPositionChanged();
         }
     }
 
-    private void goNext() {
-        int size = playList.size();
-        if (size >= 2) {
-            if (position < size - 1) {
-                position++;
-            } else {
-                position = 0;
-            }
-
-            onPositionChanged();
-        }
-    }
-
-    private void goPrev() {
-        int size = playList.size();
-        if (size >= 2) {
-            if (position == 0) {
-                position = size - 1;
-            } else {
-                position--;
-            }
-
-            onPositionChanged();
-        }
-    }
-
-    private void onError(String url) {
+    @Override
+    public void onError(String url) {
         for (PlaybackErrorListener listener : errorListeners) {
             listener.onError(url);
         }
     }
 
-    private void tryPlayCurrentUrl() {
-        final String url = playList.get(position);
-        try {
-            setStatus(Status.PREPARING);
-            mediaPlayer.reset();
-            mediaPlayer.setDataSource(url);
-
-            mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-                @Override
-                public boolean onError(MediaPlayer mp, int what, int extra) {
-                    onPlayingUrlError(url);
-                    return true;
-                }
-            });
-
-            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    playNext();
-                }
-            });
-
-            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    setStatus(Status.PLAYING);
-                    mp.start();
-                }
-            });
-            mediaPlayer.prepareAsync();
-
-        } catch (IOException e) {
-            onPlayingUrlError(url);
-        }
-    }
-
-    private void onPlayingUrlError(String url) {
-        onError(url);
-        goNext();
-        tryPlayCurrentUrl();
-    }
-
     void changePlayList(List<String> newPlayListUrls) {
-        if (playList == null) {
-            throw new IllegalStateException("Unable to change playlist, no playlist set. Call play before");
+        if (urlListPlayer == null) {
+            throw new IllegalStateException("Unable to call changePlayList, when playList is not set");
         }
 
-        String currentPlayingUrl = playList.get(position);
-        int newPosition = newPlayListUrls.indexOf(currentPlayingUrl);
-        if (newPosition < 0) {
-            throw new IllegalArgumentException("new playList should contain current playing url");
+        urlListPlayer.changePlayList(newPlayListUrls);
+    }
+
+    Player getPlayer() {
+        if (urlListPlayer != null) {
+            return urlListPlayer;
         }
 
-        position = newPosition;
-        onPositionChanged();
-        playList = newPlayListUrls;
+        return urlsProviderListPlayer;
     }
 
-    void pause() {
-        if (status != Status.PLAYING) {
-            throw new IllegalStateException("pause can be called only in PLAYING state");
+    Status getStatus() {
+        Player player = getPlayer();
+        if (player == null) {
+            return Status.IDLE;
         }
 
-        mediaPlayer.pause();
-        setStatus(Status.PAUSED);
-    }
-
-    void resume() {
-        if (status != Status.PAUSED) {
-            throw new IllegalStateException("resume can be called only in PAUSED state");
-        }
-
-        mediaPlayer.start();
-        setStatus(Status.PLAYING);
-    }
-
-    void togglePauseState() {
-        if (status == Status.PLAYING) {
-            pause();
-        } else if(status == Status.PAUSED) {
-            resume();
-        } else {
-            throw new IllegalStateException("togglePauseState can be called only in PAUSED or PLAYING state");
-        }
-    }
-
-    void playNext() {
-        goNext();
-        tryPlayCurrentUrl();
-    }
-
-    void playPrev() {
-        goPrev();
-        tryPlayCurrentUrl();
-    }
-
-    boolean isPaused() {
-        return status == Status.PAUSED;
-    }
-    
-    boolean isPlaying() {
-        return status == Status.PLAYING;
+        return player.getStatus();
     }
 
     void addProgressChangedListener(ProgressChangedListener listener) {
@@ -218,11 +126,10 @@ public class AudioPlayerService extends Service {
         return mediaPlayer.getDuration();
     }
 
-    private void setStatus(Status status) {
-        this.status = status;
-
+    @Override
+    public void onStatusChanged() {
         for (StateChangedListener listener : stateListeners) {
-            listener.onStateChanged(status);
+            listener.onStateChanged(getStatus());
         }
     }
 
@@ -237,7 +144,7 @@ public class AudioPlayerService extends Service {
         }
 
         public void play(int position) {
-            play(playList, position);
+            getPlayer().play(position);
         }
 
         public void play(List<String> urls) {
@@ -249,35 +156,60 @@ public class AudioPlayerService extends Service {
         }
 
         public void pause() {
-            AudioPlayerService.this.pause();
+            Player player = getPlayer();
+            if (player != null) {
+                player.pause();
+            } else {
+                throw new IllegalStateException("pause is called on IDLE state");
+            }
         }
 
         public void resume() {
-            AudioPlayerService.this.resume();
+            Player player = getPlayer();
+            if (player != null) {
+                player.resume();
+            } else {
+                throw new IllegalStateException("resume is called on IDLE state");
+            }
         }
 
         public void togglePauseState() {
-            AudioPlayerService.this.togglePauseState();
+            Player player = getPlayer();
+            if (player != null) {
+                player.togglePauseState();
+            } else {
+                throw new IllegalStateException("togglePauseState is called on IDLE state");
+            }
         }
 
         public boolean isPaused() {
-            return AudioPlayerService.this.isPaused();
+            return getStatus() == Status.PAUSED;
         }
 
         public boolean isPlaying() {
-            return AudioPlayerService.this.isPlaying();
+            return getStatus() == Status.PLAYING;
         }
 
         public Status getStatus() {
-            return status;
+            return AudioPlayerService.this.getStatus();
         }
 
         public void playNext() {
-            AudioPlayerService.this.playNext();
+            Player player = getPlayer();
+            if (player == null) {
+                throw new IllegalStateException("set play list first");
+            }
+
+            player.playNext();
         }
 
         public void playPrev() {
-            AudioPlayerService.this.playPrev();
+            Player player = getPlayer();
+            if (player == null) {
+                throw new IllegalStateException("set play list first");
+            }
+
+            player.playPrev();
         }
 
         public void addPositionChangedListener(PositionChangedListener listener) {
@@ -340,11 +272,20 @@ public class AudioPlayerService extends Service {
         }
 
         public int getPosition() {
-            return position;
+            Player player = getPlayer();
+            if (player == null) {
+                return -1;
+            }
+
+            return player.getPosition();
         }
 
         public List<String> getPlayList() {
-            return playList;
+            if (urlListPlayer == null) {
+                return null;
+            }
+
+            return urlListPlayer.getPlayList();
         }
     }
 
@@ -361,6 +302,10 @@ public class AudioPlayerService extends Service {
         
         if (mediaPlayerProgressUpdater != null) {
             mediaPlayerProgressUpdater.destroy();
+        }
+
+        if (requestManager != null) {
+            requestManager.cancelAll();
         }
     }
 

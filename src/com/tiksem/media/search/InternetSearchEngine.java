@@ -1,6 +1,7 @@
 package com.tiksem.media.search;
 
 import com.tiksem.media.data.*;
+import com.tiksem.media.playback.UrlsProvider;
 import com.tiksem.media.search.correction.CorrectionUtilities;
 import com.tiksem.media.search.network.*;
 import com.tiksem.media.search.parsers.LastFmCorrectedAudioInfoParser;
@@ -294,7 +295,21 @@ public class InternetSearchEngine {
         }
     }
 
-    public Iterable<String> getAudioUrls(final Audio audio) {
+    public List<UrlsProvider> getUrlsProviders(List<Audio> audios) {
+        return CollectionUtils.transform(audios, new CollectionUtils.Transformer<Audio, UrlsProvider>() {
+            @Override
+            public UrlsProvider get(final Audio audio) {
+                return new UrlsProvider() {
+                    @Override
+                    public List<String> getUrls() throws IOException {
+                        return getAudioUrls(audio);
+                    }
+                };
+            }
+        });
+    }
+
+    public List<String> getAudioUrls(final Audio audio) {
         String name = audio.getName();
         String artistName = audio.getArtistName();
 
