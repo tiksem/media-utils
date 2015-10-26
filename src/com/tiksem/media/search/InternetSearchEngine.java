@@ -8,13 +8,9 @@ import com.tiksem.media.search.parsers.LastFmCorrectedAudioInfoParser;
 import com.tiksem.media.search.parsers.LastFmResultParser;
 import com.tiksem.media.search.parsers.VkResultParser;
 import com.utils.framework.CollectionUtils;
-import com.utils.framework.collections.cache.*;
 import com.utils.framework.collections.queue.PageLazyQueue;
-import com.utils.framework.io.TextLoader;
-import com.utils.framework.io.TextLoaderConfig;
 import com.utils.framework.network.RequestExecutor;
 import com.utilsframework.android.ErrorListener;
-import com.utils.framework.strings.Strings;
 import org.json.JSONException;
 
 import java.io.IOException;
@@ -46,100 +42,33 @@ public class InternetSearchEngine {
     }
 
     private interface ResultProvider<T>{
-        String search(Object query) throws IOException;
+        String search() throws IOException;
         T parse(String response) throws JSONException;
     }
 
-
-    private static class LastFmSearchResultParams<T>{
-        LastFmSearchResultProvider<T> resultProvider;
-        String methodName;
-        String query;
-        int maxCount;
-        int page;
-    }
-
-    private static class ResultParams<T>{
-        ResultProvider<T> resultProvider;
-        String methodName;
-        Object query;
-    }
-
-    private <T> SearchResult<T> getLastFmSearchResult(LastFmSearchResultParams<T> lastFmParams) throws IOException{
-        LastFMSearchParams lastFMSearchParams = new LastFMSearchParams();
-        lastFMSearchParams.limit = lastFmParams.maxCount;
-        lastFMSearchParams.page = lastFmParams.page;
-
-        try{
-            String response = lastFmParams.resultProvider.search(lastFmParams.query, lastFMSearchParams);
-            return lastFmParams.resultProvider.parse(response);
-        }
-        catch (JSONException e){
-            throw new InvalidResponseException(e.getMessage());
-        }
-    }
-
-    private <T> T getResult(ResultParams<T> resultParams) {
-        try{
-            String response = resultParams.resultProvider.search(resultParams.query);
-            return resultParams.resultProvider.parse(response);
-        }
-        catch (Exception e){
-            return null;
-        }
-    }
-
-    private <T> List<T> getResultList(ResultParams<List<T>> resultParams) {
-        List<T> list = getResult(resultParams);
-        if(list == null){
-            return new ArrayList<T>();
-        }
-
-        return list;
-    }
-
     public SearchResult<Album> getAlbumsByName(String query, int maxCount, int page) throws IOException {
-        LastFmSearchResultParams<Album> lastFmParams = new LastFmSearchResultParams<Album>();
-        lastFmParams.maxCount = maxCount;
-        lastFmParams.page = page;
-        lastFmParams.methodName = "getAlbumsByName";
-        lastFmParams.query = query;
+        LastFMSearchParams searchParams = new LastFMSearchParams();
+        searchParams.page = page;
+        searchParams.limit = maxCount;
 
-        lastFmParams.resultProvider = new LastFmSearchResultProvider<Album>() {
-            @Override
-            public String search(String query, LastFMSearchParams searchParams) throws IOException {
-                return lastFMSearcher.getAlbumsByName(query, searchParams);
-            }
-
-            @Override
-            public SearchResult<Album> parse(String response) throws JSONException {
-                return lastFmResultParser.parseAlbums(response);
-            }
-        };
-
-        return getLastFmSearchResult(lastFmParams);
+        String response = lastFMSearcher.getAlbumsByName(query, searchParams);
+        try {
+            return lastFmResultParser.parseAlbums(response);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
     }
 
     public SearchResult<Album> getAlbumsOfArtist(String artistName, int maxCount, int page) throws IOException {
-        LastFmSearchResultParams<Album> lastFmParams = new LastFmSearchResultParams<Album>();
-        lastFmParams.maxCount = maxCount;
-        lastFmParams.page = page;
-        lastFmParams.methodName = "getAlbumsOfArtist";
-        lastFmParams.query = artistName;
-
-        lastFmParams.resultProvider = new LastFmSearchResultProvider<Album>() {
-            @Override
-            public String search(String query, LastFMSearchParams searchParams) throws IOException {
-                return lastFMSearcher.getAlbumsOfArtist(query, searchParams);
-            }
-
-            @Override
-            public SearchResult<Album> parse(String response) throws JSONException {
-                return lastFmResultParser.getAlbumsOfArtist(response);
-            }
-        };
-
-        return getLastFmSearchResult(lastFmParams);
+        LastFMSearchParams searchParams = new LastFMSearchParams();
+        searchParams.page = page;
+        searchParams.limit = maxCount;
+        String response = lastFMSearcher.getAlbumsOfArtist(artistName, searchParams);
+        try {
+            return lastFmResultParser.getAlbumsOfArtist(response);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
     }
 
     private void updateAlbumId(Album album) throws IOException, JSONException {
@@ -155,128 +84,65 @@ public class InternetSearchEngine {
         album.setId(id);
     }
 
-    public List<Audio> getSongsOfAlbum(final Album album) {
-        long id = album.getId();
-
+    public List<Audio> getSongsOfAlbum(final Album album) throws IOException {
         try {
-            if(id < 0){
-                updateAlbumId(album);
-                id = album.getId();
-                if(id < 0){
-                    return Collections.emptyList();
-                }
-            }
-
-            ResultParams<List<Audio>> resultParams = new ResultParams<List<Audio>>();
-            resultParams.query = id;
-            resultParams.methodName = "getSongsOfAlbum";
-            resultParams.resultProvider = new ResultProvider<List<Audio>>() {
-                @Override
-                public String search(Object id) throws IOException {
-                    return lastFMSearcher.getTracksByAlbumId((Integer)id);
-                }
-
-                @Override
-                public List<Audio> parse(String response) throws JSONException {
-                    return lastFmResultParser.getSongsOfAlbum(response, album);
-                }
-            };
-
-            return getResultList(resultParams);
-
+            String response = lastFMSearcher.getAlbumByNameAndArtistName(album.getName(), album.getArtistName());
+            return lastFmResultParser.getSongsOfAlbum(response, album);
         } catch (JSONException e) {
-            return Collections.emptyList();
-        } catch (IOException e) {
-            return Collections.emptyList();
+            throw new RequestJsonException(e);
         }
     }
 
     public SearchResult<Audio> searchAudios(String query, int maxCount, int page) throws IOException {
-        LastFmSearchResultParams<Audio> lastFmParams = new LastFmSearchResultParams<Audio>();
-        lastFmParams.maxCount = maxCount;
-        lastFmParams.page = page;
-        lastFmParams.methodName = "searchAudios";
-        lastFmParams.query = query;
+        LastFMSearchParams searchParams = new LastFMSearchParams();
+        searchParams.page = page;
+        searchParams.limit = maxCount;
 
-        lastFmParams.resultProvider = new LastFmSearchResultProvider<Audio>() {
-            @Override
-            public String search(String query, LastFMSearchParams searchParams) throws IOException {
-                return lastFMSearcher.searchTracks(query, searchParams);
-            }
-
-            @Override
-            public SearchResult<Audio> parse(String response) throws JSONException {
-                return lastFmResultParser.parseTracks(response);
-            }
-        };
-
-        return getLastFmSearchResult(lastFmParams);
+        String response = lastFMSearcher.searchTracks(query, searchParams);
+        try {
+            return lastFmResultParser.parseTracks(response);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
     }
 
     public SearchResult<Audio> getSongsOfArtist(String artistName, int maxCount, int page) throws IOException {
-        LastFmSearchResultParams<Audio> lastFmParams = new LastFmSearchResultParams<Audio>();
-        lastFmParams.maxCount = maxCount;
-        lastFmParams.page = page;
-        lastFmParams.methodName = "getSongsOfArtist";
-        lastFmParams.query = artistName;
+        LastFMSearchParams searchParams = new LastFMSearchParams();
+        searchParams.page = page;
+        searchParams.limit = maxCount;
 
-        lastFmParams.resultProvider = new LastFmSearchResultProvider<Audio>() {
-            @Override
-            public String search(String query, LastFMSearchParams searchParams) throws IOException {
-                return lastFMSearcher.getTracksOfArtist(query, searchParams);
-            }
-
-            @Override
-            public SearchResult<Audio> parse(String response) throws JSONException {
-                return lastFmResultParser.getSongsOfArtist(response);
-            }
-        };
-
-        return getLastFmSearchResult(lastFmParams);
+        String response = lastFMSearcher.getTracksOfArtist(artistName, searchParams);
+        try {
+            return lastFmResultParser.getSongsOfArtist(response);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
     }
 
     public SearchResult<Audio> getSongsByTag(String tag, int maxCount, int page) throws IOException {
-        LastFmSearchResultParams<Audio> lastFmParams = new LastFmSearchResultParams<Audio>();
-        lastFmParams.maxCount = maxCount;
-        lastFmParams.page = page;
-        lastFmParams.methodName = "getSongsByTag";
-        lastFmParams.query = tag;
+        LastFMSearchParams searchParams = new LastFMSearchParams();
+        searchParams.page = page;
+        searchParams.limit = maxCount;
 
-        lastFmParams.resultProvider = new LastFmSearchResultProvider<Audio>() {
-            @Override
-            public String search(String query, LastFMSearchParams searchParams) throws IOException {
-                return lastFMSearcher.getTracksByTag(query, searchParams);
-            }
-
-            @Override
-            public SearchResult<Audio> parse(String response) throws JSONException {
-                return lastFmResultParser.getSongsByTag(response);
-            }
-        };
-
-        return getLastFmSearchResult(lastFmParams);
+        String response = lastFMSearcher.getTracksByTag(tag, searchParams);
+        try {
+            return lastFmResultParser.getSongsByTag(response);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
     }
 
     public SearchResult<Artist> getArtistsByTag(String tag, int maxCount, int page) throws IOException {
-        LastFmSearchResultParams<Artist> lastFmParams = new LastFmSearchResultParams<Artist>();
-        lastFmParams.maxCount = maxCount;
-        lastFmParams.page = page;
-        lastFmParams.methodName = "getArtistsByTag";
-        lastFmParams.query = tag;
+        LastFMSearchParams searchParams = new LastFMSearchParams();
+        searchParams.page = page;
+        searchParams.limit = maxCount;
 
-        lastFmParams.resultProvider = new LastFmSearchResultProvider<Artist>() {
-            @Override
-            public String search(String query, LastFMSearchParams searchParams) throws IOException {
-                return lastFMSearcher.getArtistsByTag(query, searchParams);
-            }
-
-            @Override
-            public SearchResult<Artist> parse(String response) throws JSONException {
-                return lastFmResultParser.getArtistsByTag(response);
-            }
-        };
-
-        return getLastFmSearchResult(lastFmParams);
+        String response = lastFMSearcher.getArtistsByTag(tag, searchParams);
+        try {
+            return lastFmResultParser.getArtistsByTag(response);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
     }
 
     public boolean fillAudioInfo(Audio audio){
@@ -309,7 +175,7 @@ public class InternetSearchEngine {
         });
     }
 
-    public List<String> getAudioUrls(final Audio audio) {
+    public List<String> getAudioUrls(final Audio audio) throws IOException {
         String name = audio.getName();
         String artistName = audio.getArtistName();
 
@@ -320,46 +186,27 @@ public class InternetSearchEngine {
         String query = artistName + " " + name;
         fillAudioInfo(audio);
 
-        ResultParams<List<String>> resultParams = new ResultParams<List<String>>();
-        resultParams.methodName = "getAudioUrls";
-        resultParams.query = query;
-        resultParams.resultProvider = new ResultProvider<List<String>>() {
-            @Override
-            public String search(Object query) throws IOException {
-                VkAudioSearchParams searchParams = new VkAudioSearchParams();
-                searchParams.setCount(AUDIO_URLS_COUNT);
-                return vkSearcher.searchAudios(query.toString(), searchParams);
-            }
-
-            @Override
-            public List<String> parse(String response) throws JSONException {
-                return vkResultParser.getAudioUrls(response, audio);
-            }
-        };
-
-        return getResultList(resultParams);
+        VkAudioSearchParams searchParams = new VkAudioSearchParams();
+        searchParams.setCount(AUDIO_URLS_COUNT);
+        String response = vkSearcher.searchAudios(query, searchParams);
+        try {
+            return vkResultParser.getAudioUrls(response, audio);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
     }
 
     public SearchResult<Artist> searchArtists(String query, int maxCount, int page) throws IOException {
-        LastFmSearchResultParams<Artist> lastFmParams = new LastFmSearchResultParams<Artist>();
-        lastFmParams.maxCount = maxCount;
-        lastFmParams.page = page;
-        lastFmParams.methodName = "searchArtists";
-        lastFmParams.query = query;
+        LastFMSearchParams searchParams = new LastFMSearchParams();
+        searchParams.page = page;
+        searchParams.limit = maxCount;
 
-        lastFmParams.resultProvider = new LastFmSearchResultProvider<Artist>() {
-            @Override
-            public String search(String query, LastFMSearchParams searchParams) throws IOException {
-                return lastFMSearcher.searchArtists(query, searchParams);
-            }
-
-            @Override
-            public SearchResult<Artist> parse(String response) throws JSONException {
-                return lastFmResultParser.parseArtists(response);
-            }
-        };
-
-        return getLastFmSearchResult(lastFmParams);
+        String response = lastFMSearcher.searchArtists(query, searchParams);
+        try {
+            return lastFmResultParser.parseArtists(response);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
     }
 
     public SearchResult<Audio> getSimilarTracks(Audio audio, int maxCount, int page) throws IOException {
@@ -417,47 +264,29 @@ public class InternetSearchEngine {
             throw new NullPointerException("artistName == null");
         }
 
-        LastFmSearchResultParams<Artist> lastFmParams = new LastFmSearchResultParams<Artist>();
-        lastFmParams.maxCount = maxCount;
-        lastFmParams.page = page;
-        lastFmParams.methodName = "getSimilarArtists";
-        lastFmParams.query = artistName;
+        LastFMSearchParams searchParams = new LastFMSearchParams();
+        searchParams.limit = maxCount;
+        searchParams.page = page;
 
-        lastFmParams.resultProvider = new LastFmSearchResultProvider<Artist>() {
-            @Override
-            public String search(String query, LastFMSearchParams searchParams) throws IOException {
-                return lastFMSearcher.getSimilarArtists(query, searchParams);
-            }
-
-            @Override
-            public SearchResult<Artist> parse(String response) throws JSONException {
-                return lastFmResultParser.getSimilarArtists(response);
-            }
-        };
-
-        return getLastFmSearchResult(lastFmParams);
+        String response = lastFMSearcher.getSimilarArtists(artistName, searchParams);
+        try {
+            return lastFmResultParser.getSimilarArtists(response);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
     }
 
     public SearchResult<String> searchTags(String query, int maxCount, int page) throws IOException {
-        LastFmSearchResultParams<String> lastFmParams = new LastFmSearchResultParams<String>();
-        lastFmParams.maxCount = maxCount;
-        lastFmParams.page = page;
-        lastFmParams.methodName = "searchTags";
-        lastFmParams.query = query;
+        LastFMSearchParams searchParams = new LastFMSearchParams();
+        searchParams.limit = maxCount;
+        searchParams.page = page;
 
-        lastFmParams.resultProvider = new LastFmSearchResultProvider<String>() {
-            @Override
-            public String search(String query, LastFMSearchParams searchParams) throws IOException {
-                return lastFMSearcher.searchTags(query, searchParams);
-            }
-
-            @Override
-            public SearchResult<String> parse(String response) throws JSONException {
-                return lastFmResultParser.searchTags(response);
-            }
-        };
-
-        return getLastFmSearchResult(lastFmParams);
+        String response = lastFMSearcher.searchTags(query, searchParams);
+        try {
+            return lastFmResultParser.searchTags(response);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
     }
 
     public SearchResult<String> searchTagsHandleErrors(String query, int maxCount, int page){

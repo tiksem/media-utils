@@ -128,7 +128,7 @@ public class AudioDataManager {
         return albums;
     }
 
-    public List<Audio> getTracksOfAlbum(Album album){
+    public List<Audio> getTracksOfAlbum(Album album) throws IOException {
         if(album.isLocal()){
             return localAudioDataBase.getSongsOfAlbum(album);
         } else {
@@ -261,7 +261,7 @@ public class AudioDataManager {
         }
     }
 
-    public Iterable<String> getSuggestedAudioUrls(Audio audio){
+    public Iterable<String> getSuggestedAudioUrls(Audio audio) throws IOException {
         return internetSearchEngine.getAudioUrls(audio);
     }
 
@@ -341,7 +341,7 @@ public class AudioDataManager {
         localAudioDataBase.startAlbumArtsUpdating(onArtsUpdatingFinished);
     }
 
-    public List<Audio> getSongsByTag(Object tag) {
+    public List<Audio> getSongsByTag(Object tag) throws IOException {
         if(tag instanceof AllSongsTag){
             AllSongsTag allSongsTag = (AllSongsTag) tag;
             String query = allSongsTag.getQuery();

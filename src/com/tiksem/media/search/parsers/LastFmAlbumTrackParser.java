@@ -23,7 +23,7 @@ class LastFmAlbumTrackParser extends JsonArrayElementParser<Audio> {
     public Audio parse(JSONObject jsonObject) throws JSONException {
         Audio audio = Audio.createInternetAudio();
 
-        String name = jsonObject.getString("title");
+        String name = jsonObject.getString("name");
         Integer duration = jsonObject.optInt("duration", 0);
         String artistName = album.getArtistName();
 

@@ -61,7 +61,7 @@ public class LastFMSearcher {
         return search(params);
     }
 
-    public String getTracksByAlbumId(int id) throws IOException {
+    public String getTracksByAlbumId(long id) throws IOException {
         return requestExecutor.executeRequest(PLAYLIST_FETCH_URL + id + '&' +
                 ACCESS_TOKEN_KEY + '=' + ACCESS_TOKEN, null);
     }

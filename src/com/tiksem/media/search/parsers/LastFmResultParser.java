@@ -49,7 +49,7 @@ public class LastFmResultParser {
         ExtendedJSONObject jsonObject = new ExtendedJSONObject(response);
         JsonArrayElementParser<Audio> parser = new LastFmAlbumTrackParser(album);
 
-        return jsonObject.parseJsonArrayFromPath(parser, "trackList");
+        return jsonObject.parseJsonArrayFromPath(parser, "album", "tracks", "track");
     }
 
     public int getAlbumId(String response) throws JSONException {

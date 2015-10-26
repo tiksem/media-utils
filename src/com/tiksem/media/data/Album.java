@@ -1,5 +1,6 @@
 package com.tiksem.media.data;
 
+import android.os.Parcel;
 import com.utils.framework.collections.cache.GlobalStringCache;
 
 public class Album extends ArtCollection{
@@ -80,4 +81,35 @@ public class Album extends ArtCollection{
         result = 31 * result + (mbid != null ? mbid.hashCode() : 0);
         return result;
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeString(this.artistName);
+        dest.writeLong(this.artistId);
+        dest.writeString(this.mbid);
+    }
+
+    protected Album(Parcel in) {
+        super(in);
+        this.artistName = in.readString();
+        this.artistId = in.readLong();
+        this.mbid = in.readString();
+    }
+
+    public static final Creator<Album> CREATOR = new Creator<Album>() {
+        public Album createFromParcel(Parcel source) {
+            return new Album(source);
+        }
+
+        public Album[] newArray(int size) {
+            return new Album[size];
+        }
+    };
 }
