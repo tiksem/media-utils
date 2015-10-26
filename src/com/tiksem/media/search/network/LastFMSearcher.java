@@ -137,6 +137,15 @@ public class LastFMSearcher {
         return search(params);
     }
 
+    public String getTrackInfoByMbid(String mbid) throws IOException {
+        LastFMSearchParams lastFMSearchParams = new LastFMSearchParams();
+        lastFMSearchParams.autocorrect = 1;
+        Map<String, Object> params = Reflection.objectToPropertyMap(lastFMSearchParams);
+        params.put("mbid",mbid);
+        params.put("method","track.getInfo");
+        return search(params);
+    }
+
     public String getSimilarTracks(String name, String artistName, LastFMSearchParams searchParams) throws IOException {
         Map<String, Object> params = Reflection.objectToPropertyMap(searchParams);
         params.put("method","track.getsimilar");

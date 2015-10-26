@@ -12,11 +12,18 @@ import com.utils.framework.collections.checkers.ElementChecker;
 public abstract class VkUrlChecker implements ElementChecker<String> {
     public static class Params{
         public String requestedArtist;
-        public String requestTitle;
+        public String requestedTitle;
         public String receivedArtist;
         public String receivedTitle;
         public int requestedDuration;
         public int receivedDuration;
+    }
+
+    protected final void makeLowerCase() {
+        params.receivedTitle = params.receivedTitle.toLowerCase();
+        params.requestedArtist = params.requestedArtist.toLowerCase();
+        params.receivedArtist = params.receivedArtist.toLowerCase();
+        params.requestedTitle = params.requestedTitle.toLowerCase();
     }
 
    protected Params params;

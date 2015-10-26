@@ -42,27 +42,6 @@ public class Identified implements Parcelable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Identified that = (Identified) o;
-
-        if (id != that.id) return false;
-        if (isLocal != that.isLocal) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (int) (id ^ (id >>> 32));
-        result = 31 * result + (isLocal ? 1 : 0);
-        return result;
-    }
-
-
-    @Override
     public int describeContents() {
         return 0;
     }
@@ -78,4 +57,13 @@ public class Identified implements Parcelable {
         this.isLocal = in.readByte() != 0;
     }
 
+    public static final Creator<Identified> CREATOR = new Creator<Identified>() {
+        public Identified createFromParcel(Parcel source) {
+            return new Identified(source);
+        }
+
+        public Identified[] newArray(int size) {
+            return new Identified[size];
+        }
+    };
 }

@@ -14,6 +14,6 @@ public class VkUrlTitleEqualsChecker extends VkUrlChecker {
 
     @Override
     public boolean elementSatisfyCondition(String object, int index) {
-        return params.requestTitle.equalsIgnoreCase(params.receivedTitle);
+        return params.requestedTitle.equalsIgnoreCase(params.receivedTitle);
     }
 }

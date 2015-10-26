@@ -92,26 +92,6 @@ public class NamedData extends Identified{
         return name;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
-        NamedData namedData = (NamedData) o;
-
-        if (name != null ? !name.equals(namedData.name) : namedData.name != null) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        return result;
-    }
-
     public static <T extends NamedData> List<String> namedDataListToNameList(List<T> namedDatas) {
         List<String> result = new ArrayList<String>(namedDatas.size());
         for(NamedData namedData : namedDatas){

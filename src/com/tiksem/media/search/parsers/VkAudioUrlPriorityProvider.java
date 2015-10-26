@@ -1,10 +1,10 @@
 package com.tiksem.media.search.parsers;
 
 import com.tiksem.media.data.Audio;
+import com.tiksem.media.search.parsers.checkers.VkITunesSessionChecker;
 import com.tiksem.media.search.parsers.checkers.VkUrlChecker;
 import com.tiksem.media.search.parsers.checkers.VkUrlCheckerFactory;
 import com.tiksem.media.search.parsers.checkers.VkUrlDurationChecker;
-import com.utils.framework.collections.checkers.ElementChecker;
 import com.utils.framework.collections.checkers.ElementCheckerListPriorityProvider;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,15 +19,14 @@ public class VkAudioUrlPriorityProvider extends ElementCheckerListPriorityProvid
     public VkAudioUrlPriorityProvider(JSONArray tracks, Audio audio) {
         vkUrlCheckerParams.requestedArtist = audio.getArtistName();
         vkUrlCheckerParams.requestedDuration = Math.round((float)audio.getDuration() / 1000.0f);
-        vkUrlCheckerParams.requestTitle = audio.getName();
+        vkUrlCheckerParams.requestedTitle = audio.getName();
         this.tracks = tracks;
     }
 
     @Override
     protected List getElementCheckers() {
-        return Arrays.asList(VkUrlCheckerFactory.artistNameTitleAndDuration(vkUrlCheckerParams),
-                VkUrlCheckerFactory.receivedTitleHasArtistNameAndTitleAndDuration(vkUrlCheckerParams),
-                VkUrlCheckerFactory.artistNameOrTitleAndDuration(vkUrlCheckerParams),
+        return Arrays.asList(
+                new VkITunesSessionChecker(vkUrlCheckerParams),
                 VkUrlCheckerFactory.artistNameAndTitle(vkUrlCheckerParams),
                 VkUrlCheckerFactory.receivedTitleHasArtistNameOrTitleAndDuration(vkUrlCheckerParams),
                 VkUrlCheckerFactory.receivedTitleHasArtistNameAndTitle(vkUrlCheckerParams),

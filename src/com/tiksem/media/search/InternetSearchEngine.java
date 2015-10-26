@@ -146,15 +146,22 @@ public class InternetSearchEngine {
     }
 
     public boolean fillAudioInfo(Audio audio){
-        String name = audio.getName();
-        String artistName = audio.getArtistName();
-
-        if(name == null || artistName == null){
-            return false;
-        }
-
         try {
-            String response = lastFMSearcher.getTrackInfoByNameAndArtistName(name, artistName);
+            String mbid = audio.getMbid();
+            String response = null;
+            if (mbid == null) {
+                String name = audio.getName();
+                String artistName = audio.getArtistName();
+
+                if (name == null || artistName == null) {
+                    return false;
+                }
+
+                response = lastFMSearcher.getTrackInfoByNameAndArtistName(name, artistName);
+            } else {
+                response = lastFMSearcher.getTrackInfoByMbid(mbid);
+            }
+
             return lastFmResultParser.fillAudioInfo(response, audio);
         } catch (IOException e) {
             return false;

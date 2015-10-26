@@ -17,7 +17,7 @@ public class VkUrlTitlePartNotExistsChecker extends VkUrlChecker{
 
     @Override
     public boolean elementSatisfyCondition(String object, int index) {
-        String requestedTitle = params.requestTitle.toLowerCase();
+        String requestedTitle = params.requestedTitle.toLowerCase();
         String receivedTitle = params.receivedTitle.toLowerCase();
         return requestedTitle.indexOf(part) >= 0 || receivedTitle.indexOf(part) < 0;
     }

@@ -14,7 +14,7 @@ public class VkUrlReceivedTitleHasTitleChecker extends VkUrlChecker{
 
     @Override
     public boolean elementSatisfyCondition(String object, int index) {
-        String requestTitle = params.requestTitle.toLowerCase();
+        String requestTitle = params.requestedTitle.toLowerCase();
         String receivedTitle = params.receivedTitle.toLowerCase();
         return receivedTitle.indexOf(requestTitle) >= 0;
     }

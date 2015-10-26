@@ -31,6 +31,9 @@ class LastFmAudioParser extends LastFmArtCollectionInPageParser<Audio>{
         audio.setName(name);
         audio.setArtistName(artistName);
 
+        String mbid = jsonObject.optString("mbid");
+        audio.setMbid(mbid);
+
         artCollectionParser.fillAlbumArts(jsonObject, audio);
 
         return audio;
