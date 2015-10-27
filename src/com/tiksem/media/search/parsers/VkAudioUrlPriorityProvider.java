@@ -85,7 +85,7 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
     }
 
     private boolean containsCover(String input) {
-        return input.contains("cover") || input.contains("ковер");
+        return input.contains("cover") || input.contains("кавер");
     }
 
     private int getPriorityDependingOnParams() {
