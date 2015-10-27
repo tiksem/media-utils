@@ -261,10 +261,6 @@ public class AudioDataManager {
         }
     }
 
-    public Iterable<String> getSuggestedAudioUrls(Audio audio) throws IOException {
-        return internetSearchEngine.getAudioUrls(audio);
-    }
-
     public NavigationList<Audio> getSongsYouMayLike(){
         SongsYouMayLikeNavigationList.Params params = new SongsYouMayLikeNavigationList.Params();
         params.userPlaylist = getSongs();

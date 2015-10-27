@@ -83,4 +83,12 @@ public class UrlsProviderListPlayer extends Player {
         urls = null;
         urlPosition = 0;
     }
+
+    public List<UrlsProvider> getProviders() {
+        return providers;
+    }
+
+    public int getUrlPosition() {
+        return urlPosition;
+    }
 }

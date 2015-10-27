@@ -292,6 +292,22 @@ public class AudioPlayerService extends Service implements Player.Listener {
 
             return urlListPlayer.getPlayList();
         }
+
+        public List<UrlsProvider> getUrlsProviders() {
+            if (urlsProviderListPlayer == null) {
+                return null;
+            }
+
+            return urlsProviderListPlayer.getProviders();
+        }
+
+        public int getProviderUrlPosition() {
+            if (urlsProviderListPlayer == null) {
+                return -1;
+            }
+
+            return urlsProviderListPlayer.getUrlPosition();
+        }
     }
 
     @Override

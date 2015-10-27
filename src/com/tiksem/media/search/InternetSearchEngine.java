@@ -4,11 +4,9 @@ import com.tiksem.media.data.*;
 import com.tiksem.media.playback.UrlsProvider;
 import com.tiksem.media.search.correction.CorrectionUtilities;
 import com.tiksem.media.search.network.*;
-import com.tiksem.media.search.parsers.LastFmCorrectedAudioInfoParser;
-import com.tiksem.media.search.parsers.LastFmResultParser;
-import com.tiksem.media.search.parsers.TheAudioDbParser;
-import com.tiksem.media.search.parsers.VkResultParser;
+import com.tiksem.media.search.parsers.*;
 import com.utils.framework.CollectionUtils;
+import com.utils.framework.Transformer;
 import com.utils.framework.collections.queue.PageLazyQueue;
 import com.utils.framework.network.RequestExecutor;
 import com.utilsframework.android.ErrorListener;
@@ -185,21 +183,53 @@ public class InternetSearchEngine {
         return lastFmResultParser.fillAudioInfo(response, audio);
     }
 
-    public List<UrlsProvider> getUrlsProviders(List<Audio> audios) {
-        return CollectionUtils.transformNonCopy(audios, new CollectionUtils.Transformer<Audio, UrlsProvider>() {
-            @Override
-            public UrlsProvider get(final Audio audio) {
-                return new UrlsProvider() {
-                    @Override
-                    public List<String> getUrls() throws IOException {
-                        return getAudioUrls(audio);
-                    }
-                };
-            }
-        });
+    public class VkUrlsProvider implements UrlsProvider {
+        private Audio audio;
+        private List<UrlQueryData> queryDataList;
+
+        public VkUrlsProvider(Audio audio) {
+            this.audio = audio;
+        }
+
+        public List<UrlQueryData> getQueryDataList() {
+            return queryDataList;
+        }
+
+        @Override
+        public List<String> getUrls() throws IOException {
+            queryDataList = getAudioUrls(audio);
+            return CollectionUtils.transformNonCopy(queryDataList, new Transformer<UrlQueryData, String>() {
+                @Override
+                public String get(UrlQueryData data) {
+                    return data.getUrl();
+                }
+            });
+        }
     }
 
-    public List<String> getAudioUrls(final Audio audio) throws IOException {
+    public List<UrlsProvider> getUrlsProviders(final List<Audio> audios) {
+        return new AbstractList<UrlsProvider>() {
+            private Map<Integer, UrlsProvider> cached = new HashMap<>();
+
+            @Override
+            public UrlsProvider get(int location) {
+                UrlsProvider provider = cached.get(location);
+                if (provider == null) {
+                    provider = new VkUrlsProvider(audios.get(location));
+                    cached.put(location, provider);
+                }
+
+                return provider;
+            }
+
+            @Override
+            public int size() {
+                return audios.size();
+            }
+        };
+    }
+
+    public List<UrlQueryData> getAudioUrls(final Audio audio) throws IOException {
         String name = audio.getName();
         String artistName = audio.getArtistName();
 

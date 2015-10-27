@@ -27,32 +27,31 @@ public class VkResultParser {
         List<String> urls;
     }
 
-    private List<String> getAudioUrls(JSONArray tracks) throws JSONException {
-        ArrayList<String> urls = new ArrayList<String>(tracks.length() - 1);
+    private List<UrlQueryData> getAudioUrls(JSONArray tracks) throws JSONException {
+        ArrayList<UrlQueryData> datas = new ArrayList<UrlQueryData>(tracks.length() - 1);
         //first array element - results count
         for(int i = 1; i < tracks.length(); i++){
             JSONObject track = tracks.getJSONObject(i);
-            String url = track.getString("url");
-            urls.add(url);
+            UrlQueryData data = new UrlQueryData();
+            data.setUrl(track.getString("url"));
+            data.setArtistName(track.optString("artist"));
+            data.setName(track.optString("title"));
+            data.setDuration(track.optInt("duration", -1));
+            datas.add(data);
         }
 
-        return urls;
+        return datas;
     }
 
-    public List<String> getAudioUrls(String response) throws JSONException {
-        JSONArray tracks = getAudiosJSONArray(response);
-        return getAudioUrls(tracks);
-    }
-
-    public List<String> getAudioUrls(String response, Audio audio) throws JSONException
+    public List<UrlQueryData> getAudioUrls(String response, Audio audio) throws JSONException
     {
         JSONArray tracks = getAudiosJSONArray(response);
-        List<String> urls = getAudioUrls(tracks);
+        List<UrlQueryData> urlsData = getAudioUrls(tracks);
 
         VkAudioUrlPriorityProvider priorityProvider =
-                new VkAudioUrlPriorityProvider(tracks, audio);
-        CollectionUtils.sortByPriority(urls, priorityProvider);
+                new VkAudioUrlPriorityProvider(audio);
+        CollectionUtils.sortByPriority(urlsData, priorityProvider);
 
-        return urls;
+        return urlsData;
     }
 }

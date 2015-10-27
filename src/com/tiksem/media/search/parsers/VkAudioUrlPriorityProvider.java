@@ -5,8 +5,7 @@ import com.utils.framework.CollectionUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesProvider<String> {
-    private JSONArray tracks;
+public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesProvider<UrlQueryData> {
     private Audio audio;
     private String vkArtist;
     private String vkTitle;
@@ -40,21 +39,15 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
         TRASH
     }
 
-    public VkAudioUrlPriorityProvider(JSONArray tracks, Audio audio) {
-        this.tracks = tracks;
+    public VkAudioUrlPriorityProvider(Audio audio) {
         this.audio = audio;
     }
 
     @Override
-    public int getPriorityOf(String object, int index) {
-        JSONObject track = tracks.optJSONObject(index + 1);
-        if(track == null){
-            return getPrioritiesCount() - 1;
-        }
-
-        vkArtist = track.optString("artist").toLowerCase();
-        vkTitle = track.optString("title").toLowerCase();
-        vkDuration = track.optInt("duration",-1);
+    public int getPriorityOf(UrlQueryData data, int index) {
+        vkArtist = data.getArtistName().toLowerCase();
+        vkTitle = data.getName().toLowerCase();
+        vkDuration = data.getDuration();
 
         inputArtist = audio.getArtistName().toLowerCase();
         inputTitle = audio.getName().toLowerCase();
