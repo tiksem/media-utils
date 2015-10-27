@@ -13,7 +13,7 @@ public class TheAudioDbParser {
     public boolean fillAudioDuration(Audio audio, String response) {
         int index = response.indexOf(DURATION_KEY_TOKEN);
         if (index > 0) {
-            int duration = Strings.moveAndParseUnsignedInt(response, DURATION_KEY_TOKEN.length() + index);
+            int duration = Strings.parseUnsignedIntToken(response, DURATION_KEY_TOKEN.length() + index);
             if (duration > 0) {
                 duration /= 1000;
                 audio.setDuration(duration);
