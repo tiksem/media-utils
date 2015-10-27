@@ -139,6 +139,10 @@ public abstract class Player {
 
         position = newPosition;
 
+        onPositionChanged();
+    }
+
+    protected void onPositionChanged() {
         if(listener != null) {
             listener.onPositionChanged();
         }

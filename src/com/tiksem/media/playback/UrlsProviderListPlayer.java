@@ -76,4 +76,11 @@ public class UrlsProviderListPlayer extends Player {
     protected boolean canGoToNextUrl() {
         return urlPosition < urls.size() - 1;
     }
+
+    @Override
+    protected void onPositionChanged() {
+        super.onPositionChanged();
+        urls = null;
+        urlPosition = 0;
+    }
 }
