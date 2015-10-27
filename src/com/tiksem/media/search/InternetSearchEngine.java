@@ -6,6 +6,7 @@ import com.tiksem.media.search.correction.CorrectionUtilities;
 import com.tiksem.media.search.network.*;
 import com.tiksem.media.search.parsers.LastFmCorrectedAudioInfoParser;
 import com.tiksem.media.search.parsers.LastFmResultParser;
+import com.tiksem.media.search.parsers.TheAudioDbParser;
 import com.tiksem.media.search.parsers.VkResultParser;
 import com.utils.framework.CollectionUtils;
 import com.utils.framework.collections.queue.PageLazyQueue;
@@ -30,10 +31,13 @@ public class InternetSearchEngine {
     private LastFmResultParser lastFmResultParser = new LastFmResultParser();
     private VkResultParser vkResultParser = new VkResultParser();
     private VkSearcher vkSearcher;
+    private TheAudioDbSearcher audioDbSearcher;
+    private TheAudioDbParser audioDbParser = new TheAudioDbParser();
 
     public InternetSearchEngine(RequestExecutor requestExecutor) {
         lastFMSearcher = new LastFMSearcher(requestExecutor);
         vkSearcher = new VkSearcher(requestExecutor);
+        audioDbSearcher = new TheAudioDbSearcher(requestExecutor);
     }
 
     private interface LastFmSearchResultProvider<T>{
@@ -147,25 +151,38 @@ public class InternetSearchEngine {
 
     public boolean fillAudioInfo(Audio audio){
         try {
-            String mbid = audio.getMbid();
-            String response = null;
-            if (mbid == null) {
-                String name = audio.getName();
-                String artistName = audio.getArtistName();
-
-                if (name == null || artistName == null) {
-                    return false;
-                }
-
-                response = lastFMSearcher.getTrackInfoByNameAndArtistName(name, artistName);
-            } else {
-                response = lastFMSearcher.getTrackInfoByMbid(mbid);
+            if (fillAudioInfoUsingTheDb(audio)) {
+                return true;
             }
 
-            return lastFmResultParser.fillAudioInfo(response, audio);
+            return fillAudioInfoUsingLastFm(audio);
         } catch (IOException e) {
             return false;
         }
+    }
+
+    private boolean fillAudioInfoUsingTheDb(Audio audio) throws IOException {
+        String response = audioDbSearcher.searchTrack(audio.getName(), audio.getArtistName());
+        return audioDbParser.fillAudioDuration(audio, response);
+    }
+
+    private boolean fillAudioInfoUsingLastFm(Audio audio) throws IOException {
+        String response;
+        String mbid = audio.getMbid();
+        if (mbid == null) {
+            String name = audio.getName();
+            String artistName = audio.getArtistName();
+
+            if (name == null || artistName == null) {
+                return false;
+            }
+
+            response = lastFMSearcher.getTrackInfoByNameAndArtistName(name, artistName);
+        } else {
+            response = lastFMSearcher.getTrackInfoByMbid(mbid);
+        }
+
+        return lastFmResultParser.fillAudioInfo(response, audio);
     }
 
     public List<UrlsProvider> getUrlsProviders(List<Audio> audios) {

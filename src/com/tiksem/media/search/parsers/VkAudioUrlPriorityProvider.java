@@ -1,51 +1,154 @@
 package com.tiksem.media.search.parsers;
 
 import com.tiksem.media.data.Audio;
-import com.tiksem.media.search.parsers.checkers.VkITunesSessionChecker;
-import com.tiksem.media.search.parsers.checkers.VkUrlChecker;
-import com.tiksem.media.search.parsers.checkers.VkUrlCheckerFactory;
-import com.tiksem.media.search.parsers.checkers.VkUrlDurationChecker;
-import com.utils.framework.collections.checkers.ElementCheckerListPriorityProvider;
+import com.utils.framework.CollectionUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.Arrays;
-import java.util.List;
-
-public class VkAudioUrlPriorityProvider extends ElementCheckerListPriorityProvider {
-    private VkUrlChecker.Params vkUrlCheckerParams = new VkUrlChecker.Params();
+public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesProvider<String> {
     private JSONArray tracks;
+    private Audio audio;
+    private String vkArtist;
+    private String vkTitle;
+    private int vkDuration;
+    private String inputArtist;
+    private String inputTitle;
+    private int inputDuration;
+    private boolean artistEquals;
+    private boolean durationEquals;
+
+    private enum Priority {
+        DURATION_EQUALS_ARTIST_EQUALS_TITLE_EQUALS,
+        DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_ORIGINAL_WORD,
+        DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_ITUNES_SESSION,
+        DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS,
+        DURATION_EQUALS_ARTIST_CONTAINS_TITLE_EQUALS,
+        DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_ORIGINAL_WORD,
+        DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_ITUNES_SESSION,
+        DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS,
+
+        EQUALS_ARTIST_EQUALS_TITLE_EQUALS,
+        EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_ORIGINAL_WORD,
+        EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_ITUNES_SESSION,
+        EQUALS_ARTIST_EQUALS_TITLE_CONTAINS,
+        EQUALS_ARTIST_CONTAINS_TITLE_EQUALS,
+        EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_ORIGINAL_WORD,
+        EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_ITUNES_SESSION,
+        EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS,
+
+        DURATION_EQUALS,
+        TRASH
+    }
 
     public VkAudioUrlPriorityProvider(JSONArray tracks, Audio audio) {
-        vkUrlCheckerParams.requestedArtist = audio.getArtistName();
-        vkUrlCheckerParams.requestedDuration = Math.round((float)audio.getDuration() / 1000.0f);
-        vkUrlCheckerParams.requestedTitle = audio.getName();
         this.tracks = tracks;
+        this.audio = audio;
     }
 
     @Override
-    protected List getElementCheckers() {
-        return Arrays.asList(
-                new VkITunesSessionChecker(vkUrlCheckerParams),
-                VkUrlCheckerFactory.artistNameAndTitle(vkUrlCheckerParams),
-                VkUrlCheckerFactory.receivedTitleHasArtistNameOrTitleAndDuration(vkUrlCheckerParams),
-                VkUrlCheckerFactory.receivedTitleHasArtistNameAndTitle(vkUrlCheckerParams),
-                new VkUrlDurationChecker(vkUrlCheckerParams),
-                VkUrlCheckerFactory.artistNameOrTitle(vkUrlCheckerParams),
-                VkUrlCheckerFactory.receivedTitleHasArtistNameOrTitle(vkUrlCheckerParams));
-    }
-
-    @Override
-    public int getPriorityOf(Object object, int index) {
+    public int getPriorityOf(String object, int index) {
         JSONObject track = tracks.optJSONObject(index + 1);
         if(track == null){
             return getPrioritiesCount() - 1;
         }
 
-        vkUrlCheckerParams.receivedArtist = track.optString("artist");
-        vkUrlCheckerParams.receivedTitle = track.optString("title");
-        vkUrlCheckerParams.receivedDuration = track.optInt("duration",-1);
+        vkArtist = track.optString("artist").toLowerCase();
+        vkTitle = track.optString("title").toLowerCase();
+        vkDuration = track.optInt("duration",-1);
 
-        return super.getPriorityOf(object, index);
+        inputArtist = audio.getArtistName().toLowerCase();
+        inputTitle = audio.getName().toLowerCase();
+        inputDuration = audio.getDuration();
+
+        durationEquals = vkDuration == inputDuration;
+
+        artistEquals = inputArtist.equals(vkArtist);
+        boolean artistEqualsOrContains = artistEquals || artistContains();
+        
+        if (durationEquals) {
+            if (artistEqualsOrContains) {
+                return getPriorityDependingOnParams();
+            } else {
+                return Priority.DURATION_EQUALS.ordinal();
+            }
+        } else if(artistEqualsOrContains) {
+            int priority = getPriorityDependingOnParams();
+            if (priority < Priority.DURATION_EQUALS.ordinal()) {
+                return priority + Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS.ordinal();
+            }
+
+            return priority;
+        }
+
+        return Priority.TRASH.ordinal();
+    }
+
+    private boolean artistContains() {
+        if (vkArtist.contains(inputArtist)) {
+            return containsCover(vkArtist) == containsCover(inputArtist);
+        }
+
+        return false;
+    }
+
+    private boolean containsCover(String input) {
+        return input.contains("cover") || input.contains("ковер");
+    }
+
+    private int getPriorityDependingOnParams() {
+        if (inputTitle.equals(vkTitle)) {
+            if (artistEquals) {
+                return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_EQUALS.ordinal();
+            } else {
+                return Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_EQUALS.ordinal();
+            }
+        } else {
+            if (titleContains()) {
+                if (hasOriginal()) {
+                    if (artistEquals) {
+                        return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_ORIGINAL_WORD.ordinal();
+                    } else {
+                        return Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_ORIGINAL_WORD.ordinal();
+                    }
+                } else {
+                    if (hasItunesSession()) {
+                        if (artistEquals) {
+                            return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_ITUNES_SESSION.ordinal();
+                        } else {
+                            return Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_ITUNES_SESSION.ordinal();
+                        }
+                    }
+                }
+
+                if (artistEquals) {
+                    return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS.ordinal();
+                } else {
+                    return Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS.ordinal();
+                }
+            }
+
+            return (durationEquals ? Priority.DURATION_EQUALS : Priority.TRASH).ordinal();
+        }
+    }
+
+    private boolean titleContains() {
+        if (vkTitle.contains(inputTitle)) {
+            return containsCover(vkTitle) == containsCover(inputTitle);
+        }
+
+        return false;
+    }
+
+    private boolean hasItunesSession() {
+        return vkTitle.contains("itunes session");
+    }
+
+    private boolean hasOriginal() {
+        return vkTitle.contains("оригинал");
+    }
+
+    @Override
+    public int getPrioritiesCount() {
+        return Priority.values().length;
     }
 }
