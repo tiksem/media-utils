@@ -30,6 +30,11 @@ public abstract class AsyncNavigationList<T> extends NavigationList<T> {
         this.requestManager = requestManager;
     }
 
+    protected AsyncNavigationList(RequestManager requestManager, int maxCount) {
+        super(maxCount);
+        this.requestManager = requestManager;
+    }
+
     @Override
     public void getElementsOfPage(final int pageNumber,
                                   final OnLoadingFinished<T> onPageLoadingFinished, OnError onError) {

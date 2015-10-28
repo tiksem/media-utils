@@ -10,6 +10,7 @@ import com.utils.framework.Transformer;
 import com.utils.framework.collections.queue.PageLazyQueue;
 import com.utils.framework.network.RequestExecutor;
 import com.utilsframework.android.ErrorListener;
+import com.utilsframework.android.IOErrorListener;
 import org.json.JSONException;
 
 import java.io.IOException;
@@ -283,7 +284,8 @@ public class InternetSearchEngine {
         }
     }
 
-    public Queue<Audio> getSimilarTracks(final Audio audio, final int countPerPage, final ErrorListener errorListener) {
+    public Queue<Audio> getSimilarTracks(final Audio audio, final int countPerPage,
+                                         final IOErrorListener errorListener) {
         return new PageLazyQueue<Audio>() {
             boolean isLastPage = false;
 
@@ -300,7 +302,7 @@ public class InternetSearchEngine {
 
                 } catch (IOException e) {
                     if(errorListener != null){
-                        errorListener.onError(e);
+                        errorListener.onIOError(e);
                     }
                     return null;
                 }

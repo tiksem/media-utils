@@ -330,7 +330,7 @@ public class AudioPlayerService extends Service implements Player.Listener {
         }
     }
 
-    public static void bind(Context context, Services.OnBind<Binder> onBind) {
+    public static void bindAndStart(Context context, Services.OnBind<Binder> onBind) {
         Services.start(context, AudioPlayerService.class);
         Services.bind(context, AudioPlayerService.class, onBind);
     }

@@ -1,16 +1,16 @@
 package com.tiksem.media.search.navigation;
 
 import com.tiksem.media.data.Audio;
-import com.tiksem.media.data.AudioNameArtistNameUniqueSet;
+import com.tiksem.media.data.AudioNameArtistNameLinkedSet;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.SearchResult;
+import com.utils.framework.Lists;
 import com.utils.framework.algorithms.ObjectCoefficientProvider;
 import com.utils.framework.algorithms.ObjectProbabilityRangeMap;
 import com.utilsframework.android.network.RequestManager;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.Executor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -20,23 +20,20 @@ import java.util.concurrent.Executor;
  * To change this template use File | Settings | File Templates.
  */
 public class SongsYouMayLikeNavigationList extends AsyncNavigationList<Audio> {
-    private static final int SONGS_YOU_MAY_LIKE_SAFE_COUNT = 5000;
-
-    public static class Params{
-        public int songsCount;
+    public static class Params {
         public int songsCountPerPage;
+        public int maxCount = Integer.MAX_VALUE;
         public List<Audio> userPlaylist;
         public InternetSearchEngine internetSearchEngine;
         public RequestManager requestManager;
     }
 
-    private AudioNameArtistNameUniqueSet songsYouMayLike;
-    private AudioNameArtistNameUniqueSet userPlayListAsSet;
+    private AudioNameArtistNameLinkedSet songsYouMayLike;
+    private AudioNameArtistNameLinkedSet userPlayListAsSet;
     private List<Audio> userPlaylist;
     private InternetSearchEngine internetSearchEngine;
     private int songsPerPageCount;
-    private Queue<Audio>[] similarTracksProviders;
-    private int requestCount = 0;
+    private List<Queue<Audio>> similarTracksProviders;
     private ObjectProbabilityRangeMap<Audio> songsGenerator;
 
     private static class AudioCoefficientProvider implements ObjectCoefficientProvider<Audio> {
@@ -47,26 +44,35 @@ public class SongsYouMayLikeNavigationList extends AsyncNavigationList<Audio> {
     }
 
     private boolean isLastPage(){
-        boolean enoughElements = songsYouMayLike.size() >= getMaxElementsCount();
-        boolean safeCountViolation = requestCount > SONGS_YOU_MAY_LIKE_SAFE_COUNT;
-        return enoughElements || safeCountViolation;
+        if (similarTracksProviders.isEmpty()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private void reportEmptyOrInvalidProvider(int index) {
+        userPlaylist.remove(index);
+        similarTracksProviders.remove(index);
+        initSongsGenerator();
     }
 
     private Audio generateAudio(){
-        int index = songsGenerator.getRandomObjectIndex();
+        final int index = songsGenerator.getRandomObjectIndex();
         Audio audio = userPlaylist.get(index);
 
-        Queue<Audio> similarTracksProvider = similarTracksProviders[index];
+        Queue<Audio> similarTracksProvider = similarTracksProviders.get(index);
         if(similarTracksProvider == null){
             similarTracksProvider = internetSearchEngine.getSimilarTracks(audio, songsPerPageCount);
-            similarTracksProviders[index] = similarTracksProvider;
+            similarTracksProviders.set(index, similarTracksProvider);
         }
 
-        Audio suggestedAudio = null;
+        Audio suggestedAudio;
         while (true) {
             suggestedAudio = similarTracksProvider.poll();
 
             if(suggestedAudio == null){
+                reportEmptyOrInvalidProvider(index);
                 break;
             }
 
@@ -75,25 +81,28 @@ public class SongsYouMayLikeNavigationList extends AsyncNavigationList<Audio> {
             }
         }
 
-        requestCount++;
         return suggestedAudio;
     }
 
     public SongsYouMayLikeNavigationList(Params params) {
-        super(params.requestManager);
+        super(params.requestManager, params.maxCount);
 
-        songsYouMayLike = new AudioNameArtistNameUniqueSet();
-        userPlayListAsSet = new AudioNameArtistNameUniqueSet(new LinkedHashSet());
+        songsYouMayLike = new AudioNameArtistNameLinkedSet();
+        userPlayListAsSet = new AudioNameArtistNameLinkedSet();
         userPlayListAsSet.addAll(params.userPlaylist);
         userPlaylist = new ArrayList<Audio>(userPlayListAsSet);
 
-        songsGenerator = new ObjectProbabilityRangeMap<Audio>(userPlaylist,
-                new AudioCoefficientProvider());
+        initSongsGenerator();
 
-        similarTracksProviders = new Queue[userPlaylist.size()];
+        similarTracksProviders = Lists.arrayListWithNulls(userPlaylist.size());
 
         internetSearchEngine = params.internetSearchEngine;
         songsPerPageCount = params.songsCountPerPage;
+    }
+
+    private void initSongsGenerator() {
+        songsGenerator = new ObjectProbabilityRangeMap<Audio>(userPlaylist,
+                new AudioCoefficientProvider());
     }
 
     @Override

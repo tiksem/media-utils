@@ -23,7 +23,6 @@ import java.util.List;
  */
 public class AudioDataManager {
     private static final int SIMILAR_TRACKS_PER_PAGE_COUNT = 30;
-    private static final float SONGS_YOU_MAY_LIKE_COUNT_COEFFICIENT = 2.0f;
     private static final int GENRES_OF_COUNTRY_MAX_COUNT = 150;
 
     private AudioDataBase localAudioDataBase;
@@ -264,7 +263,6 @@ public class AudioDataManager {
     public NavigationList<Audio> getSongsYouMayLike(){
         SongsYouMayLikeNavigationList.Params params = new SongsYouMayLikeNavigationList.Params();
         params.userPlaylist = getSongs();
-        params.songsCount = (int)(SONGS_YOU_MAY_LIKE_COUNT_COEFFICIENT * params.userPlaylist.size());
         params.songsCountPerPage = SIMILAR_TRACKS_PER_PAGE_COUNT;
         params.internetSearchEngine = internetSearchEngine;
 
