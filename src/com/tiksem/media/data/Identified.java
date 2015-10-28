@@ -57,13 +57,4 @@ public class Identified implements Parcelable {
         this.isLocal = in.readByte() != 0;
     }
 
-    public static final Creator<Identified> CREATOR = new Creator<Identified>() {
-        public Identified createFromParcel(Parcel source) {
-            return new Identified(source);
-        }
-
-        public Identified[] newArray(int size) {
-            return new Identified[size];
-        }
-    };
 }
