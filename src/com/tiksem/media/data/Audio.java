@@ -1,5 +1,6 @@
 package com.tiksem.media.data;
 
+import android.os.Parcel;
 import com.utils.framework.collections.cache.GlobalStringCache;
 
 import java.util.Arrays;
@@ -142,4 +143,47 @@ public class Audio extends ArtCollection{
     public void setMbid(String mbid) {
         this.mbid = mbid;
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        super.writeToParcel(dest, flags);
+        dest.writeString(this.url);
+        dest.writeString(this.lyrics);
+        dest.writeString(this.albumName);
+        dest.writeLong(this.albumId);
+        dest.writeString(this.artistName);
+        dest.writeLong(this.artistId);
+        dest.writeInt(this.duration);
+        dest.writeString(this.mbid);
+        dest.writeFloat(this.totalListeningDuration);
+    }
+
+    protected Audio(Parcel in) {
+        super(in);
+        this.url = in.readString();
+        this.lyrics = in.readString();
+        this.albumName = in.readString();
+        this.albumId = in.readLong();
+        this.artistName = in.readString();
+        this.artistId = in.readLong();
+        this.duration = in.readInt();
+        this.mbid = in.readString();
+        this.totalListeningDuration = in.readFloat();
+    }
+
+    public static final Creator<Audio> CREATOR = new Creator<Audio>() {
+        public Audio createFromParcel(Parcel source) {
+            return new Audio(source);
+        }
+
+        public Audio[] newArray(int size) {
+            return new Audio[size];
+        }
+    };
 }
