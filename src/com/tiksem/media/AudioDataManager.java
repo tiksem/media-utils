@@ -365,14 +365,6 @@ public class AudioDataManager {
         return localAudioDataBase.addPlayList(name);
     }
 
-    public Artist addArtist(String name) {
-        return localAudioDataBase.addArtist(name);
-    }
-
-    public boolean addSongToPlayList(Audio audio, PlayList playList) {
-        return localAudioDataBase.addSongToPlayList(audio, playList);
-    }
-
     public List<PlayList> getPlayListsWhereSongCanBeAdded(Audio audio) {
         return localAudioDataBase.getPlayListsWhereSongCanBeAdded(audio);
     }
@@ -401,10 +393,6 @@ public class AudioDataManager {
         List<Artist> artists =
                 internetSearchEngine.getSuggestedArtistsByTrackName(trackName, maxCount);
         return artists;
-    }
-
-    public void commitAudioChangesToDataBase(Audio audio) {
-        localAudioDataBase.commitAudioChangesToDataBase(audio);
     }
 
     public Album getAlbumOfAudioFromInternet(Audio audio) {

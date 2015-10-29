@@ -122,16 +122,6 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         return cursor;
     }
 
-    private Audio getAudioByIdFromDataBase(long id) {
-        String where = DEFAULT_AUDIO_QUERY_WHERE + " AND " + MediaStore.Audio.Media._ID + " = " + id;
-        Cursor cursor = queryAudios(where);
-        if(cursor.getCount() <= 0){
-            return null;
-        }
-
-        return getAudioFromCursor(cursor, false).audio;
-    }
-
     @Override
     protected void initAudios(){
         Cursor cursor = queryAudios(DEFAULT_AUDIO_QUERY_WHERE);
@@ -245,116 +235,11 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
     }
 
     @Override
-    protected void addArtistToDatabase(Artist artist) {
-        long id = Collections.max(getArtists(), new Comparator<Artist>() {
-            @Override
-            public int compare(Artist a, Artist b) {
-                return (int) (a.getId() - b.getId());
-            }
-        }).getId() + 1;
-        artist.setId(id);
-    }
-
-    @Override
-    protected void addAlbumToDatabase(Album album) {
-        long id = Collections.max(getAlbums(), new Comparator<Album>() {
-            @Override
-            public int compare(Album a, Album b) {
-                return (int) (a.getId() - b.getId());
-            }
-        }).getId() + 1;
-        album.setId(id);
-    }
-
-    @Override
     protected void addAudioToPlayListInDatabase(PlayList playList, Audio audio) {
         Uri uri = MediaStore.Audio.Playlists.Members.getContentUri("external", playList.getId());
         ContentValues contentValues = new ContentValues();
         contentValues.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, audio.getId());
         contentResolver.insert(uri, contentValues);
-    }
-
-    @Override
-    public void commitAudioChangesToDataBase(Audio audio) {
-        Long id = audio.getId();
-        if(getAudioById(id) == null){
-            throw new IllegalArgumentException("Audio is not in database");
-        }
-
-        Audio dataBaseAudio = getAudioByIdFromDataBase(id);
-
-        if(dataBaseAudio == null){
-            throw new RuntimeException("Broken database!");
-        }
-
-        final Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        final String where = MediaStore.Audio.AudioColumns._ID + "=" + id;
-
-        ContentValues contentValues = new ContentValues();
-
-        String name = audio.getName();
-        if(!dataBaseAudio.getName().equals(name)){
-            contentValues.put(MediaStore.Audio.Media.TITLE, name);
-        }
-
-        String artistName = audio.getArtistName();
-        Artist artist = getArtistByName(artistName);
-        if(artist == null){
-            artist = addArtist(artistName);
-        }
-
-        long artistId = artist.getId();
-
-        if(!dataBaseAudio.getArtistName().equals(artistName)){
-
-            long prevArtistId = dataBaseAudio.getArtistId();
-            List<Audio> prevArtistAudios = getSongsByArtistId(prevArtistId);
-            prevArtistAudios.remove(audio);
-            if(prevArtistAudios.isEmpty()){
-                removeArtistWithId(prevArtistId);
-            }
-
-            audio.setArtistId(artistId);
-            contentValues.put(MediaStore.Audio.Media.ARTIST_ID, artistId);
-            contentValues.put(MediaStore.Audio.Media.ARTIST, artistName);
-            getSongsByArtistId(artistId).add(audio);
-        }
-
-        String albumName = audio.getAlbumName();
-        if(albumName != null){
-
-            Album album = getAlbumByNameAndArtistId(albumName, artistId);
-            if(album == null){
-                if(audio.getAlbumId() < 0){
-                    album = addAlbum(albumName, artistName);
-                } else {
-                    throw new IllegalArgumentException("Album is not associated with the artist");
-                }
-            }
-
-            audio.setAlbumId(album.getId());
-
-            contentValues.put(MediaStore.Audio.Media.ALBUM_ID, album.getId());
-            contentValues.put(MediaStore.Audio.Media.ALBUM, albumName);
-
-            if(album.getArtUrl(ArtSize.LARGE) == null){
-                String audioArtUrl = audio.getArtUrl(ArtSize.LARGE);
-                if(audioArtUrl != null){
-                    try {
-                        Bitmap bitmap = BitmapFactory.decodeStream(
-                                IOUtilities.getBufferedInputStreamFromUrl(audioArtUrl));
-                        setArt(bitmap, album);
-                        audio.cloneArtUrlsFrom(album);
-                    } catch (IOException e) {
-
-                    }
-                }
-            }
-        }
-
-        if (contentValues.size() > 0) {
-            contentResolver.update(uri, contentValues, where, null);
-        }
     }
 
     @Override
@@ -401,43 +286,5 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         }
 
         return "file://" + path;
-    }
-
-    @Override
-    protected String saveAlbumArtToDataBase(Bitmap bitmap, long albumId) {
-        String path = generateAlbumArtPath(albumId);
-        return saveArtToDatabase(path, bitmap);
-    }
-
-    @Override
-    protected String saveArtistArtToDataBase(Bitmap bitmap, long artistId) {
-        String path = generateArtistArtPath(artistId);
-        return saveArtToDatabase(path, bitmap);
-    }
-
-    private boolean hasTrueArt(Audio audio) {
-        return generateAlbumArtPath(audio.getAlbumId()).equals(audio.getArtUrl(ArtSize.LARGE));
-    }
-
-    private boolean hasTrueArt(Album album) {
-        return generateAlbumArtPath(album.getId()).equals(album.getArtUrl(ArtSize.LARGE));
-    }
-
-    private boolean hasTrueArt(Artist artist) {
-        return generateArtistArtPath(artist.getId()).equals(artist.getArtUrl(ArtSize.LARGE));
-    }
-
-    @Override
-    public boolean hasTrueArt(ArtCollection artCollection) {
-        if(artCollection instanceof Audio){
-            return hasTrueArt((Audio) artCollection);
-        } else if(artCollection instanceof Album) {
-            return hasTrueArt((Album) artCollection);
-        } else if(artCollection instanceof Artist) {
-            return hasTrueArt((Artist) artCollection);
-        } else {
-            throw new IllegalArgumentException("ArtCollection with type " +
-                    artCollection.getClass().getSimpleName() + " is not supported");
-        }
     }
 }

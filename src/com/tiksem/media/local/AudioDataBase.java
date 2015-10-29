@@ -14,41 +14,33 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public interface AudioDataBase {
-    public List<Audio> getSongs();
+    List<Audio> getSongs();
 
     Artist getArtistById(long id);
 
-    public List<PlayList> getPlayLists();
-    public List<Album> getAlbums();
-    public List<Artist> getArtists();
+    List<PlayList> getPlayLists();
+    List<Album> getAlbums();
+    List<Artist> getArtists();
 
-    public List<Audio> getSongsOfArtist(Artist artist);
-    public List<Audio> getSongsOfAlbum(Album album);
-    public List<Audio> getSongsOfPlayList(PlayList playList);
-    public List<Audio> getSongsWithoutAlbumOfArtist(Artist artist);
-    public List<Album> getAlbumsOfArtist(Artist artist);
+    List<Audio> getSongsOfArtist(Artist artist);
+    List<Audio> getSongsOfAlbum(Album album);
+    List<Audio> getSongsOfPlayList(PlayList playList);
+    List<Audio> getSongsWithoutAlbumOfArtist(Artist artist);
+    List<Album> getAlbumsOfArtist(Artist artist);
 
-    public boolean artistHasTracks(Artist artist);
-    public boolean artistHasAlbums(Artist artist);
+    boolean artistHasTracks(Artist artist);
+    boolean artistHasAlbums(Artist artist);
 
-    public Audio getSongById(long id);
-    public Album getAlbumById(long id);
+    Audio getSongById(long id);
+    Album getAlbumById(long id);
 
-    public PlayList addPlayList(String name);
-    public Artist addArtist(String name);
-    public Album addAlbum(String albumName, String artistName);
-    public boolean addSongToPlayList(Audio audio, PlayList playList);
-    public List<PlayList> getPlayListsWhereSongCanBeAdded(Audio audio);
+    PlayList addPlayList(String name);
+    boolean addSongToPlayList(Audio audio, PlayList playList);
+    List<PlayList> getPlayListsWhereSongCanBeAdded(Audio audio);
 
-    public void commitAudioChangesToDataBase(Audio audio);
-
-    public interface OnArtsUpdatingFinished{
+    interface OnArtsUpdatingFinished{
         void onFinished();
     }
 
-    public AsyncTask startAlbumArtsUpdating(OnArtsUpdatingFinished onArtsUpdatingFinishedListener);
-    public void setAlbumArt(Bitmap bitmap, long albumId);
-    public void setArtistArt(Bitmap bitmap, long artistId);
-    public void setArt(Bitmap bitmap, ArtCollection artCollection);
-    public boolean hasTrueArt(ArtCollection artCollection);
+    AsyncTask startAlbumArtsUpdating(OnArtsUpdatingFinished onArtsUpdatingFinishedListener);
 }

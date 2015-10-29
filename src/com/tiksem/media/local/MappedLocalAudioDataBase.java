@@ -319,10 +319,6 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
         return getElementsOf(artist, songsByArtistId);
     }
 
-    protected final List<Audio> getSongsByArtistId(long artistId) {
-        return getElementsOf(artistId, songsByArtistId);
-    }
-
     @Override
     public List<Audio> getSongsWithoutAlbumOfArtist(Artist artist) {
         return getElementsOf(artist, songsWithoutAlbumByArtistId);
@@ -352,10 +348,6 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
     @Override
     public List<Album> getAlbumsOfArtist(Artist artist) {
         return getElementsOf(artist, albumsByArtistId);
-    }
-
-    protected final List<Album> getAlbumsByArtistId(long artistId) {
-        return getElementsOf(artistId, albumsByArtistId);
     }
 
     @Override
@@ -428,7 +420,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
     }
 
     @Override
-    public PlayList addPlayList(String name) {
+    public synchronized PlayList addPlayList(String name) {
         if(getPlaylistByName(name) != null){
             throw new IllegalArgumentException("Playlist exists");
         }
@@ -440,52 +432,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
         return playList;
     }
 
-    @Override
-    public Artist addArtist(String name) {
-        if(getArtistByName(name) != null){
-            throw new IllegalArgumentException("Artist exists");
-        }
-
-        Artist artist = Artist.createLocalArtist();
-        artist.setName(name);
-        addArtistToDatabase(artist);
-        artistsById.put(artist.getId(), artist);
-        return artist;
-    }
-
-    @Override
-    public Album addAlbum(String albumName, String artistName) {
-        Artist artist = getArtistByName(artistName);
-        if(artist == null){
-            throw new IllegalArgumentException("Could not find artist with '" + artistName + "' name");
-        }
-
-        long artistId = artist.getId();
-        Album album = getAlbumByNameAndArtistId(albumName, artistId);
-        if(album != null){
-            throw new IllegalArgumentException("Album exists");
-        }
-
-        album = Album.createLocalAlbum();
-        album.setName(albumName);
-        album.setArtistName(artistName);
-        album.setArtistId(artistId);
-        addAlbumToDatabase(album);
-        albumsById.put(album.getId(), album);
-
-        List<Album> albums = albumsByArtistId.get(artistId);
-        if(albums == null){
-            albums = new ArrayList<Album>();
-            albumsByArtistId.put(artistId, albums);
-        }
-        albums.add(album);
-
-        return album;
-    }
-
     protected abstract void addPlayListToDatabase(PlayList playList);
-    protected abstract void addArtistToDatabase(Artist artist);
-    protected abstract void addAlbumToDatabase(Album album);
     protected abstract void addAudioToPlayListInDatabase(PlayList playList, Audio audio);
     protected abstract void removeAlbumFromDataBase(long id);
     protected abstract void setAlbumIdToAudioInDataBase(Long albumId, long audioId);
@@ -519,19 +466,6 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
         return true;
     }
 
-    protected final Artist getArtistByName(final String name) {
-        if(name == null){
-            throw new NullPointerException();
-        }
-
-        return CollectionUtils.find(getArtists(), new Predicate<Artist>() {
-            @Override
-            public boolean check(Artist artist) {
-                return name.equals(artist.getName());
-            }
-        });
-    }
-
     protected final PlayList getPlaylistByName(final String name) {
         if(name == null){
             throw new NullPointerException();
@@ -544,67 +478,4 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
             }
         });
     }
-
-    protected final Album getAlbumByNameAndArtistId(final String albumName, long artistId) {
-        if(albumName == null){
-            throw new NullPointerException();
-        }
-
-        return CollectionUtils.find(getAlbumsByArtistId(artistId), new Predicate<Album>() {
-            @Override
-            public boolean check(Album album) {
-                return albumName.equals(album.getName());
-            }
-        });
-    }
-
-    @Override
-    public void commitAudioChangesToDataBase(Audio audio) {
-
-    }
-
-    @Override
-    public void setAlbumArt(Bitmap bitmap, long albumId) {
-        String path = saveAlbumArtToDataBase(bitmap, albumId);
-        if(path != null){
-            Album album = albumsById.get(albumId);
-            if(album == null){
-                throw new IllegalArgumentException("Could not find album with " + albumId + " id");
-            }
-
-            album.setUrlForAllArts(path);
-            List<Audio> audios = songsByAlbumId.get(albumId);
-            if (audios != null) {
-                for(Audio audio : audios){
-                    audio.setUrlForAllArts(path);
-                }
-            }
-        }
-    }
-
-    @Override
-    public void setArtistArt(Bitmap bitmap, long artistId) {
-        Artist artist = artistsById.get(artistId);
-        if(artist == null){
-            throw new IllegalArgumentException("Could not find artist with " + artistId + " id");
-        }
-
-        String path = saveArtistArtToDataBase(bitmap, artistId);
-        artist.setUrlForAllArts(path);
-    }
-
-    @Override
-    public void setArt(Bitmap bitmap, ArtCollection artCollection) {
-        if(artCollection instanceof Album){
-            setAlbumArt(bitmap, artCollection.getId());
-        } else if(artCollection instanceof Artist) {
-            setArtistArt(bitmap, artCollection.getId());
-        } else {
-            throw new IllegalArgumentException("Unsuuported ArtCollection type " +
-                    artCollection.getClass().getCanonicalName());
-        }
-    }
-
-    protected abstract String saveAlbumArtToDataBase(Bitmap bitmap, long albumId);
-    protected abstract String saveArtistArtToDataBase(Bitmap bitmap, long artistId);
 }
