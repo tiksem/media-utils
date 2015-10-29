@@ -1,6 +1,5 @@
 package com.tiksem.media.local;
 
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import com.tiksem.media.data.*;
 import com.utils.framework.*;
@@ -21,14 +20,14 @@ import java.util.*;
  */
 public abstract class MappedLocalAudioDataBase implements AudioDataBase {
     private Map<Long,Audio> songsById;
-    private Map<Long,Artist> artistsById = new LinkedHashMap<Long, Artist>();
+    private Map<String,Artist> artistsByName = new LinkedHashMap<String, Artist>();
     private Map<Long,Album> albumsById = new LinkedHashMap<Long, Album>();
     private Map<Long,PlayList> playListsById;
 
     private Map<Long,List<Audio>> songsByAlbumId =
             new LinkedHashMap<Long, List<Audio>>();
-    private Map<Long,List<Audio>> songsByArtistId =
-            new LinkedHashMap<Long, List<Audio>>();
+    private Map<String,List<Audio>> songsByArtistName =
+            new LinkedHashMap<String, List<Audio>>();
     private Map<Long,List<Audio>> songsWithoutAlbumByArtistId =
             new LinkedHashMap<Long, List<Audio>>();
     private Map<Long,List<Audio>> songsByPlayListId =
@@ -58,19 +57,15 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
     }
 
     @Override
-    public Artist getArtistById(long id){
-        return artistsById.get(id);
+    public Artist getArtistByName(String artistName) {
+        return artistsByName.get(artistName);
     }
 
-    protected void removeArtistWithId(long id) {
-        artistsById.remove(id);
-    }
-
-    protected Artist getOrCreateArtistWithId(long id){
-        Artist artist = getArtistById(id);
+    protected Artist getOrCreateArtistWithName(String artistName){
+        Artist artist = getArtistByName(artistName);
         if(artist == null){
-            artist = Artist.createLocalArtist((int)id);
-            artistsById.put(id,artist);
+            artist = Artist.createLocalArtist();
+            artistsByName.put(artistName, artist);
         }
 
         return artist;
@@ -105,7 +100,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
         return playList;
     }
 
-    private void addTrackToMap(Map<Long,List<Audio>> map, long id, Audio track){
+    private <Id> void addTrackToMap(Map<Id, List<Audio>> map, Id id, Audio track){
         List<Audio> audiosById = map.get(id);
 
         if(audiosById == null){
@@ -124,8 +119,24 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
         addTrackToMap(songsByAlbumId, albumId, audio);
     }
 
-    protected void addTrackToArtist(long artistId, Audio audio){
-        addTrackToMap(songsByArtistId, artistId, audio);
+    protected Artist addTrackToArtist(String artistName, Audio audio){
+        addTrackToMap(songsByArtistName, artistName, audio);
+        if (!artistsByName.containsKey(artistName)) {
+            Artist artist = Artist.createLocalArtist();
+            artistsByName.put(artistName, artist);
+            return artist;
+        }
+
+        return null;
+    }
+
+    protected void removeTrackFromArtist(String artistName, Audio audio){
+        List<Audio> audios = songsByArtistName.get(artistName);
+        audios.remove(audio);
+        if (audios.isEmpty()) {
+            songsByArtistName.remove(artistName);
+            artistsByName.remove(artistName);
+        }
     }
 
     protected void addTrackWithoutAlbumToArtist(long artistId, Audio audio){
@@ -183,7 +194,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
         String artistName = artist.getName();
         audio.setArtistName(artistName);
         audio.setArtistId(artist.getId());
-        addTrackToArtist(artist.getId(),audio);
+        addTrackToArtist(artist.getName(), audio);
 
         return albumIsOk;
     }
@@ -297,7 +308,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
         return new ArrayList<Audio>(songsById.values());
     }
 
-    private <T> List<T> getElementsOf(long id, Map<Long,List<T>> from){
+    private <T, Id> List<T> getElementsOf(Id id, Map<Id,List<T>> from){
         List<T> elements = from.get(id);
         if(elements == null){
             elements = new ArrayList<T>();
@@ -316,7 +327,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
 
     @Override
     public List<Audio> getSongsOfArtist(Artist artist) {
-        return getElementsOf(artist, songsByArtistId);
+        return getElementsOf(artist.getName(), songsByArtistName);
     }
 
     @Override
@@ -326,7 +337,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
 
     @Override
     public List<Artist> getArtists() {
-        return new ArrayList<Artist>(artistsById.values());
+        return new ArrayList<Artist>(artistsByName.values());
     }
 
     private void checkLocal(Identified identified){
@@ -352,7 +363,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
 
     @Override
     public boolean artistHasTracks(Artist artist) {
-        return !songsByArtistId.isEmpty();
+        return !songsByArtistName.isEmpty();
     }
 
     @Override

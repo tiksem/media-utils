@@ -4,22 +4,17 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import com.tiksem.media.data.*;
-import com.utils.framework.io.IOUtilities;
 import com.utils.framework.strings.Strings;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -72,7 +67,7 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
             albumId = -1;
         }
 
-        Artist artist = getOrCreateArtistWithId(artistId);
+        Artist artist = getOrCreateArtistWithName(artistName);
         artist.setName(artistName);
 
         Album album = null;

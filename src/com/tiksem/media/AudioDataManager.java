@@ -373,10 +373,6 @@ public class AudioDataManager {
         return localAudioDataBase.getSongById(id);
     }
 
-    public Artist getArtistById(long id) {
-        return localAudioDataBase.getArtistById(id);
-    }
-
     public Album getAlbumById(long id) {
         return localAudioDataBase.getAlbumById(id);
     }

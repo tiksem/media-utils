@@ -16,8 +16,6 @@ import java.util.List;
 public interface AudioDataBase {
     List<Audio> getSongs();
 
-    Artist getArtistById(long id);
-
     List<PlayList> getPlayLists();
     List<Album> getAlbums();
     List<Artist> getArtists();
@@ -33,6 +31,7 @@ public interface AudioDataBase {
 
     Audio getSongById(long id);
     Album getAlbumById(long id);
+    Artist getArtistByName(String artistName);
 
     PlayList addPlayList(String name);
     boolean addSongToPlayList(Audio audio, PlayList playList);
