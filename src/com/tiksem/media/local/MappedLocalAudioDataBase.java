@@ -448,7 +448,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
     }
 
     @Override
-    public boolean addSongToPlayList(Audio audio, PlayList playList) {
+    public synchronized boolean addSongToPlayList(Audio audio, PlayList playList) {
         Long playListId = playList.getId();
         List<Audio> audiosOfPlayList = songsByPlayListId.get(playListId);
         if(audiosOfPlayList == null){
