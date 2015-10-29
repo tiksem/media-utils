@@ -91,4 +91,12 @@ public class UrlsProviderListPlayer extends Player {
     public int getUrlPosition() {
         return urlPosition;
     }
+
+    public String getCurrentUrl() {
+        if (urls == null) {
+            throw new IllegalStateException("getCurrentUrl can only be called when song is selected");
+        }
+
+        return urls.get(urlPosition);
+    }
 }

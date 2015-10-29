@@ -27,6 +27,8 @@ public class FlyingDogDatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(FlyingDogAudioDatabase.CREATE_AUDIO_TABLE);
+        db.execSQL(FlyingDogAudioDatabase.CREATE_INTERNET_AUDIO_TABLE);
+        db.execSQL(FlyingDogAudioDatabase.CREATE_INTERNET_PLAYLISTS_DATABASE);
     }
 
     @Override

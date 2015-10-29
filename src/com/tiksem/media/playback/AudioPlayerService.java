@@ -308,6 +308,14 @@ public class AudioPlayerService extends Service implements Player.Listener {
 
             return urlsProviderListPlayer.getUrlPosition();
         }
+
+        public String getCurrentUrl() {
+            if (urlsProviderListPlayer == null) {
+                throw new IllegalStateException("getCurrentUrl can only be called when plying song from internet");
+            }
+
+            return urlsProviderListPlayer.getCurrentUrl();
+        }
     }
 
     @Override
