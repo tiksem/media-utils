@@ -130,13 +130,15 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
         return null;
     }
 
-    protected void removeTrackFromArtist(String artistName, Audio audio){
+    protected Artist removeTrackFromArtist(String artistName, Audio audio){
         List<Audio> audios = songsByArtistName.get(artistName);
         audios.remove(audio);
         if (audios.isEmpty()) {
             songsByArtistName.remove(artistName);
-            artistsByName.remove(artistName);
+            return artistsByName.remove(artistName);
         }
+
+        return null;
     }
 
     protected void addTrackWithoutAlbumToArtist(long artistId, Audio audio){
