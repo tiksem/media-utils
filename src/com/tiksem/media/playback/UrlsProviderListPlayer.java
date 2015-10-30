@@ -106,6 +106,7 @@ public class UrlsProviderListPlayer extends Player {
         return urlPosition;
     }
 
+    @Override
     public String getCurrentUrl() {
         if (urls == null) {
             throw new IllegalStateException("getCurrentUrl can only be called when song is selected");

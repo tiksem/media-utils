@@ -217,4 +217,6 @@ public abstract class Player {
     }
 
     protected abstract int getPlayListSize();
+
+    public abstract String getCurrentUrl();
 }

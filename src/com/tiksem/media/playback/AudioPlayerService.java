@@ -310,11 +310,12 @@ public class AudioPlayerService extends Service implements Player.Listener {
         }
 
         public String getCurrentUrl() {
-            if (urlsProviderListPlayer == null) {
-                throw new IllegalStateException("getCurrentUrl can only be called when plying song from internet");
+            Player player = getPlayer();
+            if (player == null) {
+                throw new IllegalStateException("getCurrentUrl can only be called when player is selected");
             }
 
-            return urlsProviderListPlayer.getCurrentUrl();
+            return player.getCurrentUrl();
         }
     }
 

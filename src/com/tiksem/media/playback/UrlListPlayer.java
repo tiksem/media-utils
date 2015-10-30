@@ -44,4 +44,9 @@ public class UrlListPlayer extends Player {
     public List<String> getPlayList() {
         return playList;
     }
+
+    @Override
+    public String getCurrentUrl() {
+        return playList.get(getPosition());
+    }
 }
