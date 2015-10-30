@@ -34,7 +34,7 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
     private static final String INTERNET_AUDIO_TABLE_NAME = "InternetAudio";
     static final String CREATE_INTERNET_AUDIO_TABLE = "CREATE TABLE " + INTERNET_AUDIO_TABLE_NAME + " " +
             "(" +
-            ID + " BIGINT PRIMARY KEY," +
+            ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
             NAME + " TEXT," +
             ARTIST_NAME + " TEXT," +
             URL + " TEXT," +
@@ -47,8 +47,8 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
     private static final String INTERNET_PLAYLISTS_TABLE_NAME = "InternetPlaylists";
     static final String CREATE_INTERNET_PLAYLISTS_DATABASE = "CREATE TABLE " + INTERNET_PLAYLISTS_TABLE_NAME + " " +
             "(" +
-            ID + " BIGINT PRIMARY KEY," +
-            AUDIO_ID + " BIGINT" +
+            ID + " INTEGER," +
+            AUDIO_ID + " INTEGER" +
             ")";
 
     private final SQLiteDatabase dataBase;
@@ -82,7 +82,7 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
             int bigArtColumnIndex = cursor.getColumnIndexOrThrow(BIG_ART);
 
             while (cursor.moveToNext()) {
-                Audio audio = Audio.createInternetAudio(idColumnIndex);
+                Audio audio = Audio.createInternetAudio(cursor.getInt(idColumnIndex));
                 audio.setName(cursor.getString(nameColumnIndex));
                 audio.setArtistName(cursor.getString(artistNameColumnIndex));
                 audio.setUrl(cursor.getString(urlColumnIndex));
