@@ -248,6 +248,8 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
     }
 
     public void downloadAndSaveAudioArt(Audio audio, String artUrl, ArtSize artSize) throws IOException {
-        IOUtilities.downloadFile(artUrl, getAudioArtFile(audio, artSize).getAbsolutePath());
+        String path = getAudioArtFile(audio, artSize).getAbsolutePath();
+        IOUtilities.downloadFile(artUrl, path);
+        audio.setArtUrl(artSize, "file://" + path);
     }
 }

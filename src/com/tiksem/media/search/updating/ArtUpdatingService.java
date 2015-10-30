@@ -78,39 +78,20 @@ public abstract class ArtUpdatingService extends Service {
 
         for (final Audio audio : songs) {
             if (audio.getArtUrl(ArtSize.SMALL) == null) {
-                requestManager.execute(new Threading.Task<IOException, ArtCollection>() {
-                    @Override
-                    public ArtCollection runOnBackground() throws IOException {
-                        ArtCollection arts = internetSearchEngine.getArts(audio);
-                        if (arts != null) {
-                            for (ArtSize artSize : ArtSize.values()) {
-                                String artUrl = arts.getArtUrl(artSize);
-                                if (artUrl == null) {
-                                    return null;
+                Threading.Task<IOException, ArtCollection> task = ArtUtils.crateUpdateAudioArtsTask(
+                        internetSearchEngine, audioDatabase, audio,
+                        new ArtUtils.OnUpdated() {
+                            @Override
+                            public void onUpdated() {
+                                updatedAudiosCount++;
+
+                                if (updatedAudiosCount >= songsCount - 1) {
+                                    updatedAudiosCount = -1;
+                                    stopSelf();
                                 }
-
-                                audioDatabase.downloadAndSaveAudioArt(audio, artUrl, artSize);
                             }
-                        }
-
-                        return arts;
-                    }
-
-                    @Override
-                    public void onComplete(ArtCollection artCollection, IOException error) {
-                        if (error == null) {
-                            audio.cloneArtUrlsFrom(artCollection);
-                            updatedAudiosCount++;
-
-                            if (updatedAudiosCount >= songsCount - 1) {
-                                updatedAudiosCount = -1;
-                                stopSelf();
-                            }
-                        } else {
-                            error.printStackTrace();
-                        }
-                    }
-                });
+                        });
+                requestManager.execute(task);
             }
         }
     }
