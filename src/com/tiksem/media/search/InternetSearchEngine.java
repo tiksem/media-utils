@@ -2,14 +2,15 @@ package com.tiksem.media.search;
 
 import com.tiksem.media.data.*;
 import com.tiksem.media.playback.UrlsProvider;
-import com.tiksem.media.search.correction.CorrectionUtilities;
 import com.tiksem.media.search.network.*;
-import com.tiksem.media.search.parsers.*;
+import com.tiksem.media.search.parsers.LastFmResultParser;
+import com.tiksem.media.search.parsers.TheAudioDbParser;
+import com.tiksem.media.search.parsers.UrlQueryData;
+import com.tiksem.media.search.parsers.VkResultParser;
 import com.utils.framework.CollectionUtils;
 import com.utils.framework.Transformer;
 import com.utils.framework.collections.queue.PageLazyQueue;
 import com.utils.framework.network.RequestExecutor;
-import com.utilsframework.android.ErrorListener;
 import com.utilsframework.android.IOErrorListener;
 import org.json.JSONException;
 
@@ -148,24 +149,33 @@ public class InternetSearchEngine {
         }
     }
 
-    public boolean fillAudioInfo(Audio audio){
+    public boolean fillAudioDuration(Audio audio){
         try {
-            if (fillAudioInfoUsingTheDb(audio)) {
+            if (fillAudioDurationUsingTheDb(audio)) {
                 return true;
             }
 
-            return fillAudioInfoUsingLastFm(audio);
+            return fillAudioDurationUsingLastFm(audio);
         } catch (IOException e) {
             return false;
         }
     }
 
-    private boolean fillAudioInfoUsingTheDb(Audio audio) throws IOException {
+    public ArtCollection getArts(Audio audio) throws IOException {
+        String response = lastFMSearcher.getTrackInfoByNameAndArtistName(audio.getName(), audio.getArtistName());
+        try {
+            return lastFmResultParser.getArtsOfAudio(response);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
+    }
+
+    private boolean fillAudioDurationUsingTheDb(Audio audio) throws IOException {
         String response = audioDbSearcher.searchTrack(audio.getName(), audio.getArtistName());
         return audioDbParser.fillAudioDuration(audio, response);
     }
 
-    private boolean fillAudioInfoUsingLastFm(Audio audio) throws IOException {
+    private boolean fillAudioDurationUsingLastFm(Audio audio) throws IOException {
         String response;
         String mbid = audio.getMbid();
         if (mbid == null) {
@@ -181,7 +191,7 @@ public class InternetSearchEngine {
             response = lastFMSearcher.getTrackInfoByMbid(mbid);
         }
 
-        return lastFmResultParser.fillAudioInfo(response, audio);
+        return lastFmResultParser.fillAudioDuration(response, audio);
     }
 
     public class VkUrlsProvider implements UrlsProvider {
@@ -239,7 +249,7 @@ public class InternetSearchEngine {
         }
 
         String query = artistName + " " + name;
-        fillAudioInfo(audio);
+        fillAudioDuration(audio);
 
         VkAudioSearchParams searchParams = new VkAudioSearchParams();
         searchParams.setCount(AUDIO_URLS_COUNT);
@@ -351,43 +361,6 @@ public class InternetSearchEngine {
         } catch (IOException e) {
             return SearchResult.empty();
         }
-    }
-
-    public LastFmCorrectedAudioInfoParser.Info getCorrectedTrackInfo(String artistName, String name)
-            throws IOException {
-        String query = name;
-        if(!CorrectionUtilities.matchUnknownPattern(artistName)){
-            query += " " + artistName;
-        }
-
-        String response = lastFMSearcher.searchTracks(query);
-        LastFmCorrectedAudioInfoParser.Info correctedTrackInfo =
-                lastFmResultParser.getCorrectedTrackInfo(response);
-        return correctedTrackInfo;
-    }
-
-    public CorrectedTrackInfo getCorrectedTrackInfo(Audio audio) throws IOException {
-        String name = audio.getName();
-        String artistName = audio.getArtistName();
-
-        LastFmCorrectedAudioInfoParser.Info correctedTrackInfo = getCorrectedTrackInfo(artistName, name);
-        if(correctedTrackInfo == null){
-            return null;
-        }
-
-        String replacedName = CorrectionUtilities.replaceArtistNameInName(correctedTrackInfo.artistName,
-                correctedTrackInfo.name);
-
-        if(replacedName != null){
-            name = replacedName;
-            artistName = correctedTrackInfo.artistName;
-            correctedTrackInfo = getCorrectedTrackInfo(artistName, name);
-        }
-
-        CorrectedTrackInfo result = new CorrectedTrackInfo();
-        result.name = correctedTrackInfo.name;
-        result.artistName = correctedTrackInfo.artistName;
-        return result;
     }
 
     public Album getAlbumByNameAndArtistName(String albumName, String artistName) throws IOException {

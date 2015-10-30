@@ -16,7 +16,7 @@ import org.json.JSONObject;
 abstract class LastFmArtCollectionParser<T> extends JsonArrayElementParser<T> {
     private final static int[] ALBUM_ART_INDEXING_MAP = new int[]{3,3,5};
 
-    protected String getAlbumArtUrlByIndex(JSONArray albumArts, int index) throws JSONException{
+    public static String getAlbumArtUrlByIndex(JSONArray albumArts, int index) throws JSONException{
         index = ALBUM_ART_INDEXING_MAP[index];
         if(albumArts.length() == 0){
             return null;
@@ -29,9 +29,9 @@ abstract class LastFmArtCollectionParser<T> extends JsonArrayElementParser<T> {
         return art.getString("#text");
     }
 
-    protected boolean fillAlbumArts(JSONObject jsonObject, ArtCollection album){
+    public static boolean fillAlbumArtsOf(JSONObject jsonObject, ArtCollection album){
         try {
-                        JSONArray albumArts = jsonObject.getJSONArray("image");
+            JSONArray albumArts = jsonObject.getJSONArray("image");
             for (int i = 0; i < ArtSize.values().length; i++) {
                 String url = getAlbumArtUrlByIndex(albumArts, i);
                 if (!url.isEmpty()) {
@@ -45,5 +45,9 @@ abstract class LastFmArtCollectionParser<T> extends JsonArrayElementParser<T> {
         }
 
         return true;
+    }
+
+    protected boolean fillAlbumArts(JSONObject jsonObject, ArtCollection album){
+        return fillAlbumArtsOf(jsonObject, album);
     }
 }

@@ -12,7 +12,7 @@ import java.io.Serializable;
  * Time: 23:57
  * To change this template use File | Settings | File Templates.
  */
-public abstract class ArtCollection extends NamedData implements Serializable{
+public class ArtCollection extends NamedData implements Serializable{
     private static final GlobalStringCache STRING_CACHE = GlobalStringCache.getInstance();
 
     private String[] arts = new String[ArtSize.values().length];

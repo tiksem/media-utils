@@ -1,12 +1,14 @@
 package com.tiksem.media.search.parsers;
 
 import com.tiksem.media.data.Album;
+import com.tiksem.media.data.ArtCollection;
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.data.Audio;
 import com.tiksem.media.search.SearchResult;
 import com.utils.framework.Primitive;
 import com.utils.framework.parsers.json.ExtendedJSONObject;
 import com.utils.framework.parsers.json.JsonArrayElementParser;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -102,7 +104,7 @@ public class LastFmResultParser {
         }
     }
 
-    public boolean fillAudioInfo(String response, Audio audio){
+    public boolean fillAudioDuration(String response, Audio audio){
         try {
             JSONObject jsonObject = new JSONObject(response);
             JSONObject track = jsonObject.getJSONObject("track");
@@ -114,6 +116,14 @@ public class LastFmResultParser {
         }
 
         return true;
+    }
+
+    public ArtCollection getArtsOfAudio(String response) throws JSONException {
+        JSONObject jsonObject = new JSONObject(response);
+        JSONObject album = jsonObject.getJSONObject("track").getJSONObject("album");
+        ArtCollection artCollection = new ArtCollection(-1, false);
+        LastFmArtCollectionParser.fillAlbumArtsOf(album, artCollection);
+        return artCollection;
     }
 
     public SearchResult<Audio> getSimilarTracks(String response) throws JSONException {

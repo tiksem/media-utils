@@ -6,10 +6,10 @@ import android.content.ContextWrapper;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import com.tiksem.media.data.*;
+import com.utils.framework.io.IOUtilities;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
 
 /**
  * Created by stykhonenko on 29.10.15.
@@ -54,10 +54,25 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
     private final SQLiteDatabase dataBase;
     private Context context;
 
-    private String getArtistArtPath(String artistName) {
+    private File getArtistArtFile(String artistName) {
+        String filesDir = getFilesDir();
+        String path = filesDir + "/arts/artist/" + artistName;
+        File file = new File(path);
+        file.getParentFile().mkdirs();
+        return file;
+    }
+
+    private File getAudioArtFile(Audio audio, ArtSize artSize) {
+        String filesDir = getFilesDir();
+        String path = filesDir + "/arts/audio/" + audio.getId() + artSize;
+        File file = new File(path);
+        file.getParentFile().mkdirs();
+        return file;
+    }
+
+    private String getFilesDir() {
         ContextWrapper contextWrapper = new ContextWrapper(context);
-        File filesDir = contextWrapper.getFilesDir();
-        return filesDir.getAbsolutePath() + "/arts/artist/" + artistName;
+        return contextWrapper.getFilesDir().getAbsolutePath();
     }
 
     public FlyingDogAudioDatabase(Context context) {
@@ -66,7 +81,7 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
         this.context = context;
 
         initLocalAudios();
-
+        initAudioArts();
         initInternetPlayLists();
     }
 
@@ -110,6 +125,17 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
         }
     }
 
+    private void initAudioArts() {
+        for (Audio audio : getSongs()) {
+            for (ArtSize artSize : ArtSize.values()) {
+                File art = getAudioArtFile(audio, artSize);
+                if (art.exists()) {
+                    audio.setArtUrl(artSize, "file://" + art.getAbsolutePath());
+                }
+            }
+        }
+    }
+
     private void initLocalAudios() {
         Cursor cursor = dataBase.query(AUDIO_TABLE, null, null, null, null, null, null);
         try {
@@ -148,9 +174,9 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
 
         Artist artist = addTrackToArtist(artistName, audio);
         if (artist != null) {
-            String artistArtPath = getArtistArtPath(artistName);
-            if (new File(artistArtPath).exists()) {
-                artist.setUrlForAllArts(artistArtPath);
+            File artistArtPath = getArtistArtFile(artistName);
+            if (artistArtPath.exists()) {
+                artist.setUrlForAllArts(artistArtPath.getAbsolutePath());
             }
         }
     }
@@ -219,5 +245,9 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
             audio.setId(id);
             addAudioToInternetPlayList(playList.getId(), id);
         }
+    }
+
+    public void downloadAndSaveAudioArt(Audio audio, String artUrl, ArtSize artSize) throws IOException {
+        IOUtilities.downloadFile(artUrl, getAudioArtFile(audio, artSize).getAbsolutePath());
     }
 }
