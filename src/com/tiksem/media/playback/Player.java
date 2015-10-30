@@ -49,7 +49,7 @@ public abstract class Player {
 
     protected abstract void getCurrentUrl(OnUrlReady onUrlReady);
 
-    private void tryPlayCurrentUrl() {
+    protected void tryPlayCurrentUrl() {
         setStatus(Status.PREPARING);
         getCurrentUrl(new OnUrlReady() {
             @Override

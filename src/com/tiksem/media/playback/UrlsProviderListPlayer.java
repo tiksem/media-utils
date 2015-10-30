@@ -1,13 +1,12 @@
 package com.tiksem.media.playback;
 
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import com.utilsframework.android.network.RequestManager;
 import com.utilsframework.android.threading.Threading;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
 /**
  * Created by stykhonenko on 23.10.15.
@@ -17,6 +16,7 @@ public class UrlsProviderListPlayer extends Player {
     private List<String> urls;
     private int urlPosition;
     private RequestManager requestManager;
+    private AsyncTask urlsGettingTask;
 
     public UrlsProviderListPlayer(MediaPlayer mediaPlayer, RequestManager requestManager,
                                   List<UrlsProvider> providers) {
@@ -31,7 +31,7 @@ public class UrlsProviderListPlayer extends Player {
             onUrlReady.onUrlReady(urls.get(urlPosition));
         } else {
             final UrlsProvider provider = providers.get(getPosition());
-            requestManager.execute(new Threading.Task<IOException, List<String>>() {
+            urlsGettingTask = requestManager.execute(new Threading.Task<IOException, List<String>>() {
                 @Override
                 public List<String> runOnBackground() throws IOException {
                     return provider.getUrls();
@@ -53,8 +53,22 @@ public class UrlsProviderListPlayer extends Player {
                         playNext();
                     }
                 }
+
+                @Override
+                public void onAfterCompleteOrCancelled() {
+                    urlsGettingTask = null;
+                }
             });
         }
+    }
+
+    @Override
+    protected void tryPlayCurrentUrl() {
+        if (urlsGettingTask != null) {
+            urlsGettingTask.cancel(true);
+        }
+
+        super.tryPlayCurrentUrl();
     }
 
     @Override
