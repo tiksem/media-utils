@@ -470,7 +470,7 @@ public class InternetSearchEngine {
 
     public boolean tryFillAlbumArts(Album album) {
         try {
-            Album temp = getAlbumByNameAndArtistName(album.getName(), album.getArtistName());
+            ArtCollection temp = getAlbumByNameAndArtistName(album.getName(), album.getArtistName());
             if (temp != null) {
                 album.cloneArtUrlsFrom(temp);
                 return true;
@@ -482,18 +482,12 @@ public class InternetSearchEngine {
         }
     }
 
-    public boolean tryFillAlbumArts(Artist artist) {
-        try {
-            Artist temp = getArtistByName(artist.getName());
-            if (temp != null) {
-                artist.cloneArtUrlsFrom(temp);
-                return true;
-            }
+    public ArtCollection getArts(Artist artist) throws IOException {
+        return getArtistByName(artist.getName());
+    }
 
-            return false;
-        } catch (IOException e) {
-            return false;
-        }
+    public ArtCollection getArts(Album album) throws IOException {
+        return getAlbumByNameAndArtistName(album.getName(), album.getArtistName());
     }
 
     public boolean tryFillAlbumArts(ArtCollection artCollection) {

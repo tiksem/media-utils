@@ -385,8 +385,6 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
         return null;
     }
 
-    protected abstract String getArtistArtUrl(long artistId);
-
     private void albumArtUpdateAction(){
         for(Map.Entry<Long,Album> entry : albumsById.entrySet()){
             long id = entry.getKey();
@@ -399,12 +397,6 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
             for(Audio audio : audiosOfAlbum){
                 audio.setUrlForAllArts(artUrl);
             }
-        }
-
-        for(Artist artist : getArtists()){
-            long id = artist.getId();
-            String artUrl = getArtistArtUrl(id);
-            artist.setUrlForAllArts(artUrl);
         }
     }
 

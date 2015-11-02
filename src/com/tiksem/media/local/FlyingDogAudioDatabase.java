@@ -27,7 +27,6 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
             ARTIST_NAME + " TEXT" +
             ")";
 
-    private static final String URL = "url";
     private static final String MEDIUM_ART = "mediumArt";
     private static final String SMALL_ART = "smallArt";
     private static final String BIG_ART = "bigArt";
@@ -53,9 +52,9 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
     private final SQLiteDatabase dataBase;
     private Context context;
 
-    private File getArtistArtFile(String artistName) {
+    private File getArtistArtFile(String artistName, ArtSize artSize) {
         String filesDir = getFilesDir();
-        String path = filesDir + "/arts/artist/" + artistName;
+        String path = filesDir + "/arts/artist/" + artSize + "_" + artistName;
         File file = new File(path);
         file.getParentFile().mkdirs();
         return file;
@@ -64,6 +63,14 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
     private File getAudioArtFile(Audio audio, ArtSize artSize) {
         String filesDir = getFilesDir();
         String path = filesDir + "/arts/audio/" + audio.getId() + artSize;
+        File file = new File(path);
+        file.getParentFile().mkdirs();
+        return file;
+    }
+
+    private File getAlbumArtFile(Album album, ArtSize artSize) {
+        String filesDir = getFilesDir();
+        String path = filesDir + "/arts/album/" + album.getId() + artSize;
         File file = new File(path);
         file.getParentFile().mkdirs();
         return file;
@@ -171,9 +178,11 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
 
         Artist artist = addTrackToArtist(artistName, audio);
         if (artist != null) {
-            File artistArtPath = getArtistArtFile(artistName);
-            if (artistArtPath.exists()) {
-                artist.setUrlForAllArts(artistArtPath.getAbsolutePath());
+            for (ArtSize artSize : ArtSize.values()) {
+                File artistArtPath = getArtistArtFile(artistName, artSize);
+                if (artistArtPath.exists()) {
+                    artist.setArtUrl(artSize, artistArtPath.getAbsolutePath());
+                }
             }
         }
     }
@@ -243,9 +252,25 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
         }
     }
 
+    private void saveArt(ArtCollection artCollection, String artUrl,
+                         ArtSize artSize, String path)
+            throws IOException {
+        IOUtilities.downloadFile(artUrl, path);
+        artCollection.setArtUrl(artSize, "file://" + path);
+    }
+
     public void downloadAndSaveAudioArt(Audio audio, String artUrl, ArtSize artSize) throws IOException {
         String path = getAudioArtFile(audio, artSize).getAbsolutePath();
-        IOUtilities.downloadFile(artUrl, path);
-        audio.setArtUrl(artSize, "file://" + path);
+        saveArt(audio, artUrl, artSize, path);
+    }
+
+    public void downloadAndSaveArtistArt(Artist artist, String artUrl, ArtSize artSize) throws IOException {
+        String path = getArtistArtFile(artist.getName(), artSize).getAbsolutePath();
+        saveArt(artist, artUrl, artSize, path);
+    }
+
+    public void downloadAndSaveAlbumArt(Album album, String artUrl, ArtSize artSize) throws IOException {
+        String path = getAlbumArtFile(album, artSize).getAbsolutePath();
+        saveArt(album, artUrl, artSize, path);
     }
 }

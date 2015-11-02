@@ -180,16 +180,6 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
     }
 
     @Override
-    protected String getArtistArtUrl(long artistId) {
-        File file = new File(generateArtistArtPath(artistId));
-        if(file.exists()){
-            return "file://" + file.getAbsolutePath();
-        } else {
-            return null;
-        }
-    }
-
-    @Override
     protected String getAlbumArtUrl(long albumId){
         if(albumId <= 0){
             return null;
@@ -208,12 +198,7 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         String url = cursor.getString(artColumn);
 
         if(url == null){
-            File file = new File(generateAlbumArtPath(albumId));
-            if(file.exists()){
-                return "file://" + file.getAbsolutePath();
-            } else {
-                return null;
-            }
+            return null;
         } else {
             return "file://" + url;
         }
@@ -238,11 +223,6 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
     }
 
     @Override
-    protected void removeAlbumFromDataBase(long id) {
-        new File(generateAlbumArtPath(id)).delete();
-    }
-
-    @Override
     protected void setAlbumIdToAudioInDataBase(Long albumId, long audioId) {
         final Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         final String where = MediaStore.Audio.AudioColumns._ID + "=" + audioId;
@@ -252,34 +232,8 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         contentResolver.update(uri, contentValues, where, null);
     }
 
-    private String generateAlbumArtPath(long albumId) {
-        return Environment.getExternalStorageDirectory().getAbsolutePath() + "/" +
-                AndroidAudioDataBase.class.getName() + "_arts/"
-                + "art" + albumId;
-    }
-
-    private String generateArtistArtPath(long artistId) {
-        return Environment.getExternalStorageDirectory().getAbsolutePath() + "/" +
-                AndroidAudioDataBase.class.getName() + "_arts/"
-                + "artist" + artistId;
-    }
-
-    private String saveArtToDatabase(String path, Bitmap bitmap) {
-        File file = new File(path);
-        file.getParentFile().mkdirs();
-
-        try {
-            file.createNewFile();
-        } catch (IOException e) {
-            return null;
-        }
-
-        try {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, new FileOutputStream(path));
-        } catch (FileNotFoundException e) {
-            return null;
-        }
-
-        return "file://" + path;
+    @Override
+    protected void removeAlbumFromDataBase(long id) {
+        throw new UnsupportedOperationException();
     }
 }
