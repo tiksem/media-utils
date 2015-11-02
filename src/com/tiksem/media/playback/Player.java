@@ -3,11 +3,12 @@ package com.tiksem.media.playback;
 import android.media.MediaPlayer;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by stykhonenko on 23.10.15.
  */
-public abstract class Player {
+public abstract class Player<PlayingEntity> {
     private MediaPlayer mediaPlayer;
     private Status status = Status.IDLE;
     private int position = -1;
@@ -216,7 +217,27 @@ public abstract class Player {
         }
     }
 
+    public void changePlayList(List<PlayingEntity> newPlayList) {
+        int position = getPosition();
+        List<PlayingEntity> playList = getPlayList();
+        if (playList == null) {
+            throw new IllegalStateException("Unable to change playlist, no playlist set. Call play before");
+        }
+
+        PlayingEntity currentPlayingEntity = playList.get(position);
+        int newPosition = newPlayList.indexOf(currentPlayingEntity);
+        if (newPosition < 0) {
+            throw new IllegalArgumentException("new playList should contain current playing url");
+        }
+
+        setPosition(newPosition);
+        setPlayList(newPlayList);
+    }
+
     protected abstract int getPlayListSize();
 
     public abstract String getCurrentUrl();
+
+    public abstract List<PlayingEntity> getPlayList();
+    protected abstract void setPlayList(List<PlayingEntity> newPlayList);
 }

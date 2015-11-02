@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Created by stykhonenko on 23.10.15.
  */
-public class UrlListPlayer extends Player {
+public class UrlListPlayer extends Player<String> {
     private List<String> playList;
 
     public UrlListPlayer(MediaPlayer mediaPlayer, List<String> playList) {
@@ -25,22 +25,7 @@ public class UrlListPlayer extends Player {
         return playList.size();
     }
 
-    public void changePlayList(List<String> newPlayList) {
-        int position = getPosition();
-        if (playList == null) {
-            throw new IllegalStateException("Unable to change playlist, no playlist set. Call play before");
-        }
-
-        String currentPlayingUrl = playList.get(position);
-        int newPosition = newPlayList.indexOf(currentPlayingUrl);
-        if (newPosition < 0) {
-            throw new IllegalArgumentException("new playList should contain current playing url");
-        }
-
-        setPosition(newPosition);
-        playList = newPlayList;
-    }
-
+    @Override
     public List<String> getPlayList() {
         return playList;
     }
@@ -48,5 +33,10 @@ public class UrlListPlayer extends Player {
     @Override
     public String getCurrentUrl() {
         return playList.get(getPosition());
+    }
+
+    @Override
+    protected void setPlayList(List<String> newPlayList) {
+        playList = newPlayList;
     }
 }

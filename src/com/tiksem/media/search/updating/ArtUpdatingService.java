@@ -78,20 +78,17 @@ public abstract class ArtUpdatingService extends Service {
 
         for (final Audio audio : songs) {
             if (audio.getArtUrl(ArtSize.SMALL) == null) {
-                Threading.Task<IOException, ArtCollection> task = ArtUtils.crateUpdateAudioArtsTask(
-                        internetSearchEngine, audioDatabase, audio,
-                        new ArtUtils.OnUpdated() {
-                            @Override
-                            public void onUpdated() {
-                                updatedAudiosCount++;
+                requestManager.execute(new UpdateAudioArtTask(internetSearchEngine, audioDatabase, audio) {
+                    @Override
+                    protected void onUpdated() {
+                        updatedAudiosCount++;
 
-                                if (updatedAudiosCount >= songsCount - 1) {
-                                    updatedAudiosCount = -1;
-                                    stopSelf();
-                                }
-                            }
-                        });
-                requestManager.execute(task);
+                        if (updatedAudiosCount >= songsCount - 1) {
+                            updatedAudiosCount = -1;
+                            stopSelf();
+                        }
+                    }
+                });
             }
         }
     }

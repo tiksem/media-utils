@@ -77,6 +77,14 @@ public class AudioPlayerService extends Service implements Player.Listener {
         urlListPlayer.changePlayList(newPlayListUrls);
     }
 
+    void changePlayListProviders(List<UrlsProvider> newPlayList) {
+        if (urlsProviderListPlayer == null) {
+            throw new IllegalStateException("Unable to call changePlayList, when playList is not set");
+        }
+
+        urlsProviderListPlayer.changePlayList(newPlayList);
+    }
+
     Player getPlayer() {
         if (urlListPlayer != null) {
             return urlListPlayer;
@@ -158,6 +166,10 @@ public class AudioPlayerService extends Service implements Player.Listener {
 
         public void changePlayList(List<String> newPlayListUrls) {
             AudioPlayerService.this.changePlayList(newPlayListUrls);
+        }
+
+        public void changePlayListProviders(List<UrlsProvider> newPlayList) {
+            AudioPlayerService.this.changePlayListProviders(newPlayList);
         }
 
         public void pause() {

@@ -37,7 +37,6 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
             ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
             NAME + " TEXT," +
             ARTIST_NAME + " TEXT," +
-            URL + " TEXT," +
             SMALL_ART + " TEXT," +
             MEDIUM_ART + " TEXT," +
             BIG_ART + " TEXT" +
@@ -91,7 +90,6 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
             int idColumnIndex = cursor.getColumnIndexOrThrow(ID);
             int nameColumnIndex = cursor.getColumnIndexOrThrow(NAME);
             int artistNameColumnIndex = cursor.getColumnIndexOrThrow(ARTIST_NAME);
-            int urlColumnIndex = cursor.getColumnIndexOrThrow(URL);
             int smallArtColumnIndex = cursor.getColumnIndexOrThrow(SMALL_ART);
             int mediumArtColumnIndex = cursor.getColumnIndexOrThrow(MEDIUM_ART);
             int bigArtColumnIndex = cursor.getColumnIndexOrThrow(BIG_ART);
@@ -100,7 +98,6 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
                 Audio audio = Audio.createInternetAudio(cursor.getInt(idColumnIndex));
                 audio.setName(cursor.getString(nameColumnIndex));
                 audio.setArtistName(cursor.getString(artistNameColumnIndex));
-                audio.setUrl(cursor.getString(urlColumnIndex));
                 audio.setArtUrl(ArtSize.SMALL, cursor.getString(smallArtColumnIndex));
                 audio.setArtUrl(ArtSize.MEDIUM, cursor.getString(mediumArtColumnIndex));
                 audio.setArtUrl(ArtSize.LARGE, cursor.getString(bigArtColumnIndex));
@@ -222,11 +219,10 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
         ContentValues contentValues = new ContentValues(5);
         contentValues.put(NAME, audio.getName());
         contentValues.put(ARTIST_NAME, audio.getArtistName());
-        contentValues.put(URL, audio.getUrl());
         contentValues.put(SMALL_ART, audio.getArtUrl(ArtSize.SMALL));
         contentValues.put(MEDIUM_ART, audio.getArtUrl(ArtSize.MEDIUM));
         contentValues.put(BIG_ART, audio.getArtUrl(ArtSize.LARGE));
-        return dataBase.insert(INTERNET_AUDIO_TABLE_NAME, null, contentValues);
+        return dataBase.replace(INTERNET_AUDIO_TABLE_NAME, null, contentValues);
     }
 
     private void addAudioToInternetPlayList(long playListId, long audioId) {

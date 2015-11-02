@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Created by stykhonenko on 23.10.15.
  */
-public class UrlsProviderListPlayer extends Player {
+public class UrlsProviderListPlayer extends Player<UrlsProvider> {
     private List<UrlsProvider> providers;
     private List<String> urls;
     private int urlPosition;
@@ -113,5 +113,15 @@ public class UrlsProviderListPlayer extends Player {
         }
 
         return urls.get(urlPosition);
+    }
+
+    @Override
+    public List<UrlsProvider> getPlayList() {
+        return providers;
+    }
+
+    @Override
+    protected void setPlayList(List<UrlsProvider> newPlayList) {
+        providers = newPlayList;
     }
 }

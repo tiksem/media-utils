@@ -194,12 +194,54 @@ public class InternetSearchEngine {
         return lastFmResultParser.fillAudioDuration(response, audio);
     }
 
-    public class VkUrlsProvider implements UrlsProvider {
-        private Audio audio;
+    private abstract class AudioUrlsProvider implements UrlsProvider {
+        Audio audio;
+
+        public AudioUrlsProvider(Audio audio) {
+            if (audio == null) {
+                throw new NullPointerException();
+            }
+
+            this.audio = audio;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof AudioUrlsProvider)) {
+                return false;
+            }
+
+            Audio another = ((AudioUrlsProvider)o).audio;
+
+            long id = audio.getId();
+            if (id > 0) {
+                return another.getId() == id;
+            } else {
+                if (another.getId() > 0) {
+                    return false;
+                } else {
+                    String url = audio.getUrl();
+                    if (url != null && url.equals(another.getUrl())) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            long id = audio.getId();
+            return (int) (id ^ (id >>> 32));
+        }
+    }
+
+    public class VkUrlsProvider extends AudioUrlsProvider {
         private List<UrlQueryData> queryDataList;
 
         public VkUrlsProvider(Audio audio) {
-            this.audio = audio;
+            super(audio);
         }
 
         public List<UrlQueryData> getQueryDataList() {
@@ -208,13 +250,26 @@ public class InternetSearchEngine {
 
         @Override
         public List<String> getUrls() throws IOException {
-            queryDataList = getAudioUrls(audio);
+            if (queryDataList == null) {
+                queryDataList = getAudioUrls(audio);
+            }
             return CollectionUtils.transformNonCopy(queryDataList, new Transformer<UrlQueryData, String>() {
                 @Override
                 public String get(UrlQueryData data) {
                     return data.getUrl();
                 }
             });
+        }
+    }
+
+    public class LocalUrlProvider extends AudioUrlsProvider {
+        public LocalUrlProvider(Audio audio) {
+            super(audio);
+        }
+
+        @Override
+        public List<String> getUrls() throws IOException {
+            return Collections.singletonList(audio.getUrl());
         }
     }
 
@@ -226,7 +281,14 @@ public class InternetSearchEngine {
             public UrlsProvider get(int location) {
                 UrlsProvider provider = cached.get(location);
                 if (provider == null) {
-                    provider = new VkUrlsProvider(audios.get(location));
+                    Audio audio = audios.get(location);
+                    String url = audio.getUrl();
+                    if (url == null) {
+                        provider = new VkUrlsProvider(audio);
+                    } else {
+                        provider = new LocalUrlProvider(audio);
+                    }
+
                     cached.put(location, provider);
                 }
 
