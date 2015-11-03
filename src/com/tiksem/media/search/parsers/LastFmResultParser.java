@@ -66,7 +66,8 @@ public class LastFmResultParser {
     }
 
     public SearchResult<Audio> getSongsByTag(String response) throws JSONException {
-        return getSongsOfArtist(response);
+        LastFmArtistTrackParser parser = new LastFmArtistTrackParser();
+        return parsePageElements(response, parser, "tracks", "track");
     }
 
     public SearchResult<Audio> parseTracks(String response) throws JSONException {

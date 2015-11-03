@@ -3,6 +3,9 @@ package com.tiksem.media.data;
 //Main(needed for use):GenreName, artist, GenreImageUrl
 //Meta:genres,wikiInfo[published,shortDescription,fullDescription]
 
+import com.utils.framework.ArrayUtils;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -262,7 +265,7 @@ public final class Genres {
     };
 
     static {
-        Arrays.sort(GENRE_NAMES);
+        //Arrays.sort(GENRE_NAMES);
     }
 
     private Genres(){
@@ -270,10 +273,10 @@ public final class Genres {
     }
 
     public static List<String> getGenresList(){
-        return Collections.unmodifiableList(Arrays.asList(GENRE_NAMES));
+        return new ArrayList<>(Arrays.asList(GENRE_NAMES));
     }
 
     public static boolean genreExists(String genreName){
-        return Arrays.binarySearch(GENRE_NAMES, genreName) >= 0;
+        return ArrayUtils.indexOf(GENRE_NAMES, genreName) >= 0;
     }
 }
