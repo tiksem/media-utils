@@ -2,6 +2,7 @@ package com.tiksem.media.search.navigation;
 
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.search.SearchResult;
+import com.utils.framework.KeyProvider;
 
 import java.io.IOException;
 
@@ -20,5 +21,10 @@ public class MultiTagsArtistNavigationList extends MultiTagNavigationList<Artist
     @Override
     protected SearchResult<Artist> searchByTag(String tag, int pageNumber) throws IOException {
         return getInternetSearchEngine().getArtistsByTag(tag, getElementsPerPage(), pageNumber);
+    }
+
+    @Override
+    protected KeyProvider<Object, Artist> getKeyProvider() {
+        return ArtistKeyProvider.INSTANCE;
     }
 }

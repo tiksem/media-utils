@@ -13,7 +13,7 @@ import java.io.IOException;
  * Time: 13:02
  * To change this template use File | Settings | File Templates.
  */
-public class ArtistSongsNavigationList extends PageNavigationList<Audio> {
+public class ArtistSongsNavigationList extends AudioNavigationList {
     public ArtistSongsNavigationList(InitParams initialParams)
     {
         super(initialParams);

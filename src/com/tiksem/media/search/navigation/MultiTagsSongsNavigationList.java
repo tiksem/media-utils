@@ -12,7 +12,7 @@ import java.io.IOException;
  * Time: 21:02
  * To change this template use File | Settings | File Templates.
  */
-public class MultiTagsSongsNavigationList extends MultiTagNavigationList<Audio> {
+public class MultiTagsSongsNavigationList extends MultiTagAudioNavigationList {
     public MultiTagsSongsNavigationList(Params params) {
         super(params);
     }

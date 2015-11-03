@@ -4,6 +4,7 @@ import com.tiksem.media.data.Audio;
 import com.tiksem.media.data.AudioNameArtistNameLinkedSet;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.SearchResult;
+import com.utils.framework.KeyProvider;
 import com.utils.framework.Lists;
 import com.utils.framework.algorithms.ObjectCoefficientProvider;
 import com.utils.framework.algorithms.ObjectProbabilityRangeMap;
@@ -132,5 +133,10 @@ public class SongsYouMayLikeNavigationList extends AsyncNavigationList<Audio> {
         userPlaylist = null;
         userPlayListAsSet = null;
         similarTracksProviders = null;
+    }
+
+    @Override
+    protected KeyProvider<Object, Audio> getKeyProvider() {
+        return null;
     }
 }

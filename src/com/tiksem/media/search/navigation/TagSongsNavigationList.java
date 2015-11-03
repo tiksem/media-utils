@@ -13,7 +13,7 @@ import java.util.concurrent.Executor;
  * Date: 2/25/13
  * Time: 6:44 PM
  */
-public class TagSongsNavigationList extends PageNavigationList<Audio> {
+public class TagSongsNavigationList extends AudioNavigationList {
     public TagSongsNavigationList(InitParams initialParams) {
         super(initialParams);
     }

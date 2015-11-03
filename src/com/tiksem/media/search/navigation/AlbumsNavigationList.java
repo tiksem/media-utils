@@ -14,7 +14,7 @@ import java.util.concurrent.Executor;
  * Time: 20:29
  * To change this template use File | Settings | File Templates.
  */
-public class AlbumsNavigationList extends PageNavigationList<Album>{
+public class AlbumsNavigationList extends AlbumKeyNavigationList {
     public AlbumsNavigationList(InitParams initialParams) {
         super(initialParams);
     }

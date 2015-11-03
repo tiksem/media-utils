@@ -6,6 +6,7 @@ import com.tiksem.media.search.SearchResult;
 import com.utils.framework.OnError;
 import com.utils.framework.collections.NavigationList;
 import com.utils.framework.collections.OnLoadingFinished;
+import com.utils.framework.collections.UniqueNavigationList;
 import com.utilsframework.android.ErrorListener;
 import com.utilsframework.android.network.RequestManager;
 import com.utilsframework.android.threading.Threading;
@@ -22,7 +23,7 @@ import java.util.concurrent.Executor;
  * Time: 20:35
  * To change this template use File | Settings | File Templates.
  */
-public abstract class AsyncNavigationList<T> extends NavigationList<T> {
+public abstract class AsyncNavigationList<T> extends UniqueNavigationList<T> {
     private ErrorListener errorListener;
     private RequestManager requestManager;
 

@@ -14,7 +14,7 @@ import java.util.concurrent.Executor;
  * Time: 14:42
  * To change this template use File | Settings | File Templates.
  */
-public class SongsNavigationList extends PageNavigationList<Audio>{
+public class SongsNavigationList extends AudioNavigationList {
     public SongsNavigationList(InitParams initialParams) {
         super(initialParams);
     }
