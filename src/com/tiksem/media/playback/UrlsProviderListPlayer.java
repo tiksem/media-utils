@@ -43,6 +43,7 @@ public class UrlsProviderListPlayer extends Player<UrlsProvider> {
                         if (urlList.isEmpty()) {
                             onError(null);
                             playNext();
+                            return;
                         }
 
                         urls = urlList;
