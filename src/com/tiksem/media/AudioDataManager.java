@@ -175,9 +175,9 @@ public class AudioDataManager {
     }
 
     public NavigationList<Artist> getArtistsByTag(String genre){
-        GenreArtistsNavigationList.InitParams params =
+        TagArtistsNavigationList.InitParams params =
                 getPageNavigationListInitialParams(Collections.emptyList(), genre);
-        return new GenreArtistsNavigationList(params);
+        return new TagArtistsNavigationList(params);
     }
 
     public List<Album> getAlbumsOfArtist(Artist artist){
