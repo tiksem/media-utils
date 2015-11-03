@@ -329,6 +329,12 @@ public class AudioPlayerService extends Service implements Player.Listener {
 
             return player.getCurrentUrl();
         }
+
+        public void reset() {
+            mediaPlayer.reset();
+            urlsProviderListPlayer = null;
+            urlListPlayer = null;
+        }
     }
 
     @Override
