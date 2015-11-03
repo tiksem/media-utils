@@ -18,7 +18,7 @@ public final class Countries {
     static {
         putCountry("Ukraine", "Ukraine","ukrainian");
         putCountry("Russia", "Russia","russian");
-        putCountry(" Afghanistan", " Afghanistan");
+        putCountry("Afghanistan", "Afghanistan");
         putCountry("Albania", "Albania");
         putCountry("Algeria", "Algeria");
         putCountry("Andorra", "Andorra");
