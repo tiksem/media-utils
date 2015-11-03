@@ -50,9 +50,9 @@ public abstract class MultiTagNavigationList<T> extends AsyncNavigationList<T> {
 
     @Override
     protected SearchResult<T> search(int pageNumber) throws IOException {
-        SearchResult<T> result = new SearchResult();
+        SearchResult<T> result = new SearchResult<>();
         result.isLastPage = true;
-        List<List<T>> resultsByTag = new ArrayList(tags.length);
+        List<List<T>> resultsByTag = new ArrayList<>(tags.length);
 
         for(String tag : tags){
             SearchResult<T> searchResultByTag =

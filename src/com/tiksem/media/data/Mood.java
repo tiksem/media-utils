@@ -13,8 +13,7 @@ import java.util.TreeMap;
  * To change this template use File | Settings | File Templates.
  */
 public final class Mood {
-    private static Map<String, String[]> moods = new TreeMap();
-    private static List<String> moodsNamesList;
+    private static Map<String, String[]> moods = new TreeMap<>();
 
     static {
         putMood("love", "love","love mood");
@@ -73,8 +72,6 @@ public final class Mood {
         putMood("stress", "stress");
         putMood("depression", "depression");
         putMood("boring", "boring");
-
-        moodsNamesList = new ArrayList<String>(moods.keySet());
     }
 
     private static void putMood(String name, String... tags){
@@ -86,6 +83,6 @@ public final class Mood {
     }
 
     public static List<String> getMoods(){
-        return moodsNamesList;
+        return new ArrayList<>(moods.keySet());
     }
 }
