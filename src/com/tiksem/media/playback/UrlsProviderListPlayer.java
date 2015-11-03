@@ -63,12 +63,15 @@ public class UrlsProviderListPlayer extends Player<UrlsProvider> {
     }
 
     @Override
-    protected void tryPlayCurrentUrl() {
+    public void reset() {
+        super.reset();
+
+        urls = null;
+        urlPosition = 0;
+
         if (urlsGettingTask != null) {
             urlsGettingTask.cancel(true);
         }
-
-        super.tryPlayCurrentUrl();
     }
 
     @Override

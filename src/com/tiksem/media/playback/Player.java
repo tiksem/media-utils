@@ -50,7 +50,8 @@ public abstract class Player<PlayingEntity> {
 
     protected abstract void getCurrentUrl(OnUrlReady onUrlReady);
 
-    protected void tryPlayCurrentUrl() {
+    private void tryPlayCurrentUrl() {
+        reset();
         setStatus(Status.PREPARING);
         getCurrentUrl(new OnUrlReady() {
             @Override
@@ -62,7 +63,6 @@ public abstract class Player<PlayingEntity> {
 
     private void tryPlayUrl(final String url) {
         try {
-            mediaPlayer.reset();
             mediaPlayer.setDataSource(url);
 
             mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
@@ -232,6 +232,10 @@ public abstract class Player<PlayingEntity> {
 
         setPosition(newPosition);
         setPlayList(newPlayList);
+    }
+
+    public void reset() {
+        mediaPlayer.reset();
     }
 
     protected abstract int getPlayListSize();

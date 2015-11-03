@@ -44,6 +44,15 @@ public class AudioPlayerService extends Service implements Player.Listener {
     }
 
     void playUrlProviders(List<UrlsProvider> urlsProviders, int position) {
+        if (urlsProviderListPlayer != null) {
+            if (urlsProviderListPlayer.getPlayList() == urlsProviders) {
+                urlsProviderListPlayer.play(position);
+                return;
+            } else {
+                urlsProviderListPlayer.reset();
+            }
+        }
+
         urlListPlayer = null;
 
         if (requestManager == null) {
@@ -139,6 +148,15 @@ public class AudioPlayerService extends Service implements Player.Listener {
     public void onStatusChanged() {
         for (StateChangedListener listener : stateListeners) {
             listener.onStateChanged(getStatus());
+        }
+    }
+
+    public void reset() {
+        Player player = getPlayer();
+        if (player != null) {
+            urlsProviderListPlayer = null;
+            urlListPlayer = null;
+            player.reset();
         }
     }
 
@@ -331,9 +349,7 @@ public class AudioPlayerService extends Service implements Player.Listener {
         }
 
         public void reset() {
-            mediaPlayer.reset();
-            urlsProviderListPlayer = null;
-            urlListPlayer = null;
+            AudioPlayerService.this.reset();
         }
     }
 
