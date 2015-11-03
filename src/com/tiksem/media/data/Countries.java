@@ -12,7 +12,7 @@ import java.util.TreeMap;
  * Time: 4:56 PM
  */
 public final class Countries {
-    private static Map<String, String[]> countries = new TreeMap();
+    private static Map<String, String[]> countries = new TreeMap<>();
     private static List<String> countriesNamesList;
 
     static {
@@ -201,7 +201,7 @@ public final class Countries {
         putCountry("Cook Islands", "Cook Islands");
         putCountry("Kosovo", "Kosovo");
         putCountry("Karabakh", "Karabakh");
-        putCountry("Niue (не все)", "Niue (не все)");
+        putCountry("Niue", "Niue");
         putCountry("Northern Cyprus", "Northern Cyprus");
         putCountry("Ossetia", "Ossetia");
 
