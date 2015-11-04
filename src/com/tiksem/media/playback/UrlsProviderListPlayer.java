@@ -87,11 +87,6 @@ public class UrlsProviderListPlayer extends Player<UrlsProvider> {
     }
 
     @Override
-    protected boolean supportsSeveralUrlsForAudio() {
-        return true;
-    }
-
-    @Override
     protected boolean canGoToNextUrl() {
         return urlPosition < urls.size() - 1;
     }
