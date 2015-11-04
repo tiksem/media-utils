@@ -216,10 +216,22 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
 
     @Override
     protected void addAudioToPlayListInDatabase(PlayList playList, Audio audio) {
-        Uri uri = MediaStore.Audio.Playlists.Members.getContentUri("external", playList.getId());
+        Uri uri = getPlayListContentUri(playList);
         ContentValues contentValues = new ContentValues();
         contentValues.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, audio.getId());
         contentResolver.insert(uri, contentValues);
+    }
+
+    @Override
+    protected void removeAudioFromPlayListInDatabase(PlayList playList, Audio audio) {
+        Uri uri = getPlayListContentUri(playList);
+        String where = MediaStore.Audio.Playlists.Members._ID + "=" + audio.getId();
+        contentResolver.delete(uri, where, null);
+    }
+
+    private Uri getPlayListContentUri(PlayList playList) {
+        return MediaStore.Audio.Playlists.Members.getContentUri(
+                "external", playList.getId());
     }
 
     @Override

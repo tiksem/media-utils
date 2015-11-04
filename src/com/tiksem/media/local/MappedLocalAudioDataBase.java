@@ -440,6 +440,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
     protected abstract void addPlayListToDatabase(PlayList playList);
     protected abstract void addAudioToPlayListInDatabase(PlayList playList, Audio audio);
     protected abstract void removeAlbumFromDataBase(long id);
+    protected abstract void removeAudioFromPlayListInDatabase(PlayList playList, Audio audio);
     protected abstract void setAlbumIdToAudioInDataBase(Long albumId, long audioId);
 
     @Override
@@ -467,6 +468,23 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
 
         audiosOfPlayList.add(audio);
         addAudioToPlayListInDatabase(playList, audio);
+
+        return true;
+    }
+
+    @Override
+    public synchronized boolean removeSongFromPlayList(Audio audio, PlayList playList) {
+        Long playListId = playList.getId();
+        List<Audio> audiosOfPlayList = songsByPlayListId.get(playListId);
+        if(audiosOfPlayList == null){
+            return false;
+        }
+
+        if(!audiosOfPlayList.remove(audio)){
+            return false;
+        }
+
+        removeAudioFromPlayListInDatabase(playList, audio);
 
         return true;
     }

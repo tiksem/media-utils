@@ -35,6 +35,7 @@ public interface AudioDataBase {
 
     PlayList addPlayList(String name);
     boolean addSongToPlayList(Audio audio, PlayList playList);
+    boolean removeSongFromPlayList(Audio audio, PlayList playList);
     List<PlayList> getPlayListsWhereSongCanBeAdded(Audio audio);
 
     interface OnArtsUpdatingFinished{

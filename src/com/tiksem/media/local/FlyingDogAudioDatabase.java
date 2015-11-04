@@ -283,4 +283,20 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
     public List<Audio> getInternetAudios() {
         return internetAudios;
     }
+
+    @Override
+    protected void removeAudioFromPlayListInDatabase(PlayList playList, Audio audio) {
+        if (audio.isLocal()) {
+            super.removeAudioFromPlayListInDatabase(playList, audio);
+        } else {
+            if (getPlayListsWhereSongCanBeAdded(audio).size() == getPlayLists().size()) {
+                internetAudios.remove(audio);
+                String where = ID + "=" + audio.getId();
+                dataBase.delete(INTERNET_AUDIO_TABLE_NAME, where, null);
+            }
+
+            String where = ID + "=" + playList.getId() + " AND " + AUDIO_ID + "=" + audio.getId();
+            dataBase.delete(INTERNET_PLAYLISTS_TABLE_NAME, where, null);
+        }
+    }
 }
