@@ -3,10 +3,7 @@ package com.tiksem.media.search;
 import com.tiksem.media.data.*;
 import com.tiksem.media.playback.UrlsProvider;
 import com.tiksem.media.search.network.*;
-import com.tiksem.media.search.parsers.LastFmResultParser;
-import com.tiksem.media.search.parsers.TheAudioDbParser;
-import com.tiksem.media.search.parsers.UrlQueryData;
-import com.tiksem.media.search.parsers.VkResultParser;
+import com.tiksem.media.search.parsers.*;
 import com.utils.framework.CollectionUtils;
 import com.utils.framework.Transformer;
 import com.utils.framework.collections.queue.PageLazyQueue;
@@ -33,11 +30,14 @@ public class InternetSearchEngine {
     private VkSearcher vkSearcher;
     private TheAudioDbSearcher audioDbSearcher;
     private TheAudioDbParser audioDbParser = new TheAudioDbParser();
+    private EchoNestSearcher echoNestSearcher;
+    private EchoNestParser echoNestParser = new EchoNestParser();
 
     public InternetSearchEngine(RequestExecutor requestExecutor) {
         lastFMSearcher = new LastFMSearcher(requestExecutor);
         vkSearcher = new VkSearcher(requestExecutor);
         audioDbSearcher = new TheAudioDbSearcher(requestExecutor);
+        echoNestSearcher = new EchoNestSearcher(requestExecutor);
     }
 
     private interface LastFmSearchResultProvider<T>{
@@ -151,6 +151,10 @@ public class InternetSearchEngine {
 
     public boolean fillAudioDuration(Audio audio){
         try {
+            if (fillAudioDurationUsingTheEchoNest(audio)) {
+                return true;
+            }
+
             if (fillAudioDurationUsingTheDb(audio)) {
                 return true;
             }
@@ -174,6 +178,15 @@ public class InternetSearchEngine {
         try {
             String response = audioDbSearcher.searchTrack(audio.getName(), audio.getArtistName());
             return audioDbParser.fillAudioDuration(audio, response);
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private boolean fillAudioDurationUsingTheEchoNest(Audio audio) {
+        try {
+            String response = echoNestSearcher.getTrackInfo(audio.getName(), audio.getArtistName());
+            return echoNestParser.fillAudioDuration(audio, response);
         } catch (IOException e) {
             return false;
         }
