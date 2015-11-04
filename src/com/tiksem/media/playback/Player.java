@@ -38,7 +38,7 @@ public abstract class Player<PlayingEntity> {
 
     public final void play(int position) {
         if (this.position == position) {
-            throw new IllegalArgumentException("this.position == position");
+            return;
         }
         setPosition(position);
         tryPlayCurrentUrl();
