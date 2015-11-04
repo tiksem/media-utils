@@ -355,7 +355,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
 
     @Override
     public List<Audio> getSongsOfPlayList(PlayList playList) {
-        return getElementsOf(playList,songsByPlayListId);
+        return new ArrayList<>(getElementsOf(playList,songsByPlayListId));
     }
 
     @Override
