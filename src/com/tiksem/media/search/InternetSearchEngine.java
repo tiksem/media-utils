@@ -170,9 +170,13 @@ public class InternetSearchEngine {
         }
     }
 
-    private boolean fillAudioDurationUsingTheDb(Audio audio) throws IOException {
-        String response = audioDbSearcher.searchTrack(audio.getName(), audio.getArtistName());
-        return audioDbParser.fillAudioDuration(audio, response);
+    private boolean fillAudioDurationUsingTheDb(Audio audio) {
+        try {
+            String response = audioDbSearcher.searchTrack(audio.getName(), audio.getArtistName());
+            return audioDbParser.fillAudioDuration(audio, response);
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private boolean fillAudioDurationUsingLastFm(Audio audio) throws IOException {
