@@ -10,6 +10,8 @@ import com.utils.framework.io.IOUtilities;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by stykhonenko on 29.10.15.
@@ -51,6 +53,8 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
 
     private final SQLiteDatabase dataBase;
     private Context context;
+
+    private List<Audio> internetAudios = new ArrayList<>();
 
     private File getArtistArtFile(String artistName, ArtSize artSize) {
         String filesDir = getFilesDir();
@@ -123,6 +127,8 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
                 } finally {
                     playListsCursor.close();
                 }
+
+                internetAudios.add(audio);
             }
         } finally {
             cursor.close();
@@ -272,5 +278,9 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
     public void downloadAndSaveAlbumArt(Album album, String artUrl, ArtSize artSize) throws IOException {
         String path = getAlbumArtFile(album, artSize).getAbsolutePath();
         saveArt(album, artUrl, artSize, path);
+    }
+
+    public List<Audio> getInternetAudios() {
+        return internetAudios;
     }
 }
