@@ -63,6 +63,7 @@ public abstract class Player<PlayingEntity> {
 
     private void tryPlayUrl(final String url) {
         try {
+            mediaPlayer.reset();
             mediaPlayer.setDataSource(url);
 
             mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
