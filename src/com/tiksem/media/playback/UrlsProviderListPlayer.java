@@ -91,13 +91,6 @@ public class UrlsProviderListPlayer extends Player<UrlsProvider> {
         return urlPosition < urls.size() - 1;
     }
 
-    @Override
-    protected void onPositionChanged() {
-        super.onPositionChanged();
-        urls = null;
-        urlPosition = 0;
-    }
-
     public List<UrlsProvider> getProviders() {
         return providers;
     }
