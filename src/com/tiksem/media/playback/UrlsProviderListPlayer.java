@@ -72,6 +72,7 @@ public class UrlsProviderListPlayer extends Player<UrlsProvider> {
 
         if (urlsGettingTask != null) {
             urlsGettingTask.cancel(true);
+            urlsGettingTask = null;
         }
     }
 

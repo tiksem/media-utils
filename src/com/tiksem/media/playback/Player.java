@@ -97,7 +97,7 @@ public abstract class Player<PlayingEntity> {
     protected void onPlayingUrlError(String url) {
         onError(url);
 
-        if (supportsSeveralUrlsForAudio() && canGoToNextUrl()) {
+        if (canGoToNextUrl()) {
             goToNextUrl();
         } else {
             goNext();
@@ -126,10 +126,6 @@ public abstract class Player<PlayingEntity> {
     }
 
     protected boolean canGoToNextUrl() {
-        throw new UnsupportedOperationException("Override this method if supportsSeveralUrlsForAudio returns true");
-    }
-
-    protected boolean supportsSeveralUrlsForAudio() {
         return false;
     }
 
