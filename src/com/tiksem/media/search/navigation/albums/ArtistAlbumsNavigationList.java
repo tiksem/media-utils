@@ -1,4 +1,4 @@
-package com.tiksem.media.search.navigation.artists;
+package com.tiksem.media.search.navigation.albums;
 
 import com.tiksem.media.data.Album;
 import com.tiksem.media.search.InternetSearchEngine;

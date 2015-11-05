@@ -6,7 +6,7 @@ import com.tiksem.media.local.AudioDataBase;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.navigation.*;
 import com.tiksem.media.search.navigation.albums.AlbumsNavigationList;
-import com.tiksem.media.search.navigation.artists.ArtistAlbumsNavigationList;
+import com.tiksem.media.search.navigation.albums.ArtistAlbumsNavigationList;
 import com.tiksem.media.search.navigation.artists.ArtistsNavigationList;
 import com.tiksem.media.search.navigation.artists.MultiTagsArtistNavigationList;
 import com.tiksem.media.search.navigation.artists.TagArtistsNavigationList;
