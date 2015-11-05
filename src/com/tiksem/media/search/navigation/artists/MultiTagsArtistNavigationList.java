@@ -1,7 +1,8 @@
-package com.tiksem.media.search.navigation;
+package com.tiksem.media.search.navigation.artists;
 
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.search.SearchResult;
+import com.tiksem.media.search.navigation.MultiTagNavigationList;
 import com.utils.framework.KeyProvider;
 
 import java.io.IOException;

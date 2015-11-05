@@ -1,12 +1,10 @@
-package com.tiksem.media.search.navigation;
+package com.tiksem.media.search.navigation.artists;
 
-import android.widget.Filter;
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.search.InternetSearchEngine;
+import com.tiksem.media.search.navigation.PageNavListParams;
 import com.tiksem.media.search.queue.SearchQueue;
-import com.utils.framework.ArrayUtils;
 import com.utils.framework.strings.Strings;
-import com.utilsframework.android.network.RequestManager;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,17 +12,23 @@ import java.util.List;
 /**
  * Created by stykhonenko on 05.11.15.
  */
-public class ArtistsFilterTagNavigationList extends FilterNavigationList<Artist> {
+public class ArtistsFilterTagNavigationList extends ArtistFilterNavigationList {
     private final InternetSearchEngine internetSearchEngine;
     private final String tag;
+    private final String query;
+    private int elementsOfPageCount;
 
     public ArtistsFilterTagNavigationList(PageNavListParams params, String tag) {
         super(params.requestManager);
         this.tag = tag;
         internetSearchEngine = params.internetSearchEngine;
-        SearchQueue<Artist> artists =
-                internetSearchEngine.searchArtists(params.query, params.elementsOfPageCount);
-        setSearchQueue(artists);
+        query = params.query;
+        elementsOfPageCount = params.elementsOfPageCount;
+    }
+
+    @Override
+    protected SearchQueue<Artist> getSearchQueue() {
+        return internetSearchEngine.searchArtists(query, elementsOfPageCount);
     }
 
     @Override

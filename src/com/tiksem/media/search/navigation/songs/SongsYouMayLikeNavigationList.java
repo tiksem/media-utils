@@ -1,9 +1,10 @@
-package com.tiksem.media.search.navigation;
+package com.tiksem.media.search.navigation.songs;
 
 import com.tiksem.media.data.Audio;
 import com.tiksem.media.data.AudioNameArtistNameLinkedSet;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.SearchResult;
+import com.tiksem.media.search.navigation.AsyncNavigationList;
 import com.tiksem.media.search.queue.SearchQueue;
 import com.utils.framework.KeyProvider;
 import com.utils.framework.Lists;

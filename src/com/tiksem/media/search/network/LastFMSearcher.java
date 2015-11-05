@@ -186,4 +186,12 @@ public class LastFMSearcher {
         args.put("artist", artistName);
         return search(args);
     }
+
+    public String getSongTopTags(String name, String artistName) throws IOException {
+        Map<String, Object> args = new HashMap<>();
+        args.put("method", "track.gettoptags");
+        args.put("artist", artistName);
+        args.put("track", name);
+        return search(args);
+    }
 }

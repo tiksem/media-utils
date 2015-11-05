@@ -1,6 +1,7 @@
-package com.tiksem.media.search.navigation;
+package com.tiksem.media.search.navigation.songs;
 
 import com.tiksem.media.data.Audio;
+import com.tiksem.media.search.navigation.MultiTagNavigationList;
 import com.utils.framework.KeyProvider;
 
 /**

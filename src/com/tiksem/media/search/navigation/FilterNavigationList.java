@@ -5,6 +5,7 @@ import com.utils.framework.OnError;
 import com.utils.framework.collections.EmptyList;
 import com.utils.framework.collections.NavigationList;
 import com.utils.framework.collections.OnLoadingFinished;
+import com.utils.framework.collections.UniqueNavigationList;
 import com.utilsframework.android.network.RequestManager;
 import com.utilsframework.android.threading.Threading;
 
@@ -15,7 +16,7 @@ import java.util.List;
 /**
  * Created by stykhonenko on 05.11.15.
  */
-public abstract class FilterNavigationList<T> extends NavigationList<T> {
+public abstract class FilterNavigationList<T> extends UniqueNavigationList<T> {
     private static final EmptyList LAST_PAGE = new EmptyList();
 
     private RequestManager requestManager;
@@ -28,6 +29,10 @@ public abstract class FilterNavigationList<T> extends NavigationList<T> {
     @Override
     public void getElementsOfPage(int pageNumber, final OnLoadingFinished<T> onPageLoadingFinished,
                                   final OnError onError) {
+        if (searchQueue == null) {
+            searchQueue = getSearchQueue();
+        }
+
         requestManager.execute(new Threading.Task<IOException, List<T>>() {
             @Override
             public List<T> runOnBackground() throws IOException {
@@ -54,13 +59,6 @@ public abstract class FilterNavigationList<T> extends NavigationList<T> {
         });
     }
 
-    protected final void setSearchQueue(SearchQueue<T> searchQueue) {
-        this.searchQueue = searchQueue;
-    }
-
-    protected final SearchQueue<T> getSearchQueue() {
-        return searchQueue;
-    }
-
+    protected abstract SearchQueue<T> getSearchQueue();
     protected abstract boolean satisfies(T item) throws IOException;
 }

@@ -110,6 +110,15 @@ public class InternetSearchEngine {
         }
     }
 
+    public SearchQueue<Audio> searchAudios(final String query, final int itemsPerPage) {
+        return new SearchQueue<Audio>() {
+            @Override
+            protected SearchResult<Audio> loadData(int pageNumber) throws IOException {
+                return searchAudios(query, itemsPerPage, pageNumber);
+            }
+        };
+    }
+
     public SearchResult<Audio> getSongsOfArtist(String artistName, int maxCount, int page) throws IOException {
         LastFMSearchParams searchParams = new LastFMSearchParams();
         searchParams.page = page;
@@ -561,5 +570,12 @@ public class InternetSearchEngine {
         }
     }
 
-
+    public List<String> getTopTags(Audio audio) throws IOException {
+        String response = lastFMSearcher.getSongTopTags(audio.getName(), audio.getArtistName());
+        try {
+            return lastFmResultParser.parseTopTags(response);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
+    }
 }

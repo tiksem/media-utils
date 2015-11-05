@@ -1,6 +1,8 @@
-package com.tiksem.media.search.navigation;
+package com.tiksem.media.search.navigation.albums;
 
 import com.tiksem.media.data.Album;
+import com.tiksem.media.search.navigation.PageNavListParams;
+import com.tiksem.media.search.navigation.PageNavigationList;
 import com.utils.framework.KeyProvider;
 
 /**
