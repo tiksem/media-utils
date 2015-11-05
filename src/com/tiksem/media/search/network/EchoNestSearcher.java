@@ -79,6 +79,12 @@ public class EchoNestSearcher {
         args.put("title", name);
         args.put("artist", artistName);
         args.put("bucket", "audio_summary");
+        args.put("results", 1);
+
+        if (!name.contains("live")) {
+            args.put("song_type", "studio");
+        }
+
         return search(SONGS_SEARCH_ROOT_URL, args);
     }
 }
