@@ -5,7 +5,6 @@ import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.SearchResult;
 
 import java.io.IOException;
-import java.util.concurrent.Executor;
 
 /**
  * Project: FlyingDog
@@ -14,7 +13,7 @@ import java.util.concurrent.Executor;
  * Time: 7:04 PM
  */
 public class TagArtistsNavigationList extends ArtistKeyNavigationList {
-    public TagArtistsNavigationList(InitParams initialParams) {
+    public TagArtistsNavigationList(PageNavListParams initialParams) {
         super(initialParams);
     }
 

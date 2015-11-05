@@ -4,6 +4,7 @@ import com.tiksem.media.data.Audio;
 import com.tiksem.media.data.AudioNameArtistNameLinkedSet;
 import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.SearchResult;
+import com.tiksem.media.search.queue.SearchQueue;
 import com.utils.framework.KeyProvider;
 import com.utils.framework.Lists;
 import com.utils.framework.algorithms.ObjectCoefficientProvider;
@@ -34,7 +35,7 @@ public class SongsYouMayLikeNavigationList extends AsyncNavigationList<Audio> {
     private List<Audio> userPlaylist;
     private InternetSearchEngine internetSearchEngine;
     private int songsPerPageCount;
-    private List<Queue<Audio>> similarTracksProviders;
+    private List<SearchQueue<Audio>> similarTracksProviders;
     private ObjectProbabilityRangeMap<Audio> songsGenerator;
 
     private static class AudioCoefficientProvider implements ObjectCoefficientProvider<Audio> {
@@ -58,11 +59,11 @@ public class SongsYouMayLikeNavigationList extends AsyncNavigationList<Audio> {
         initSongsGenerator();
     }
 
-    private Audio generateAudio(){
+    private Audio generateAudio() throws IOException {
         final int index = songsGenerator.getRandomObjectIndex();
         Audio audio = userPlaylist.get(index);
 
-        Queue<Audio> similarTracksProvider = similarTracksProviders.get(index);
+        SearchQueue<Audio> similarTracksProvider = similarTracksProviders.get(index);
         if(similarTracksProvider == null){
             similarTracksProvider = internetSearchEngine.getSimilarTracks(audio, songsPerPageCount);
             similarTracksProviders.set(index, similarTracksProvider);
@@ -70,7 +71,7 @@ public class SongsYouMayLikeNavigationList extends AsyncNavigationList<Audio> {
 
         Audio suggestedAudio;
         while (true) {
-            suggestedAudio = similarTracksProvider.poll();
+            suggestedAudio = similarTracksProvider.get();
 
             if(suggestedAudio == null){
                 reportEmptyOrInvalidProvider(index);

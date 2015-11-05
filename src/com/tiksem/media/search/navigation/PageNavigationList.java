@@ -1,11 +1,6 @@
 package com.tiksem.media.search.navigation;
 
 import com.tiksem.media.search.InternetSearchEngine;
-import com.utilsframework.android.network.RequestManager;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Executor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,14 +14,7 @@ public abstract class PageNavigationList<T> extends AsyncNavigationList<T> {
     private String query;
     private int elementsOfPageCount;
 
-    public static class InitParams {
-        public InternetSearchEngine internetSearchEngine;
-        public int elementsOfPageCount = 50;
-        public String query;
-        public RequestManager requestManager;
-    }
-
-    public PageNavigationList(InitParams initialParams)
+    public PageNavigationList(PageNavListParams initialParams)
     {
         super(initialParams.requestManager);
         this.internetSearchEngine = initialParams.internetSearchEngine;

@@ -14,7 +14,7 @@ import java.io.IOException;
  * To change this template use File | Settings | File Templates.
  */
 public class ArtistSongsNavigationList extends AudioNavigationList {
-    public ArtistSongsNavigationList(InitParams initialParams)
+    public ArtistSongsNavigationList(PageNavListParams initialParams)
     {
         super(initialParams);
     }

@@ -5,6 +5,7 @@ import com.utils.framework.network.RequestExecutor;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -177,5 +178,12 @@ public class LastFMSearcher {
 
     public LastFMSearcher(RequestExecutor requestExecutor) {
         this.requestExecutor = requestExecutor;
+    }
+
+    public String getArtistTopTags(String artistName) throws IOException {
+        Map<String, Object> args = new HashMap<>();
+        args.put("method", "artist.gettoptags");
+        args.put("artist", artistName);
+        return search(args);
     }
 }

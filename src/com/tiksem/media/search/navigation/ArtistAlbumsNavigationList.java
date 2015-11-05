@@ -5,7 +5,6 @@ import com.tiksem.media.search.InternetSearchEngine;
 import com.tiksem.media.search.SearchResult;
 
 import java.io.IOException;
-import java.util.concurrent.Executor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,7 +14,7 @@ import java.util.concurrent.Executor;
  * To change this template use File | Settings | File Templates.
  */
 public class ArtistAlbumsNavigationList extends AlbumKeyNavigationList {
-    public ArtistAlbumsNavigationList(InitParams initialParams)
+    public ArtistAlbumsNavigationList(PageNavListParams initialParams)
     {
         super(initialParams);
     }

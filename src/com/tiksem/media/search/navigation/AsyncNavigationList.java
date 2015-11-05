@@ -38,7 +38,7 @@ public abstract class AsyncNavigationList<T> extends UniqueNavigationList<T> {
 
     @Override
     public void getElementsOfPage(final int pageNumber,
-                                  final OnLoadingFinished<T> onPageLoadingFinished, OnError onError) {
+                                  final OnLoadingFinished<T> onPageLoadingFinished, final OnError onError) {
         requestManager.execute(new Threading.Task<IOException, SearchResult<T>>() {
             @Override
             public SearchResult<T> runOnBackground() throws IOException {
@@ -58,6 +58,10 @@ public abstract class AsyncNavigationList<T> extends UniqueNavigationList<T> {
                     onPageLoadingFinished.onLoadingFinished(searchResult.elements, searchResult.isLastPage);
                 } else if(errorListener != null) {
                     errorListener.onError(error);
+
+                    if (onError != null) {
+                        onError.onError(error);
+                    }
                 }
             }
         });

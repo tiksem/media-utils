@@ -7,7 +7,7 @@ import com.utils.framework.KeyProvider;
  * Created by stykhonenko on 03.11.15.
  */
 public abstract class AudioNavigationList extends PageNavigationList<Audio> {
-    public AudioNavigationList(InitParams initialParams) {
+    public AudioNavigationList(PageNavListParams initialParams) {
         super(initialParams);
     }
 

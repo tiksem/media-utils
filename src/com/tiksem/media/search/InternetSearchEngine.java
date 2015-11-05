@@ -4,9 +4,9 @@ import com.tiksem.media.data.*;
 import com.tiksem.media.playback.UrlsProvider;
 import com.tiksem.media.search.network.*;
 import com.tiksem.media.search.parsers.*;
+import com.tiksem.media.search.queue.SearchQueue;
 import com.utils.framework.CollectionUtils;
 import com.utils.framework.Transformer;
-import com.utils.framework.collections.queue.PageLazyQueue;
 import com.utils.framework.network.RequestExecutor;
 import com.utilsframework.android.IOErrorListener;
 import org.json.JSONException;
@@ -362,6 +362,15 @@ public class InternetSearchEngine {
         }
     }
 
+    public SearchQueue<Artist> searchArtists(final String query, final int itemsPerPage) {
+        return new SearchQueue<Artist>() {
+            @Override
+            protected SearchResult<Artist> loadData(int pageNumber) throws IOException {
+                return searchArtists(query, itemsPerPage, pageNumber);
+            }
+        };
+    }
+
     public SearchResult<Audio> getSimilarTracks(Audio audio, int maxCount, int page) throws IOException {
         final String name = audio.getName();
         final String artistName = audio.getArtistName();
@@ -382,34 +391,13 @@ public class InternetSearchEngine {
         }
     }
 
-    public Queue<Audio> getSimilarTracks(final Audio audio, final int countPerPage,
-                                         final IOErrorListener errorListener) {
-        return new PageLazyQueue<Audio>() {
-            boolean isLastPage = false;
-
+    public SearchQueue<Audio> getSimilarTracks(final Audio audio, final int countPerPage) {
+        return new SearchQueue<Audio>() {
             @Override
-            protected List<Audio> loadData(int pageNumber) {
-                if(isLastPage){
-                    return null;
-                }
-
-                try {
-                    SearchResult<Audio> result = getSimilarTracks(audio, countPerPage, pageNumber);
-                    isLastPage = result.isLastPage;
-                    return result.elements;
-
-                } catch (IOException e) {
-                    if(errorListener != null){
-                        errorListener.onIOError(e);
-                    }
-                    return null;
-                }
+            protected SearchResult<Audio> loadData(int pageNumber) throws IOException {
+                return getSimilarTracks(audio, countPerPage, pageNumber);
             }
         };
-    }
-
-    public Queue<Audio> getSimilarTracks(final Audio audio, final int countPerPage) {
-        return getSimilarTracks(audio, countPerPage, null);
     }
 
     public SearchResult<Artist> getSimilarArtists(Artist artist, int maxCount, int page) throws IOException {
@@ -563,4 +551,15 @@ public class InternetSearchEngine {
     public List<Artist> getSuggestedArtistsByTrackName(String trackName, int maxCount) {
         return getArtistsByNames(getSuggestedArtistNamesByTrackName(trackName, maxCount));
     }
+
+    public List<String> getTopTags(Artist artist) throws IOException {
+        String response = lastFMSearcher.getArtistTopTags(artist.getName());
+        try {
+            return lastFmResultParser.parseTopTags(response);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
+    }
+
+
 }

@@ -163,4 +163,10 @@ public class LastFmResultParser {
         JSONObject jsonObject = new JSONObject(response);
         return artistParser.parse(jsonObject.getJSONObject("artist"));
     }
+
+    public List<String> parseTopTags(String response) throws JSONException {
+        ExtendedJSONObject jsonObject = new ExtendedJSONObject(response);
+        LastFmTagParser parser = new LastFmTagParser();
+        return jsonObject.parseJsonArrayFromPath(parser, "toptags", "tag");
+    }
 }

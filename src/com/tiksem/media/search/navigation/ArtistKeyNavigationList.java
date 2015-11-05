@@ -7,7 +7,7 @@ import com.utils.framework.KeyProvider;
  * Created by stykhonenko on 03.11.15.
  */
 public abstract class ArtistKeyNavigationList extends PageNavigationList<Artist> {
-    public ArtistKeyNavigationList(InitParams initialParams) {
+    public ArtistKeyNavigationList(PageNavListParams initialParams) {
         super(initialParams);
     }
 

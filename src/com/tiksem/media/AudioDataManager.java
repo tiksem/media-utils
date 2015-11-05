@@ -46,7 +46,7 @@ public class AudioDataManager {
 
     public NavigationList<Audio> getSongs(String query){
         List<Audio> localAudios = localAudioDataBase.getSongs();
-        SongsNavigationList.InitParams initParams = getPageNavigationListInitialParams(localAudios, query);
+        PageNavListParams initParams = getPageNavigationListInitialParams(localAudios, query);
 
         SongsNavigationList songs = new SongsNavigationList(initParams);
         songs.setErrorListener(errorListener);
@@ -86,11 +86,11 @@ public class AudioDataManager {
         return Search.filter(playLists, query, maxCount);
     }
 
-    private <T> PageNavigationList.InitParams getPageNavigationListInitialParams(
+    private <T> PageNavListParams getPageNavigationListInitialParams(
             List<T> localElements,
             String query)
     {
-        PageNavigationList.InitParams initParams = new PageNavigationList.InitParams();
+        PageNavListParams initParams = new PageNavListParams();
         initParams.query = query;
         initParams.internetSearchEngine = internetSearchEngine;
 
@@ -120,7 +120,7 @@ public class AudioDataManager {
     public NavigationList<Album> getAlbums(String query){
         List<Album> localAlbums = getAlbums();
 
-        AlbumsNavigationList.InitParams initParams = getPageNavigationListInitialParams(localAlbums, query);
+        PageNavListParams initParams = getPageNavigationListInitialParams(localAlbums, query);
 
         AlbumsNavigationList albums = new AlbumsNavigationList(initParams);
         albums.setErrorListener(errorListener);
@@ -162,20 +162,20 @@ public class AudioDataManager {
                 return NavigationList.emptyList();
             }
 
-            ArtistSongsNavigationList.InitParams params =
+            PageNavListParams params =
                     getPageNavigationListInitialParams(initialElements,artistName);
             return new ArtistSongsNavigationList(params);
         }
     }
 
     public NavigationList<Audio> getTracksByTag(String tag){
-        TagSongsNavigationList.InitParams params =
+        PageNavListParams params =
                 getPageNavigationListInitialParams(Collections.emptyList(), tag);
         return new TagSongsNavigationList(params);
     }
 
     public NavigationList<Artist> getArtistsByTag(String genre){
-        TagArtistsNavigationList.InitParams params =
+        PageNavListParams params =
                 getPageNavigationListInitialParams(Collections.emptyList(), genre);
         return new TagArtistsNavigationList(params);
     }
@@ -190,7 +190,7 @@ public class AudioDataManager {
                 return NavigationList.emptyList();
             }
 
-            ArtistSongsNavigationList.InitParams params =
+            PageNavListParams params =
                     getPageNavigationListInitialParams(initialElements,artistName);
             return new ArtistAlbumsNavigationList(params);
         }
@@ -236,7 +236,7 @@ public class AudioDataManager {
     public NavigationList<Artist> getArtists(String query){
         List<Artist> localArtists = getArtists();
 
-        ArtistsNavigationList.InitParams initParams = getPageNavigationListInitialParams(localArtists, query);
+        PageNavListParams initParams = getPageNavigationListInitialParams(localArtists, query);
 
         ArtistsNavigationList artists = new ArtistsNavigationList(initParams);
         artists.setErrorListener(errorListener);
