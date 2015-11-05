@@ -330,6 +330,15 @@ public class InternetSearchEngine {
         String query = artistName + " " + name;
         fillAudioDuration(audio);
 
+        List<UrlQueryData> result = getAudioUrls(audio, query);
+        if (result.isEmpty()) {
+            result = getAudioUrls(audio, name + " " + artistName);
+        }
+
+        return result;
+    }
+
+    private List<UrlQueryData> getAudioUrls(Audio audio, String query) throws IOException {
         VkAudioSearchParams searchParams = new VkAudioSearchParams();
         searchParams.setCount(AUDIO_URLS_COUNT);
         String response = vkSearcher.searchAudios(query, searchParams);
