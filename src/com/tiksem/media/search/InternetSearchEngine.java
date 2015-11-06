@@ -50,7 +50,7 @@ public class InternetSearchEngine {
         T parse(String response) throws JSONException;
     }
 
-    public SearchResult<Album> getAlbumsByName(String query, int maxCount, int page) throws IOException {
+    public SearchResult<Album> searchAlbums(String query, int maxCount, int page) throws IOException {
         LastFMSearchParams searchParams = new LastFMSearchParams();
         searchParams.page = page;
         searchParams.limit = maxCount;
@@ -61,6 +61,15 @@ public class InternetSearchEngine {
         } catch (JSONException e) {
             throw new RequestJsonException(e);
         }
+    }
+
+    public SearchQueue<Album> searchAlbums(final String query, final int itemsPerPage) {
+        return new SearchQueue<Album>() {
+            @Override
+            protected SearchResult<Album> loadData(int pageNumber) throws IOException {
+                return searchAlbums(query, itemsPerPage, pageNumber);
+            }
+        };
     }
 
     public SearchResult<Album> getAlbumsOfArtist(String artistName, int maxCount, int page) throws IOException {

@@ -24,6 +24,6 @@ public class AlbumsNavigationList extends AlbumKeyNavigationList {
         InternetSearchEngine internetSearchEngine = getInternetSearchEngine();
         String query = getQuery();
         int elementsOfPageCount = getElementsOfPageCount();
-        return internetSearchEngine.getAlbumsByName(query, elementsOfPageCount, pageNumber + 1);
+        return internetSearchEngine.searchAlbums(query, elementsOfPageCount, pageNumber + 1);
     }
 }

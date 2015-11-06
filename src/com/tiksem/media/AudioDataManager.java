@@ -117,7 +117,7 @@ public class AudioDataManager {
         }
 
         try {
-            return internetSearchEngine.getAlbumsByName(query, maxCount, 0).elements;
+            return internetSearchEngine.searchAlbums(query, maxCount, 0).elements;
         } catch (IOException e) {
             return new ArrayList<Album>();
         }
