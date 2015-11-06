@@ -227,10 +227,6 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
             throw new NullPointerException();
         }
 
-        if (audio.getUrl() == null) {
-            throw new IllegalArgumentException("Invalid audio url");
-        }
-
         ContentValues contentValues = new ContentValues(5);
         contentValues.put(NAME, audio.getName());
         contentValues.put(ARTIST_NAME, audio.getArtistName());

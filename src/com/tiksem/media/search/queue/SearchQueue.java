@@ -15,11 +15,11 @@ public abstract class SearchQueue<T> {
     private boolean isLastPage;
 
     public T get() throws IOException {
-        if (isLastPage) {
-            return null;
-        }
+        while (elements.isEmpty()) {
+            if (isLastPage) {
+                return null;
+            }
 
-        while (elements.isEmpty() && !isLastPage) {
             SearchResult<T> searchResult = loadData(pageNumber++);
             boolean empty = searchResult.elements.isEmpty();
             isLastPage = searchResult.isLastPage || empty;

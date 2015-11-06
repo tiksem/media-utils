@@ -131,7 +131,12 @@ public class LastFmResultParser {
         SearchResult<Audio> searchResult = new SearchResult<Audio>();
         LastFmSimilarTrackParser parser = new LastFmSimilarTrackParser();
         ExtendedJSONObject jsonObject = new ExtendedJSONObject(response);
+        if (jsonObject.getJsonObject().has("error")) {
+            return SearchResult.empty();
+        }
+
         searchResult.elements = jsonObject.parseJsonArrayFromPath(parser, "similartracks", "track");
+        // TODO: fix this
         searchResult.isLastPage = true;
         return searchResult;
     }
