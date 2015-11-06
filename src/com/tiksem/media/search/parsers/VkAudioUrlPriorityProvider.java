@@ -78,7 +78,11 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
 
     private boolean artistContains() {
         if (vkArtist.contains(inputArtist)) {
-            return containsCover(vkArtist) == containsCover(inputArtist);
+            if (containsCover(vkArtist) != containsCover(inputArtist)) {
+                return false;
+            }
+
+            return containsMinus(vkArtist) == containsMinus(inputArtist);
         }
 
         return false;
@@ -86,6 +90,11 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
 
     private boolean containsCover(String input) {
         return input.contains("cover") || input.contains("кавер");
+    }
+
+    private boolean containsMinus(String input) {
+        return input.contains("instrumental") || input.contains("minus") || input.contains("минус")
+                || input.contains("минусовка");
     }
 
     private int getPriorityDependingOnParams() {
@@ -126,7 +135,11 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
 
     private boolean titleContains() {
         if (vkTitle.contains(inputTitle)) {
-            return containsCover(vkTitle) == containsCover(inputTitle);
+            if (containsCover(vkTitle) != containsCover(inputTitle)) {
+                return false;
+            }
+
+            return containsMinus(vkTitle) == containsMinus(inputTitle);
         }
 
         return false;
