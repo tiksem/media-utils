@@ -56,8 +56,10 @@ public abstract class AsyncNavigationList<T> extends UniqueNavigationList<T> {
             public void onComplete(SearchResult<T> searchResult, IOException error) {
                 if (searchResult != null) {
                     onPageLoadingFinished.onLoadingFinished(searchResult.elements, searchResult.isLastPage);
-                } else if(errorListener != null) {
-                    errorListener.onError(error);
+                } else {
+                    if (errorListener != null) {
+                        errorListener.onError(error);
+                    }
 
                     if (onError != null) {
                         onError.onError(error);

@@ -21,7 +21,8 @@ public abstract class SearchQueue<T> {
 
         while (elements.isEmpty() && !isLastPage) {
             SearchResult<T> searchResult = loadData(pageNumber++);
-            isLastPage = searchResult.isLastPage;
+            boolean empty = searchResult.elements.isEmpty();
+            isLastPage = searchResult.isLastPage || empty;
             elements.addAll(searchResult.elements);
         }
 
