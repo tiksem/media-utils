@@ -77,12 +77,28 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
     }
 
     private boolean artistContains() {
-        if (vkArtist.contains(inputArtist)) {
-            if (containsCover(vkArtist) != containsCover(inputArtist)) {
+        return contains(vkArtist, inputArtist);
+    }
+
+    private boolean contains(String vk, String input) {
+        if (vk.contains(input)) {
+            if (containsCover(vk) != containsCover(input)) {
                 return false;
             }
 
-            return containsMinus(vkArtist) == containsMinus(inputArtist);
+            if (containsRemix(vk) != containsRemix(input)) {
+                return false;
+            }
+
+            if (containsRussianVersion(vk) != containsRussianVersion(input)) {
+                return false;
+            }
+
+            if (containsAcoustic(vk) != containsAcoustic(input)) {
+                return false;
+            }
+
+            return containsMinus(vk) == containsMinus(input);
         }
 
         return false;
@@ -95,6 +111,18 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
     private boolean containsMinus(String input) {
         return input.contains("instrumental") || input.contains("minus") || input.contains("минус")
                 || input.contains("минусовка");
+    }
+
+    private boolean containsRemix(String input) {
+        return input.contains("remix");
+    }
+
+    private boolean containsRussianVersion(String input) {
+        return input.contains("русская версия") || input.contains("на русском");
+    }
+
+    private boolean containsAcoustic(String input) {
+        return input.contains("acoustic");
     }
 
     private int getPriorityDependingOnParams() {
@@ -134,15 +162,7 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
     }
 
     private boolean titleContains() {
-        if (vkTitle.contains(inputTitle)) {
-            if (containsCover(vkTitle) != containsCover(inputTitle)) {
-                return false;
-            }
-
-            return containsMinus(vkTitle) == containsMinus(inputTitle);
-        }
-
-        return false;
+        return contains(vkTitle, inputTitle);
     }
 
     private boolean hasItunesSession() {
