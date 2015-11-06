@@ -110,7 +110,7 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
 
     private boolean containsMinus(String input) {
         return input.contains("instrumental") || input.contains("minus") || input.contains("минус")
-                || input.contains("минусовка");
+                || input.contains("минусовка") || input.contains("instumental");
     }
 
     private boolean containsRemix(String input) {
