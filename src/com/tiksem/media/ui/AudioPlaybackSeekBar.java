@@ -58,9 +58,8 @@ public class AudioPlaybackSeekBar extends SeekBar {
             public void onStateChanged(Status status) {
                 if (status == Status.PLAYING || status == Status.PAUSED) {
                     setVisibility(VISIBLE);
-                    setEnabled(true);
                 } else {
-                    setEnabled(false);
+                    setVisibility(GONE);
                 }
             }
         };
