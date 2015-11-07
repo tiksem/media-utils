@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import com.tiksem.media.data.*;
 import com.utils.framework.io.IOUtilities;
+import com.utils.framework.strings.Strings;
 
 import java.io.File;
 import java.io.IOException;
@@ -172,20 +173,24 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
 
     private void deleteAllArts(ArtCollection artCollection) {
         for (ArtSize size : ArtSize.values()) {
-            new File(artCollection.getArtUrl(size)).delete();
+            String artUrl = artCollection.getArtUrl(size);
+            if (artUrl != null) {
+                new File(artUrl).delete();
+            }
         }
     }
 
-    private void replaceArtist(String artistName, Audio audio) {
-        Artist removedArtist = removeTrackFromArtist(artistName, audio);
+    private void replaceArtist(String newArtistName, Audio audio) {
+        String oldArtistName = audio.getArtistName();
+        Artist removedArtist = removeTrackFromArtist(oldArtistName, audio);
         if (removedArtist != null) {
             deleteAllArts(removedArtist);
         }
 
-        Artist artist = addTrackToArtist(artistName, audio);
+        Artist artist = addTrackToArtist(newArtistName, audio);
         if (artist != null) {
             for (ArtSize artSize : ArtSize.values()) {
-                File artistArtPath = getArtistArtFile(artistName, artSize);
+                File artistArtPath = getArtistArtFile(newArtistName, artSize);
                 if (artistArtPath.exists()) {
                     artist.setArtUrl(artSize, artistArtPath.getAbsolutePath());
                 }
@@ -193,33 +198,48 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
         }
     }
 
+    private void updateAudioField(long audioId, String filedName, String value) {
+        ContentValues contentValues = new ContentValues(1);
+        contentValues.put(filedName, value);
+        String where = ID + "=" + audioId;
+        dataBase.update(AUDIO_TABLE, contentValues, where, null);
+    }
+
     public void setArtistName(Audio audio, String artistName) {
-        if (artistName == null) {
-            throw new NullPointerException();
+        if (Strings.isEmpty(artistName)) {
+            throw new IllegalArgumentException("ArtistName is null or empty");
         }
 
         if (audio.getArtistName().equals(artistName)) {
             return;
         }
 
-        audio.setArtistName(artistName);
+        checkAudioLocal(audio);
+
         replaceArtist(artistName, audio);
+        updateAudioField(audio.getId(), ARTIST_NAME, artistName);
+        audio.setArtistName(artistName);
     }
 
     public void setAudioName(Audio audio, String name) {
-        if (name == null) {
-            throw new NullPointerException();
+        if (Strings.isEmpty(name)) {
+            throw new IllegalArgumentException("Name is null or empty");
         }
 
         if (audio.getName().equals(name)) {
             return;
         }
 
+        checkAudioLocal(audio);
+
+        updateAudioField(audio.getId(), NAME, name);
         audio.setName(name);
-        ContentValues contentValues = new ContentValues(2);
-        contentValues.put(ID, audio.getId());
-        contentValues.put(NAME, name);
-        dataBase.replace(AUDIO_TABLE, null, contentValues);
+    }
+
+    private void checkAudioLocal(Audio audio) {
+        if (!audio.isLocal()) {
+            throw new IllegalArgumentException("Audio is not local");
+        }
     }
 
     private long addInternetAudio(Audio audio) {
