@@ -7,6 +7,7 @@ import com.tiksem.media.search.parsers.*;
 import com.tiksem.media.search.queue.SearchQueue;
 import com.utils.framework.CollectionUtils;
 import com.utils.framework.Transformer;
+import com.utils.framework.collections.NavigationList;
 import com.utils.framework.network.RequestExecutor;
 import com.utilsframework.android.IOErrorListener;
 import org.json.JSONException;
@@ -308,7 +309,7 @@ public class InternetSearchEngine {
         }
     }
 
-    public List<UrlsProvider> getUrlsProviders(final List<Audio> audios) {
+    public List<UrlsProvider> getUrlsProviders(final NavigationList<Audio> audios) {
         return new AbstractList<UrlsProvider>() {
             private Map<Integer, UrlsProvider> cached = new HashMap<>();
 
@@ -332,7 +333,7 @@ public class InternetSearchEngine {
 
             @Override
             public int size() {
-                return audios.size();
+                return audios.getElementsCount();
             }
         };
     }
