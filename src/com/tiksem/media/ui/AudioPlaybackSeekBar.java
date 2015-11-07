@@ -55,7 +55,7 @@ public class AudioPlaybackSeekBar extends SeekBar {
 
         stateChangedListener = new StateChangedListener() {
             @Override
-            public void onStateChanged(Status status) {
+            public void onStateChanged(Status status, Status lastStatus) {
                 if (status == Status.PLAYING || status == Status.PAUSED) {
                     setVisibility(VISIBLE);
                 } else {
@@ -64,7 +64,7 @@ public class AudioPlaybackSeekBar extends SeekBar {
             }
         };
         playerBinder.addStateChangedListener(stateChangedListener);
-        stateChangedListener.onStateChanged(playerBinder.getStatus());
+        stateChangedListener.onStateChanged(playerBinder.getStatus(), null);
 
         super.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
             @Override

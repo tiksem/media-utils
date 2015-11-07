@@ -16,7 +16,7 @@ public abstract class Player<PlayingEntity> {
 
     public interface Listener {
         void onPositionChanged();
-        void onStatusChanged();
+        void onStatusChanged(Status status, Status lastStatus);
         void onError(String url);
     }
 
@@ -151,10 +151,11 @@ public abstract class Player<PlayingEntity> {
     }
 
     private void setStatus(Status status) {
+        Status lastStatus = this.status;
         this.status = status;
 
         if (listener != null) {
-            listener.onStatusChanged();
+            listener.onStatusChanged(status, lastStatus);
         }
     }
 

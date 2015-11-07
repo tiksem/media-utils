@@ -10,7 +10,6 @@ import com.utilsframework.android.media.MediaPlayerProgressUpdater;
 import com.utilsframework.android.network.AsyncRequestExecutorManager;
 import com.utilsframework.android.network.RequestManager;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -145,9 +144,9 @@ public class AudioPlayerService extends Service implements Player.Listener {
     }
 
     @Override
-    public void onStatusChanged() {
+    public void onStatusChanged(Status status, Status lastStatus) {
         for (StateChangedListener listener : stateListeners) {
-            listener.onStateChanged(getStatus());
+            listener.onStateChanged(status, lastStatus);
         }
     }
 
@@ -158,6 +157,15 @@ public class AudioPlayerService extends Service implements Player.Listener {
             urlListPlayer = null;
             player.reset();
         }
+    }
+
+    protected int getPosition() {
+        Player player = getPlayer();
+        if (player == null) {
+            return -1;
+        }
+
+        return player.getPosition();
     }
 
     public class Binder extends android.os.Binder implements Services.OnUnbind {
@@ -307,12 +315,7 @@ public class AudioPlayerService extends Service implements Player.Listener {
         }
 
         public int getPosition() {
-            Player player = getPlayer();
-            if (player == null) {
-                return -1;
-            }
-
-            return player.getPosition();
+            return AudioPlayerService.this.getPosition();
         }
 
         public List<String> getPlayList() {
@@ -353,10 +356,25 @@ public class AudioPlayerService extends Service implements Player.Listener {
         }
     }
 
+    protected void startForeground() {
+
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
         mediaPlayer = new MediaPlayer();
+
+        stateListeners.add(new StateChangedListener() {
+            @Override
+            public void onStateChanged(Status status, Status lastStatus) {
+                if (status != Status.IDLE) {
+                    startForeground();
+                } else {
+                    stopForeground(true);
+                }
+            }
+        });
     }
 
     @Override
@@ -373,9 +391,10 @@ public class AudioPlayerService extends Service implements Player.Listener {
         }
     }
 
-    public static void bindAndStart(Context context, Services.OnBind<Binder> onBind) {
-        Services.start(context, AudioPlayerService.class);
-        Services.bind(context, AudioPlayerService.class, onBind);
+    public static void bindAndStart(Context context, Class<? extends AudioPlayerService> aClass,
+                                    Services.OnBind<Binder> onBind) {
+        Services.start(context, aClass);
+        Services.bind(context, aClass, onBind);
     }
 
     @Override
