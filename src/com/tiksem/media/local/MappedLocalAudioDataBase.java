@@ -3,9 +3,9 @@ package com.tiksem.media.local;
 import android.os.AsyncTask;
 import com.tiksem.media.data.*;
 import com.utils.framework.*;
-import com.utils.framework.Objects;
-import com.utils.framework.collections.map.ListValuesMultiMap;
 import com.utils.framework.collections.map.MultiMap;
+import com.utils.framework.collections.map.SetValuesHashMultiMap;
+import com.utils.framework.collections.map.ValueExistsException;
 import com.utilsframework.android.threading.OnComplete;
 import com.utilsframework.android.threading.Threading;
 
@@ -28,15 +28,12 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
             new LinkedHashMap<Long, List<Audio>>();
     private Map<String,List<Audio>> songsByArtistName =
             new LinkedHashMap<String, List<Audio>>();
-    private Map<Long,List<Audio>> songsWithoutAlbumByArtistId =
-            new LinkedHashMap<Long, List<Audio>>();
+    private MultiMap<String, Audio> songsWithoutAlbumByArtistName =
+            new SetValuesHashMultiMap<>();
     private Map<Long,List<Audio>> songsByPlayListId =
             new LinkedHashMap<Long, List<Audio>>();
 
-    private Map<Long,List<Album>> albumsByArtistId =
-            new LinkedHashMap<Long, List<Album>>();
-
-    private Map<Long,Long> albumIdArtistId = new LinkedHashMap<Long, Long>();
+    private MultiMap<String, Album> albumsByArtistName = new SetValuesHashMultiMap<>();
 
     protected MappedLocalAudioDataBase() {
 
@@ -142,150 +139,64 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
         return null;
     }
 
-    protected void addTrackWithoutAlbumToArtist(long artistId, Audio audio){
-        addTrackToMap(songsWithoutAlbumByArtistId, artistId, audio);
+    protected void addTrackWithoutAlbumToArtist(String artistName, Audio audio){
+        songsWithoutAlbumByArtistName.put(artistName, audio);
     }
 
-    private void addAlbumToArtist(Album album, Artist artist){
-        Long artistId = artist.getId();
-        List<Album> albums = albumsByArtistId.get(artistId);
-        if(albums == null){
-            albums = new ArrayList<Album>();
-            albumsByArtistId.put(artistId,albums);
-        }
-
-        albums.add(album);
+    private void addAlbumToArtist(Album album, Artist artist) {
+        albumsByArtistName.put(artist.getName(), album);
     }
 
-    private void removeAlbumFromArtist(final long albumId, long artistId){
-        List<Album> albums = albumsByArtistId.get(artistId);
-        CollectionUtils.removeAll(albums, new Predicate<Album>() {
-            @Override
-            public boolean check(Album item) {
-                return item.getId() == albumId;
+    private void removeAlbumFromArtist(Album album, String artistName){
+        albumsByArtistName.remove(artistName, album);
+    }
+
+    private void removeAlbum(Album album){
+        Long albumId = album.getId();
+        List<Audio> audios = songsByAlbumId.get(albumId);
+        if(audios != null){
+            for(Audio audio : audios){
+                audio.setAlbumId(-1);
+                audio.setAlbumName(null);
             }
-        });
-    }
-
-    private boolean checkAlbumValidationAndWriteItIfSuccess(Artist artist, Album album){
-        Long artistId = albumIdArtistId.get(album.getId());
-        // remove albums, that have more that one artist
-        if(artistId != null && artistId != artist.getId()){
-            removeAlbum(album.getId());
-            return false;
-        } else if(artistId == null) {
-            addAlbumToArtist(album,artist);
-            albumIdArtistId.put((long)album.getId(), (long)artist.getId());
+            songsByAlbumId.remove(albumId);
         }
 
-        return true;
+        albumsByArtistName.removeAll(album.getArtistName());
+        albumsById.remove(albumId);
     }
 
     protected boolean writeAudioAndAlbumUsingArtist(Audio audio, Album album, Artist artist){
-        boolean albumIsOk = album != null && checkAlbumValidationAndWriteItIfSuccess(artist, album);
+        String artistName = artist.getName();
+        boolean albumIsOk = album != null;
+        if (albumIsOk && album.getArtistName() != null) {
+            albumIsOk = album.getArtistName().equals(artistName);
+        }
 
         if(albumIsOk){
             String albumName = album.getName();
             audio.setAlbumName(albumName);
             audio.setAlbumId(album.getId());
             album.setArtistId(artist.getId());
-            addTrackToAlbum(album.getId(),audio);
+            album.setArtistName(artistName);
+            addTrackToAlbum(album.getId(), audio);
+            addAlbumToArtist(album, artist);
         } else {
-            addTrackWithoutAlbumToArtist(artist.getId(),audio);
+            removeAlbum(album);
+            addTrackWithoutAlbumToArtist(artistName, audio);
         }
 
-        String artistName = artist.getName();
         audio.setArtistName(artistName);
         audio.setArtistId(artist.getId());
-        addTrackToArtist(artist.getName(), audio);
+        addTrackToArtist(artistName, audio);
 
         return albumIsOk;
-    }
-
-    protected void removeAlbum(long albumId){
-        List<Audio> audios = songsByAlbumId.get(albumId);
-        if(audios != null){
-            for(Audio audio : audios){
-                audio.setAlbumId(-1);
-                audio.setAlbumName(null);
-                setAlbumIdToAudioInDataBase(-1l, audio.getId());
-            }
-            songsByAlbumId.remove(albumId);
-        }
-
-        Long artistId = albumIdArtistId.get(albumId);
-        if(artistId != null){
-            albumIdArtistId.remove(albumId);
-            removeAlbumFromArtist(albumId,artistId);
-        }
-
-        albumsById.remove(albumId);
-        removeAlbumFromDataBase(albumId);
     }
 
     protected final void executeInitPlayListsIfNeed(){
         if(playListsById == null){
             playListsById = new LinkedHashMap<Long, PlayList>();
             initPlayLists();
-            for (Artist artist : getArtists()) {
-                removeAlbumsWithSameNames(artist);
-            }
-        }
-    }
-
-    private void removeAlbumsWithSameNames(Artist artist) {
-        MultiMap<String, Album> stringAlbumMultiMap = new ListValuesMultiMap<String, Album>();
-        List<Album> albums = getAlbumsOfArtist(artist);
-        for(Album album : albums){
-            stringAlbumMultiMap.put(album.getName().toLowerCase(), album);
-        }
-
-        Collection<String> keys = stringAlbumMultiMap.getKeys();
-        for(String key : keys){
-            Collection<Album> albumsByName = stringAlbumMultiMap.getValues(key);
-            if(albumsByName.size() <= 1){
-                continue;
-            }
-
-            Album bestAlbum = Collections.max(albumsByName, new Comparator<Album>() {
-                @Override
-                public int compare(Album a, Album b) {
-                    String aArtUrl = a.getArtUrl(ArtSize.SMALL);
-                    String bArtUrl = b.getArtUrl(ArtSize.SMALL);
-
-                    if(Objects.equals(aArtUrl, bArtUrl) || (aArtUrl != null && bArtUrl != null)){
-                        Collection<Audio> aSongs = songsByAlbumId.get(a.getId());
-                        Collection<Audio> bSongs = songsByAlbumId.get(b.getId());
-                        int aSize = aSongs == null ? 0 : aSongs.size();
-                        int bSize = bSongs == null ? 0 : bSongs.size();
-                        return aSize - bSize;
-                    } else {
-                        if(aArtUrl != null){
-                            return 1;
-                        } else {
-                            return -1;
-                        }
-                    }
-                }
-            });
-
-            LinkedHashSet<Audio> audiosOfAlbums = new LinkedHashSet<Audio>();
-            long bestAlbumId = bestAlbum.getId();
-            for(Album album : albumsByName){
-                List<Audio> audios = songsByAlbumId.get(album.getId());
-                audiosOfAlbums.addAll(audios);
-
-                if(album != bestAlbum){
-                    removeAlbum(album.getId());
-
-                    for(Audio audio : audios){
-                        audio.setAlbumId(bestAlbumId);
-                        setAlbumIdToAudioInDataBase(bestAlbumId, audio.getId());
-                    }
-                }
-            }
-
-            songsByAlbumId.put(bestAlbumId, new ArrayList<Audio>(audiosOfAlbums));
         }
     }
 
@@ -335,7 +246,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
 
     @Override
     public List<Audio> getSongsWithoutAlbumOfArtist(Artist artist) {
-        return getElementsOf(artist, songsWithoutAlbumByArtistId);
+        return new ArrayList<>(songsWithoutAlbumByArtistName.getValues(artist.getName()));
     }
 
     @Override
@@ -361,7 +272,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
 
     @Override
     public List<Album> getAlbumsOfArtist(Artist artist) {
-        return getElementsOf(artist, albumsByArtistId);
+        return new ArrayList<>(albumsByArtistName.getValues(artist.getName()));
     }
 
     @Override
@@ -371,12 +282,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
 
     @Override
     public boolean artistHasAlbums(Artist artist) {
-        List albums = albumsByArtistId.get(artist.getId());
-        if(albums == null){
-            return false;
-        } else {
-            return !albums.isEmpty();
-        }
+        return albumsByArtistName.containsKey(artist.getName());
     }
 
     protected abstract void initAudios();
@@ -444,9 +350,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
 
     protected abstract void addPlayListToDatabase(PlayList playList);
     protected abstract void addAudioToPlayListInDatabase(PlayList playList, Audio audio);
-    protected abstract void removeAlbumFromDataBase(long id);
     protected abstract void removeAudioFromPlayListInDatabase(PlayList playList, Audio audio);
-    protected abstract void setAlbumIdToAudioInDataBase(Long albumId, long audioId);
 
     @Override
     public List<PlayList> getPlayListsWhereSongCanBeAdded(final Audio audio) {

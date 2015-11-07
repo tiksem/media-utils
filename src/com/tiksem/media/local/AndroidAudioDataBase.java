@@ -74,7 +74,6 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
         if (albumId > 0) {
             album = getOrCreateAlbumWithId(albumId);
             album.setName(albumName);
-            album.setArtistName(artistName);
         }
 
         Audio audio = useCachedAudio ? getOrCreateAudioWithId(id) : Audio.createLocalAudio(id);
@@ -232,20 +231,5 @@ public class AndroidAudioDataBase extends MappedLocalAudioDataBase{
     private Uri getPlayListContentUri(PlayList playList) {
         return MediaStore.Audio.Playlists.Members.getContentUri(
                 "external", playList.getId());
-    }
-
-    @Override
-    protected void setAlbumIdToAudioInDataBase(Long albumId, long audioId) {
-        final Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        final String where = MediaStore.Audio.AudioColumns._ID + "=" + audioId;
-
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.Audio.Media.ALBUM_ID, albumId);
-        contentResolver.update(uri, contentValues, where, null);
-    }
-
-    @Override
-    protected void removeAlbumFromDataBase(long id) {
-        throw new UnsupportedOperationException();
     }
 }
