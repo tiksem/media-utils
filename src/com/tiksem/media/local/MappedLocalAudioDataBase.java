@@ -182,7 +182,9 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
             addTrackToAlbum(album.getId(), audio);
             addAlbumToArtist(album, artist);
         } else {
-            removeAlbum(album);
+            if (album != null) {
+                removeAlbum(album);
+            }
             addTrackWithoutAlbumToArtist(artistName, audio);
         }
 
