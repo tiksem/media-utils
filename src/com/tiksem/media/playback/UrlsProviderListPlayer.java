@@ -70,6 +70,10 @@ public class UrlsProviderListPlayer extends Player<UrlsProvider> {
         urls = null;
         urlPosition = 0;
 
+        cancelLastTaskIfNeed();
+    }
+
+    private void cancelLastTaskIfNeed() {
         if (urlsGettingTask != null) {
             urlsGettingTask.cancel(true);
             urlsGettingTask = null;
@@ -116,5 +120,11 @@ public class UrlsProviderListPlayer extends Player<UrlsProvider> {
     @Override
     protected void setPlayList(List<UrlsProvider> newPlayList) {
         providers = newPlayList;
+    }
+
+    @Override
+    protected void tryPlayCurrentUrl() {
+        cancelLastTaskIfNeed();
+        super.tryPlayCurrentUrl();
     }
 }

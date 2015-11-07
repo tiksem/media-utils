@@ -50,8 +50,7 @@ public abstract class Player<PlayingEntity> {
 
     protected abstract void getCurrentUrl(OnUrlReady onUrlReady);
 
-    private void tryPlayCurrentUrl() {
-        reset();
+    protected void tryPlayCurrentUrl() {
         setStatus(Status.PREPARING);
         getCurrentUrl(new OnUrlReady() {
             @Override

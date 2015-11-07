@@ -309,7 +309,7 @@ public class InternetSearchEngine {
         }
     }
 
-    public List<UrlsProvider> getUrlsProviders(final NavigationList<Audio> audios) {
+    public List<UrlsProvider> getUrlsProviders(final List<Audio> audios) {
         return new AbstractList<UrlsProvider>() {
             private Map<Integer, UrlsProvider> cached = new HashMap<>();
 
@@ -333,7 +333,11 @@ public class InternetSearchEngine {
 
             @Override
             public int size() {
-                return audios.getElementsCount();
+                if (audios instanceof NavigationList) {
+                    return ((NavigationList) audios).getElementsCount();
+                }
+
+                return audios.size();
             }
         };
     }
