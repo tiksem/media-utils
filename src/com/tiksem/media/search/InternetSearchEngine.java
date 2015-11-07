@@ -356,6 +356,9 @@ public class InternetSearchEngine {
         List<UrlQueryData> result = getAudioUrls(audio, query);
         if (result.isEmpty()) {
             result = getAudioUrls(audio, name + " " + artistName);
+            if (result.isEmpty()) {
+                result = getAudioUrls(audio, name);
+            }
         }
 
         return result;
