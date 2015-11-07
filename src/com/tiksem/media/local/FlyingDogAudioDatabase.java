@@ -57,9 +57,9 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
 
     private List<Audio> internetAudios = new ArrayList<>();
 
-    private File getArtistArtFile(String artistName, ArtSize artSize) {
+    private File getArtistArtFile(Artist artist, ArtSize artSize) {
         String filesDir = getFilesDir();
-        String path = filesDir + "/arts/artist/" + artSize + "_" + artistName;
+        String path = filesDir + "/arts/artist/" + artSize + "_" + artist.getName();
         File file = new File(path);
         file.getParentFile().mkdirs();
         return file;
@@ -92,8 +92,8 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
         this.context = context;
 
         initLocalAudios();
-        initAudioArts();
         initInternetPlayLists();
+        initArts();
     }
 
     private void initInternetPlayLists() {
@@ -136,17 +136,6 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
         }
     }
 
-    private void initAudioArts() {
-        for (Audio audio : getSongs()) {
-            for (ArtSize artSize : ArtSize.values()) {
-                File art = getAudioArtFile(audio, artSize);
-                if (art.exists()) {
-                    audio.setArtUrl(artSize, "file://" + art.getAbsolutePath());
-                }
-            }
-        }
-    }
-
     private void initLocalAudios() {
         Cursor cursor = dataBase.query(AUDIO_TABLE, null, null, null, null, null, null);
         try {
@@ -160,15 +149,59 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
                 String artistName = cursor.getString(artistNameColumnIndex);
 
                 Audio audio = getAudioById(id);
-                audio.setName(name);
+                if (name != null) {
+                    audio.setName(name);
+                }
                 if (artistName != null && !audio.getArtistName().equals(artistName)) {
-                    audio.setArtistName(artistName);
                     replaceArtist(artistName, audio);
+                    audio.setArtistName(artistName);
                 }
             }
         } finally {
             cursor.close();
         }
+    }
+
+    private interface ArtFileProvider<T extends ArtCollection> {
+        File getArtFile(T artCollection, ArtSize artSize);
+    }
+
+    private class ArtistArtFileProvider implements ArtFileProvider<Artist> {
+        @Override
+        public File getArtFile(Artist artCollection, ArtSize artSize) {
+            return getArtistArtFile(artCollection, artSize);
+        }
+    }
+
+    private class AlbumArtFileProvider implements ArtFileProvider<Album> {
+        @Override
+        public File getArtFile(Album artCollection, ArtSize artSize) {
+            return getAlbumArtFile(artCollection, artSize);
+        }
+    }
+
+    private class AudioArtFileProvider implements ArtFileProvider<Audio> {
+        @Override
+        public File getArtFile(Audio artCollection, ArtSize artSize) {
+            return getAudioArtFile(artCollection, artSize);
+        }
+    }
+
+    private <T extends ArtCollection> void initArts(List<T> artCollections, ArtFileProvider<T> artFileProvider) {
+        for (T artCollection : artCollections) {
+            for (ArtSize artSize : ArtSize.values()) {
+                File artFile = artFileProvider.getArtFile(artCollection, artSize);
+                if (artFile.exists()) {
+                    artCollection.setArtUrl(artSize, "file://" + artFile.getAbsolutePath());
+                }
+            }
+        }
+    }
+
+    private void initArts() {
+        initArts(getSongs(), new AudioArtFileProvider());
+        initArts(getAlbums(), new AlbumArtFileProvider());
+        initArts(getArtists(), new ArtistArtFileProvider());
     }
 
     private void deleteAllArts(ArtCollection artCollection) {
@@ -190,19 +223,20 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
         Artist artist = addTrackToArtist(newArtistName, audio);
         if (artist != null) {
             for (ArtSize artSize : ArtSize.values()) {
-                File artistArtPath = getArtistArtFile(newArtistName, artSize);
+                File artistArtPath = getArtistArtFile(artist, artSize);
                 if (artistArtPath.exists()) {
-                    artist.setArtUrl(artSize, artistArtPath.getAbsolutePath());
+                    artist.setArtUrl(artSize, "file://" + artistArtPath.getAbsolutePath());
                 }
             }
         }
     }
 
-    private void updateAudioField(long audioId, String filedName, String value) {
+    private void updateAudioInDataBase(Audio audio) {
         ContentValues contentValues = new ContentValues(1);
-        contentValues.put(filedName, value);
-        String where = ID + "=" + audioId;
-        dataBase.update(AUDIO_TABLE, contentValues, where, null);
+        contentValues.put(NAME, audio.getName());
+        contentValues.put(ID, audio.getId());
+        contentValues.put(ARTIST_NAME, audio.getArtistName());
+        dataBase.replace(AUDIO_TABLE, null, contentValues);
     }
 
     public void setArtistName(Audio audio, String artistName) {
@@ -217,8 +251,8 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
         checkAudioLocal(audio);
 
         replaceArtist(artistName, audio);
-        updateAudioField(audio.getId(), ARTIST_NAME, artistName);
         audio.setArtistName(artistName);
+        updateAudioInDataBase(audio);
     }
 
     public void setAudioName(Audio audio, String name) {
@@ -232,8 +266,8 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
 
         checkAudioLocal(audio);
 
-        updateAudioField(audio.getId(), NAME, name);
         audio.setName(name);
+        updateAudioInDataBase(audio);
     }
 
     private void checkAudioLocal(Audio audio) {
@@ -287,7 +321,7 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
     }
 
     public void downloadAndSaveArtistArt(Artist artist, String artUrl, ArtSize artSize) throws IOException {
-        String path = getArtistArtFile(artist.getName(), artSize).getAbsolutePath();
+        String path = getArtistArtFile(artist, artSize).getAbsolutePath();
         saveArt(artist, artUrl, artSize, path);
     }
 

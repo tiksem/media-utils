@@ -17,7 +17,6 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public class NamedData extends Identified{
-    private static final GlobalStringCache STRING_CACHE = GlobalStringCache.getInstance();
     private String name;
 
     public void cloneDataFrom(NamedData other) {
@@ -84,7 +83,7 @@ public class NamedData extends Identified{
     }
 
     public void setName(String name) {
-        this.name = STRING_CACHE.putOrGet(name);
+        this.name = name;
     }
 
     @Override

@@ -1,8 +1,10 @@
 package com.tiksem.media.data;
 
 import android.os.Parcel;
+import com.utils.framework.collections.cache.GlobalStringCache;
 
 public class Artist extends ArtCollection{
+    private static final GlobalStringCache STRING_CACHE = GlobalStringCache.getInstance();
     private Artist(int id, boolean local) {
         super(id, local);
     }
@@ -50,4 +52,13 @@ public class Artist extends ArtCollection{
             return new Artist[size];
         }
     };
+
+    @Override
+    public void setName(String name) {
+        if (name == null) {
+            throw new NullPointerException("Artist name could not be null");
+        }
+
+        super.setName(STRING_CACHE.putOrGet(name));
+    }
 }

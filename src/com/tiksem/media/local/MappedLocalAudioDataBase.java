@@ -123,6 +123,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
         addTrackToMap(songsByArtistName, artistName, audio);
         if (!artistsByName.containsKey(artistName)) {
             Artist artist = Artist.createLocalArtist();
+            artist.setName(artistName);
             artistsByName.put(artistName, artist);
             return artist;
         }
@@ -393,9 +394,13 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
             String artUrl = getAlbumArtUrl(id);
             album.setUrlForAllArts(artUrl);
 
-            List<Audio> audiosOfAlbum = songsByAlbumId.get(id);
-            for(Audio audio : audiosOfAlbum){
-                audio.setUrlForAllArts(artUrl);
+            if (artUrl != null) {
+                List<Audio> audiosOfAlbum = songsByAlbumId.get(id);
+                for(Audio audio : audiosOfAlbum){
+                    if (audio.getArtUrl(ArtSize.SMALL) == null) {
+                        audio.setUrlForAllArts(artUrl);
+                    }
+                }
             }
         }
     }
