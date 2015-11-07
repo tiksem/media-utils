@@ -41,6 +41,7 @@ public abstract class Player<PlayingEntity> {
             return;
         }
         setPosition(position);
+        reset();
         tryPlayCurrentUrl();
     }
 
@@ -113,11 +114,13 @@ public abstract class Player<PlayingEntity> {
 
     public void playNext() {
         goNext();
+        reset();
         tryPlayCurrentUrl();
     }
 
     public void playPrev() {
         goPrev();
+        reset();
         tryPlayCurrentUrl();
     }
 
