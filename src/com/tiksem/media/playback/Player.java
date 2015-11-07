@@ -233,6 +233,7 @@ public abstract class Player<PlayingEntity> {
     }
 
     public void reset() {
+        setStatus(Status.IDLE);
         mediaPlayer.reset();
     }
 
