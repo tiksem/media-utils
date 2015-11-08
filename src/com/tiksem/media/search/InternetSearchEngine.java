@@ -23,7 +23,7 @@ import java.util.*;
  * To change this template use File | Settings | File Templates.
  */
 public class InternetSearchEngine {
-    private static final int AUDIO_URLS_COUNT = 200;
+    private static final int AUDIO_URLS_COUNT = 50;
 
     private LastFMSearcher lastFMSearcher;
     private LastFmResultParser lastFmResultParser = new LastFmResultParser();
