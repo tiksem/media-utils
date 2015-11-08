@@ -9,7 +9,7 @@ import com.utils.framework.CollectionUtils;
 import com.utils.framework.Transformer;
 import com.utils.framework.collections.NavigationList;
 import com.utils.framework.network.RequestExecutor;
-import com.utilsframework.android.IOErrorListener;
+import com.utils.framework.strings.Strings;
 import org.json.JSONException;
 
 import java.io.IOException;
@@ -343,6 +343,8 @@ public class InternetSearchEngine {
     }
 
     public List<UrlQueryData> getAudioUrls(final Audio audio) throws IOException {
+        fillAudioDuration(audio);
+
         String name = audio.getName();
         String artistName = audio.getArtistName();
 
@@ -351,13 +353,20 @@ public class InternetSearchEngine {
         }
 
         String query = artistName + " " + name;
-        fillAudioDuration(audio);
-
         List<UrlQueryData> result = getAudioUrls(audio, query);
         if (result.isEmpty()) {
             result = getAudioUrls(audio, name + " " + artistName);
             if (result.isEmpty()) {
-                result = getAudioUrls(audio, name);
+                query = query.toLowerCase();
+                String newQuery = Strings.replaceFirstChar(query, 'а'/*Russian a*/, 'a'/*English a*/);
+
+                if (!newQuery.equals(query)) {
+                    result = getAudioUrls(audio, newQuery);
+                }
+
+                if (result.isEmpty()) {
+                    return getAudioUrls(audio, name);
+                }
             }
         }
 
