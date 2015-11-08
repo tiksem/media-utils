@@ -98,6 +98,10 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
                 return false;
             }
 
+            if (containsLive(vk) != containsLive(input)) {
+                return false;
+            }
+
             return containsMinus(vk) == containsMinus(input);
         }
 
@@ -123,6 +127,10 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
 
     private boolean containsAcoustic(String input) {
         return input.contains("acoustic");
+    }
+
+    private boolean containsLive(String input) {
+        return input.contains("live") || input.contains("лайф");
     }
 
     private int getPriorityDependingOnParams() {
