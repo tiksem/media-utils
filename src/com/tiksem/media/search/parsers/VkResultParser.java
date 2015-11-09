@@ -7,6 +7,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -48,9 +49,8 @@ public class VkResultParser {
         JSONArray tracks = getAudiosJSONArray(response);
         List<UrlQueryData> urlsData = getAudioUrls(tracks);
 
-        VkAudioUrlPriorityProvider priorityProvider =
-                new VkAudioUrlPriorityProvider(audio);
-        CollectionUtils.sortByPriority(urlsData, priorityProvider);
+        VkUrlDataComparator comparator = new VkUrlDataComparator(audio);
+        Collections.sort(urlsData, comparator);
 
         return urlsData;
     }

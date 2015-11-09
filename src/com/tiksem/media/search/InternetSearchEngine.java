@@ -170,11 +170,11 @@ public class InternetSearchEngine {
 
     public boolean fillAudioDuration(Audio audio){
         try {
-            if (fillAudioDurationUsingTheEchoNest(audio)) {
+            if (fillAudioDurationUsingTheDb(audio)) {
                 return true;
             }
 
-            if (fillAudioDurationUsingTheDb(audio)) {
+            if (fillAudioDurationUsingTheEchoNest(audio)) {
                 return true;
             }
 
