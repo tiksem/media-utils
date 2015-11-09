@@ -104,6 +104,12 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
             }
 
             if (Strings.getFirstUnsignedInteger(vk) != Strings.getFirstUnsignedInteger(input)) {
+                if (vkDuration != inputDuration) {
+                    return false;
+                }
+            }
+
+            if (containsRadioRip(vk) != containsRadioRip(input)) {
                 return false;
             }
 
@@ -137,6 +143,10 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
 
     private boolean containsLive(String input) {
         return input.contains("live") || input.contains("лайф");
+    }
+
+    private boolean containsRadioRip(String input) {
+        return input.contains("radiorip") || input.contains("radio rip") || input.contains("записывал с радио");
     }
 
     private int getPriorityDependingOnParams() {
