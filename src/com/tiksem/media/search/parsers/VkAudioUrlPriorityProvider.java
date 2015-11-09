@@ -142,7 +142,7 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
     }
 
     private boolean containsLive(String input) {
-        return input.contains("live") || input.contains("лайф");
+        return input.contains("live") || input.contains("лайф") || input.contains("нашествие");
     }
 
     private boolean containsRadioRip(String input) {
