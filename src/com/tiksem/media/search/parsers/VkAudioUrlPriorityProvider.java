@@ -2,6 +2,7 @@ package com.tiksem.media.search.parsers;
 
 import com.tiksem.media.data.Audio;
 import com.utils.framework.CollectionUtils;
+import com.utils.framework.strings.Strings;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -99,6 +100,10 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
             }
 
             if (containsLive(vk) != containsLive(input)) {
+                return false;
+            }
+
+            if (Strings.getFirstUnsignedInteger(vk) != Strings.getFirstUnsignedInteger(input)) {
                 return false;
             }
 
