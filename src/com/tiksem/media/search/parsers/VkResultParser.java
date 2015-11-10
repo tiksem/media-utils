@@ -49,8 +49,8 @@ public class VkResultParser {
         JSONArray tracks = getAudiosJSONArray(response);
         List<UrlQueryData> urlsData = getAudioUrls(tracks);
 
-        VkUrlDataComparator comparator = new VkUrlDataComparator(audio);
-        Collections.sort(urlsData, comparator);
+        VkAudioUrlPriorityProvider priorityProvider = new VkAudioUrlPriorityProvider(audio);
+        CollectionUtils.sortByPriority(urlsData, priorityProvider);
 
         return urlsData;
     }
