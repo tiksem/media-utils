@@ -3,8 +3,6 @@ package com.tiksem.media.search.parsers;
 import com.tiksem.media.data.Audio;
 import com.utils.framework.CollectionUtils;
 import com.utils.framework.strings.Strings;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesProvider<UrlQueryData> {
     private Audio audio;
@@ -16,18 +14,23 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
     private int inputDuration;
     private boolean artistEquals;
     private boolean durationEquals;
+    private boolean titleContains;
+    private boolean titleContainsInBrackets = false;
+    private boolean titleEquals;
+    private boolean artistContains;
+    private boolean artistEqualsOrContains;
 
     private enum Priority {
         DURATION_EQUALS_ARTIST_EQUALS_TITLE_EQUALS,
         DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_ORIGINAL_WORD,
         DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_ITUNES_SESSION,
         DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS,
+        ARTIST_EQUALS_TITLE_EQUALS,
         DURATION_EQUALS_ARTIST_CONTAINS_TITLE_EQUALS,
         DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_ORIGINAL_WORD,
         DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_ITUNES_SESSION,
         DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS,
 
-        ARTIST_EQUALS_TITLE_EQUALS,
         ARTIST_EQUALS_TITLE_CONTAINS_ORIGINAL_WORD,
         ARTIST_EQUALS_TITLE_CONTAINS_ITUNES_SESSION,
         ARTIST_EQUALS_TITLE_CONTAINS,
@@ -35,6 +38,11 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
         ARTIST_CONTAINS_TITLE_CONTAINS_ORIGINAL_WORD,
         ARTIST_CONTAINS_TITLE_CONTAINS_ITUNES_SESSION,
         ARTIST_CONTAINS_TITLE_CONTAINS,
+
+        DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_IN_BRACKETS,
+        ARTIST_EQUALS_TITLE_CONTAINS_IN_BRACKETS,
+        DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_IN_BRACKETS,
+        ARTIST_CONTAINS_TITLE_CONTAINS_IN_BRACKETS,
 
         DURATION_EQUALS,
         TRASH
@@ -57,21 +65,40 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
         durationEquals = vkDuration == inputDuration;
 
         artistEquals = inputArtist.equals(vkArtist);
-        boolean artistEqualsOrContains = artistEquals || artistContains();
-        
-        if (durationEquals) {
-            if (artistEqualsOrContains) {
-                return getPriorityDependingOnParams();
-            } else {
-                return Priority.DURATION_EQUALS.ordinal();
-            }
-        } else if(artistEqualsOrContains) {
-            int priority = getPriorityDependingOnParams();
-            if (priority < Priority.DURATION_EQUALS.ordinal()) {
-                return priority + Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS.ordinal();
-            }
+        if (!artistEquals) {
+            artistContains = artistContains();
+        }
+        artistEqualsOrContains = artistEquals || artistContains;
 
-            return priority;
+        titleEquals = inputTitle.equals(vkTitle);
+        if (!titleEquals) {
+            titleContains = titleContains();
+            if (titleContains) {
+                titleContainsInBrackets = titleContainsInBrackets();
+                titleContains = !titleContainsInBrackets;
+            }
+        }
+
+        if (artistEqualsOrContains) {
+            if (titleEquals || titleContains) {
+                return getPriorityFromFristTwoGroups();
+            } else if(titleContainsInBrackets) {
+                if (artistEquals) {
+                    if (durationEquals) {
+                        return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_IN_BRACKETS.ordinal();
+                    } else {
+                        return Priority.ARTIST_EQUALS_TITLE_CONTAINS_IN_BRACKETS.ordinal();
+                    }
+                } else {
+                    if (durationEquals) {
+                        return Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_IN_BRACKETS.ordinal();
+                    } else {
+                        return Priority.ARTIST_CONTAINS_TITLE_CONTAINS_IN_BRACKETS.ordinal();
+                    }
+                }
+            }
+        } else if(durationEquals) {
+            return Priority.DURATION_EQUALS.ordinal();
         }
 
         return Priority.TRASH.ordinal();
@@ -149,35 +176,67 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
         return input.contains("radiorip") || input.contains("radio rip") || input.contains("записывал с радио");
     }
 
-    private int getPriorityDependingOnParams() {
-        if (inputTitle.equals(vkTitle)) {
+    private int getPriorityFromFristTwoGroups() {
+        if (titleEquals) {
             if (artistEquals) {
-                return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_EQUALS.ordinal();
+                if (durationEquals) {
+                    return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_EQUALS.ordinal();
+                } else {
+                    return Priority.ARTIST_EQUALS_TITLE_EQUALS.ordinal();
+                }
             } else {
-                return Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_EQUALS.ordinal();
+                if (durationEquals) {
+                    return Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_EQUALS.ordinal();
+                } else {
+                    return Priority.ARTIST_CONTAINS_TITLE_EQUALS.ordinal();
+                }
             }
         } else {
-            if (titleContains()) {
+            if (titleContains) {
                 if (hasOriginal()) {
                     if (artistEquals) {
-                        return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_ORIGINAL_WORD.ordinal();
+                        if (durationEquals) {
+                            return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_ORIGINAL_WORD.ordinal();
+                        } else {
+                            return Priority.ARTIST_EQUALS_TITLE_CONTAINS_ORIGINAL_WORD.ordinal();
+                        }
                     } else {
-                        return Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_ORIGINAL_WORD.ordinal();
+                        if (durationEquals) {
+                            return Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_ORIGINAL_WORD.ordinal();
+                        } else {
+                            return Priority.ARTIST_CONTAINS_TITLE_CONTAINS_ORIGINAL_WORD.ordinal();
+                        }
                     }
                 } else {
                     if (hasItunesSession()) {
                         if (artistEquals) {
-                            return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_ITUNES_SESSION.ordinal();
+                            if (durationEquals) {
+                                return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS_ITUNES_SESSION.ordinal();
+                            } else {
+                                return Priority.ARTIST_EQUALS_TITLE_CONTAINS_ITUNES_SESSION.ordinal();
+                            }
                         } else {
-                            return Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_ITUNES_SESSION.ordinal();
+                            if (durationEquals) {
+                                return Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS_ITUNES_SESSION.ordinal();
+                            } else {
+                                return Priority.ARTIST_CONTAINS_TITLE_CONTAINS_ITUNES_SESSION.ordinal();
+                            }
                         }
                     }
                 }
 
                 if (artistEquals) {
-                    return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS.ordinal();
+                    if (durationEquals) {
+                        return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS.ordinal();
+                    } else {
+                        return Priority.ARTIST_EQUALS_TITLE_CONTAINS.ordinal();
+                    }
                 } else {
-                    return Priority.DURATION_EQUALS_ARTIST_CONTAINS_TITLE_CONTAINS.ordinal();
+                    if (durationEquals) {
+                        return Priority.DURATION_EQUALS_ARTIST_EQUALS_TITLE_CONTAINS.ordinal();
+                    } else {
+                        return Priority.ARTIST_EQUALS_TITLE_CONTAINS.ordinal();
+                    }
                 }
             }
 
@@ -187,6 +246,25 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
 
     private boolean titleContains() {
         return contains(vkTitle, inputTitle);
+    }
+
+    private boolean titleContainsInBrackets() {
+        int indexOfFirstBracket = vkTitle.indexOf('(');
+        if (indexOfFirstBracket < 0) {
+            return false;
+        }
+
+        int indexOfSecondBracket = vkTitle.indexOf(')');
+        if (indexOfSecondBracket < 0) {
+            return false;
+        }
+
+        int indexOfTitle = vkTitle.indexOf(inputTitle);
+        if (indexOfTitle < 0) {
+            throw new RuntimeException("Unexpected WTF?");
+        }
+
+        return indexOfFirstBracket < indexOfTitle && indexOfSecondBracket > indexOfTitle + inputTitle.length();
     }
 
     private boolean hasItunesSession() {

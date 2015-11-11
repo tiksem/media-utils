@@ -1,5 +1,6 @@
 package com.tiksem.media.search;
 
+import android.util.Log;
 import com.tiksem.media.data.*;
 import com.tiksem.media.playback.UrlsProvider;
 import com.tiksem.media.search.network.*;
@@ -33,6 +34,7 @@ public class InternetSearchEngine {
     private TheAudioDbParser audioDbParser = new TheAudioDbParser();
     private EchoNestSearcher echoNestSearcher;
     private EchoNestParser echoNestParser = new EchoNestParser();
+    private String loggingTag;
 
     public InternetSearchEngine(RequestExecutor requestExecutor) {
         lastFMSearcher = new LastFMSearcher(requestExecutor);
@@ -370,6 +372,10 @@ public class InternetSearchEngine {
             }
         }
 
+        if (loggingTag != null) {
+            Log.i(loggingTag, "Top found url info: " + new UrlReport(audio, result.get(0)).toString());
+        }
+
         return result;
     }
 
@@ -603,5 +609,13 @@ public class InternetSearchEngine {
         } catch (JSONException e) {
             throw new RequestJsonException(e);
         }
+    }
+
+    public String getLoggingTag() {
+        return loggingTag;
+    }
+
+    public void setLoggingTag(String loggingTag) {
+        this.loggingTag = loggingTag;
     }
 }
