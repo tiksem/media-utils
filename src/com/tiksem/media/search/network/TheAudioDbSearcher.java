@@ -10,7 +10,9 @@ import java.util.Map;
  * Created by stykhonenko on 26.10.15.
  */
 public class TheAudioDbSearcher {
-    private static final String SEARCH_TRACK = "http://www.theaudiodb.com/api/v1/json/1/searchtrack.php";
+    private static final String API_KEY = "1635249876521398675129";
+    private static final String SEARCH_TRACK = "http://www.theaudiodb.com/api/v1/json/" + API_KEY +
+            "/searchtrack.php";
 
     private RequestExecutor requestExecutor;
 

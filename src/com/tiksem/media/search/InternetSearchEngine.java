@@ -367,7 +367,7 @@ public class InternetSearchEngine {
                 }
 
                 if (result.isEmpty()) {
-                    return getAudioUrls(audio, name);
+                    result = getAudioUrls(audio, name);
                 }
             }
         }
