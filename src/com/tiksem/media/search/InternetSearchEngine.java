@@ -171,19 +171,15 @@ public class InternetSearchEngine {
     }
 
     public boolean fillAudioDuration(Audio audio){
-        try {
-            if (fillAudioDurationUsingTheDb(audio)) {
-                return true;
-            }
-
-            if (fillAudioDurationUsingTheEchoNest(audio)) {
-                return true;
-            }
-
-            return fillAudioDurationUsingLastFm(audio);
-        } catch (IOException e) {
-            return false;
+        if (fillAudioDurationUsingTheDb(audio)) {
+            return true;
         }
+
+        if (fillAudioDurationUsingTheEchoNest(audio)) {
+            return true;
+        }
+
+        return false;
     }
 
     public ArtCollection getArts(Audio audio) throws IOException {
