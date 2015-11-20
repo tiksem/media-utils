@@ -3,9 +3,13 @@ package com.tiksem.media.search.suggestions;
 import com.tiksem.media.AudioDataManager;
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.data.NamedData;
+import com.tiksem.media.search.InternetSearchEngine;
+import com.tiksem.media.search.SearchResult;
 import com.utils.framework.CollectionUtils;
+import com.utils.framework.Transformer;
 import com.utils.framework.suggestions.SuggestionsProvider;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,22 +21,22 @@ import java.util.List;
  * Time: 18:50
  * To change this template use File | Settings | File Templates.
  */
-public class ArtistSuggestionsProvider implements SuggestionsProvider<Artist> {
-    private AudioDataManager audioDataManager;
+public class ArtistSuggestionsProvider implements SuggestionsProvider<String> {
+    private InternetSearchEngine internetSearchEngine;
     private int maxCount;
     private String trackName;
 
-    public ArtistSuggestionsProvider(AudioDataManager audioDataManager, int maxCount) {
+    public ArtistSuggestionsProvider(InternetSearchEngine internetSearchEngine, int maxCount) {
         if(maxCount < 1){
             throw new IllegalArgumentException();
         }
 
-        this.audioDataManager = audioDataManager;
+        this.internetSearchEngine = internetSearchEngine;
         this.maxCount = maxCount;
     }
 
-    public ArtistSuggestionsProvider(AudioDataManager audioDataManager, int maxCount, String trackName) {
-        this(audioDataManager, maxCount);
+    public ArtistSuggestionsProvider(InternetSearchEngine internetSearchEngine, int maxCount, String trackName) {
+        this(internetSearchEngine, maxCount);
         this.trackName = trackName;
     }
 
@@ -45,21 +49,28 @@ public class ArtistSuggestionsProvider implements SuggestionsProvider<Artist> {
     }
 
     @Override
-    public List<Artist> getSuggestions(String query) {
-        List<Artist> result = new ArrayList<Artist>();
-        int artistByQueryMaxCount = maxCount;
+    public List<String> getSuggestions(String query) {
+        List<String> result = new ArrayList<>();
 
         if (trackName != null) {
-            List<Artist> artistsByTrack =
-                    audioDataManager.getSuggestedArtistsByTrackName(trackName, maxCount / 3);
-            artistsByTrack = NamedData.uniqueNames(artistsByTrack);
-            result.addAll(artistsByTrack);
-            artistByQueryMaxCount -= artistsByTrack.size();
+            result.addAll(internetSearchEngine.getSuggestedArtistNamesByTrackName(
+                    trackName, Math.max(maxCount / 3, 1)));
         }
 
-        List<Artist> artistsByQuery = audioDataManager.getArtists(query, artistByQueryMaxCount);
-        artistsByQuery = NamedData.uniqueNames(artistsByQuery);
-        result.addAll(artistsByQuery);
-        return result;
+        result = CollectionUtils.unique(result);
+        try {
+            List<Artist> artists = internetSearchEngine.
+                    searchArtists(query, maxCount - result.size(), 1).elements;
+            CollectionUtils.transformAndAdd(artists, result, new Transformer<Artist, String>() {
+                @Override
+                public String get(Artist artist) {
+                    return artist.getName();
+                }
+            });
+        } catch (IOException e) {
+            return result;
+        }
+
+        return CollectionUtils.unique(result);
     }
 }
