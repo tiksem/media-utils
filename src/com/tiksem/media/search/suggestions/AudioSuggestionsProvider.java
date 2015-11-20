@@ -5,10 +5,16 @@ import com.tiksem.media.AudioDataManager;
 import com.tiksem.media.data.Artist;
 import com.tiksem.media.data.Audio;
 import com.tiksem.media.data.NamedData;
+import com.tiksem.media.search.InternetSearchEngine;
+import com.tiksem.media.search.SearchResult;
+import com.utils.framework.collections.iterator.ReverseIterator;
+import com.utils.framework.strings.Strings;
 import com.utils.framework.suggestions.SuggestionsProvider;
 import com.utils.framework.suggestions.SuggestionsProviderWithHelpWord;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -18,9 +24,10 @@ import java.util.List;
  * Time: 18:27
  * To change this template use File | Settings | File Templates.
  */
-public class AudioSuggestionsProvider implements SuggestionsProvider<Audio> {
-    private AudioDataManager audioDataManager;
+public class AudioSuggestionsProvider implements SuggestionsProvider<String> {
+    private InternetSearchEngine internetSearchEngine;
     private int maxCount;
+    private int minCount;
     private String artistName;
 
     public String getArtistName() {
@@ -31,58 +38,45 @@ public class AudioSuggestionsProvider implements SuggestionsProvider<Audio> {
         this.artistName = artistName;
     }
 
-    public AudioSuggestionsProvider(AudioDataManager audioDataManager, int maxCount) {
-        if(maxCount < 1){
-            throw new IllegalArgumentException();
+    /* minCount is used to define minimum suggestions count, while removing audios with wrong artist,
+     * see getSuggestions for details */
+    public AudioSuggestionsProvider(InternetSearchEngine internetSearchEngine, int minCount, int maxCount) {
+        if (minCount > maxCount) {
+            throw new IllegalArgumentException("minCount > maxCount");
         }
 
-        this.audioDataManager = audioDataManager;
+        this.internetSearchEngine = internetSearchEngine;
+        this.minCount = minCount;
         this.maxCount = maxCount;
     }
 
     @Override
-    public List<Audio> getSuggestions(String query) {
-        List<Audio> audiosByArtist = null;
+    public List<String> getSuggestions(String query) {
+        try {
+            if (artistName == null) {
+                return NamedData.namedDataListToNameList(
+                        internetSearchEngine.searchAudios(query, maxCount, 1).elements);
+            } else {
+                List<String> result = new ArrayList<>();
+                List<Audio> audios = internetSearchEngine.searchAudios(query, maxCount * 2, 1).elements;
+                audios = NamedData.uniqueNames(audios);
 
-        if (artistName != null) {
-            audiosByArtist =
-                    audioDataManager.getSongs(artistName + " " + query, maxCount);
-            audiosByArtist = NamedData.uniqueNames(audiosByArtist);
-        }
+                int removedCount = 0;
+                for (int i = audios.size() - 1; i >= 0; i--) {
+                    Audio audio = audios.get(i);
+                    if (result.size() - removedCount > minCount &&
+                            !Strings.equalsIgnoreCase(audio.getArtistName(), artistName)) {
+                        removedCount++;
+                    } else {
+                        result.add(audio.getName());
+                    }
+                }
 
-        List<Audio> audiosByQuery = audioDataManager.getSongs(query, maxCount);
-        audiosByQuery = NamedData.uniqueNames(audiosByQuery);
-
-        if(audiosByArtist != null){
-            int audiosByArtistCount = maxCount / 3;
-            int audiosByQueryCount = maxCount - audiosByArtistCount;
-
-            if(audiosByQuery.size() < audiosByQueryCount){
-                audiosByArtistCount = maxCount - audiosByQuery.size();
+                Collections.reverse(result);
+                return result;
             }
-
-            if(audiosByArtist.size() < audiosByArtistCount){
-                audiosByQueryCount = maxCount - audiosByArtist.size();
-            }
-
-            audiosByArtistCount = Math.min(audiosByArtistCount, audiosByArtist.size());
-            audiosByQueryCount = Math.min(audiosByQueryCount, audiosByQuery.size());
-
-            if(audiosByQuery.size() != audiosByQueryCount){
-                audiosByQuery = audiosByQuery.subList(0, audiosByQueryCount);
-            }
-
-            if(audiosByArtist.size() != audiosByArtistCount){
-                audiosByArtist = audiosByArtist.subList(0, audiosByArtistCount);
-            }
-
-            ArrayList<Audio> result = new ArrayList<Audio>();
-            result.addAll(audiosByArtist);
-            result.addAll(audiosByQuery);
-            return result;
-
-        } else {
-            return audiosByQuery;
+        } catch (IOException e) {
+            return Collections.emptyList();
         }
     }
 }
