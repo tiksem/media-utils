@@ -11,6 +11,7 @@ import com.tiksem.media.search.navigation.artists.ArtistsNavigationList;
 import com.tiksem.media.search.navigation.artists.MultiTagsArtistNavigationList;
 import com.tiksem.media.search.navigation.artists.TagArtistsNavigationList;
 import com.tiksem.media.search.navigation.songs.*;
+import com.tiksem.media.search.syouml.SongsYouMayLikeNavigationList;
 import com.utils.framework.algorithms.Search;
 import com.utils.framework.collections.NavigationList;
 import com.utilsframework.android.ErrorListener;

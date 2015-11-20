@@ -1,4 +1,4 @@
-package com.tiksem.media.search.navigation.songs;
+package com.tiksem.media.search.syouml;
 
 import com.tiksem.media.data.Audio;
 import com.tiksem.media.data.AudioNameArtistNameLinkedSet;
