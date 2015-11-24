@@ -149,12 +149,16 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
                 String artistName = cursor.getString(artistNameColumnIndex);
 
                 Audio audio = getAudioById(id);
-                if (name != null) {
-                    audio.setName(name);
-                }
-                if (artistName != null && !audio.getArtistName().equals(artistName)) {
-                    replaceArtist(artistName, audio);
-                    audio.setArtistName(artistName);
+                if (audio != null) {
+                    if (name != null) {
+                        audio.setName(name);
+                    }
+                    if (artistName != null && !audio.getArtistName().equals(artistName)) {
+                        replaceArtist(artistName, audio);
+                        audio.setArtistName(artistName);
+                    }
+                } else {
+                    dataBase.delete(AUDIO_TABLE, ID + "=" + id, null);
                 }
             }
         } finally {
