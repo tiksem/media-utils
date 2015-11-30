@@ -334,7 +334,7 @@ public abstract class MappedLocalAudioDataBase implements AudioDataBase {
 
     @Override
     public Audio getSongById(long id) {
-        return songsById.get((long)id);
+        return songsById.get(id);
     }
 
     @Override

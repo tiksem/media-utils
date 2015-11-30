@@ -243,7 +243,9 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
         dataBase.replace(AUDIO_TABLE, null, contentValues);
     }
 
-    public void setArtistName(Audio audio, String artistName) {
+    public void setArtistName(long audioId, String artistName) {
+        Audio audio = getSongById(audioId);
+
         if (Strings.isEmpty(artistName)) {
             throw new IllegalArgumentException("ArtistName is null or empty");
         }
@@ -259,7 +261,9 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
         updateAudioInDataBase(audio);
     }
 
-    public void setAudioName(Audio audio, String name) {
+    public void setAudioName(long audioId, String name) {
+        Audio audio = getSongById(audioId);
+
         if (Strings.isEmpty(name)) {
             throw new IllegalArgumentException("Name is null or empty");
         }
