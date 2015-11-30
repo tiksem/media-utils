@@ -613,5 +613,6 @@ public class InternetSearchEngine {
 
     public void setLoggingTag(String loggingTag) {
         this.loggingTag = loggingTag;
+        vkResultParser.setLoggingTag(loggingTag);
     }
 }

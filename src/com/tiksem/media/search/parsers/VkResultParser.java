@@ -1,5 +1,6 @@
 package com.tiksem.media.search.parsers;
 
+import android.util.Log;
 import com.tiksem.media.data.Audio;
 import com.utils.framework.CollectionUtils;
 import org.json.JSONArray;
@@ -18,6 +19,8 @@ import java.util.List;
  */
 
 public class VkResultParser {
+    private String loggingTag;
+
     private JSONArray getAudiosJSONArray(String response) throws JSONException {
         JSONObject responseJSONObject = new JSONObject(response);
         return responseJSONObject.getJSONArray("response");
@@ -44,6 +47,10 @@ public class VkResultParser {
         return datas;
     }
 
+    public void setLoggingTag(String loggingTag) {
+        this.loggingTag = loggingTag;
+    }
+
     public List<UrlQueryData> getAudioUrls(String response, Audio audio) throws JSONException
     {
         JSONArray tracks = getAudiosJSONArray(response);
@@ -51,6 +58,10 @@ public class VkResultParser {
 
         VkAudioUrlPriorityProvider priorityProvider = new VkAudioUrlPriorityProvider(audio);
         CollectionUtils.sortByPriority(urlsData, priorityProvider);
+
+        if (loggingTag != null) {
+            Log.i(loggingTag, "priority = " + priorityProvider.getBestPriority());
+        }
 
         return urlsData;
     }
