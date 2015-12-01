@@ -33,6 +33,10 @@ public abstract class AsyncNavigationList<T> extends UniqueNavigationList<T> {
 
     protected AsyncNavigationList(RequestManager requestManager, int maxCount) {
         super(maxCount);
+        if (requestManager == null) {
+            throw new NullPointerException("requestManager == null");
+        }
+
         this.requestManager = requestManager;
     }
 
@@ -42,11 +46,11 @@ public abstract class AsyncNavigationList<T> extends UniqueNavigationList<T> {
         requestManager.execute(new Threading.Task<IOException, SearchResult<T>>() {
             @Override
             public SearchResult<T> runOnBackground() throws IOException {
-                if(isAllDataLoaded()){
+                if (isAllDataLoaded()) {
                     return null;
                 }
                 SearchResult<T> result = search(pageNumber);
-                if(result.elements == null){
+                if (result.elements == null) {
                     throw new NullPointerException();
                 }
                 return result;

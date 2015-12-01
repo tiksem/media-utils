@@ -39,10 +39,11 @@ public abstract class SongsYouMayLikeService extends Service {
                     executor = Executors.newSingleThreadExecutor();
                 }
                 if (requestManager == null) {
-                    requestManager = params.requestManager = new AsyncRequestExecutorManager(executor);
+                    requestManager = new AsyncRequestExecutorManager(executor);
                 } else {
                     requestManager.cancelAll();
                 }
+                params.requestManager = requestManager;
 
                 navigationList = new SongsYouMayLikeNavigationList(params);
             }
@@ -69,7 +70,11 @@ public abstract class SongsYouMayLikeService extends Service {
         }
 
         public NavigationList<Audio> reload() {
-            navigationList = null;
+            if (navigationList != null) {
+                navigationList.forceAllDataLoaded();
+                navigationList = null;
+            }
+
             return getSongsYouMayLike();
         }
     }
