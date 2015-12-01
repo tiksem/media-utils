@@ -7,13 +7,14 @@ import com.tiksem.media.playback.AudioPlayerService;
 import com.tiksem.media.playback.ProgressChangedListener;
 import com.tiksem.media.playback.StateChangedListener;
 import com.tiksem.media.playback.Status;
+import com.utilsframework.android.view.ExtendedSeekBar;
 
 /**
  * User: Tikhonenko.S
  * Date: 07.08.14
  * Time: 15:39
  */
-public class AudioPlaybackSeekBar extends SeekBar {
+public class AudioPlaybackSeekBar extends ExtendedSeekBar {
     private static final int SEEK_BAR_COEFFICIENT = 1000;
 
     private AudioPlayerService.Binder playerBinder;
