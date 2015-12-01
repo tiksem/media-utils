@@ -66,7 +66,7 @@ public class SongsYouMayLikeNavigationList extends AsyncNavigationList<Audio> {
 
         SearchQueue<Audio> similarTracksProvider = similarTracksProviders.get(index);
         if(similarTracksProvider == null){
-            similarTracksProvider = internetSearchEngine.getSimilarTracks(audio, songsPerPageCount);
+            similarTracksProvider = internetSearchEngine.getSimilarTracksQueue(audio, songsPerPageCount);
             similarTracksProviders.set(index, similarTracksProvider);
         }
 

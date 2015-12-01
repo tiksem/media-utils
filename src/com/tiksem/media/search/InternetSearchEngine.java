@@ -417,7 +417,7 @@ public class InternetSearchEngine {
         };
     }
 
-    public SearchResult<Audio> getSimilarTracks(Audio audio, int maxCount, int page) throws IOException {
+    public SearchResult<Audio> getSimilarTracks(Audio audio, int maxCount) throws IOException {
         final String name = audio.getName();
         final String artistName = audio.getArtistName();
         if(artistName == null || name == null){
@@ -427,7 +427,6 @@ public class InternetSearchEngine {
         LastFMSearchParams lastFMSearchParams = new LastFMSearchParams();
         lastFMSearchParams.autocorrect = 1;
         lastFMSearchParams.limit = maxCount;
-        lastFMSearchParams.page = page;
 
         String response = lastFMSearcher.getSimilarTracks(name, artistName, lastFMSearchParams);
         try {
@@ -437,11 +436,11 @@ public class InternetSearchEngine {
         }
     }
 
-    public SearchQueue<Audio> getSimilarTracks(final Audio audio, final int countPerPage) {
+    public SearchQueue<Audio> getSimilarTracksQueue(final Audio audio, final int countPerPage) {
         return new SearchQueue<Audio>() {
             @Override
             protected SearchResult<Audio> loadData(int pageNumber) throws IOException {
-                return getSimilarTracks(audio, countPerPage, pageNumber);
+                return getSimilarTracks(audio, countPerPage);
             }
         };
     }

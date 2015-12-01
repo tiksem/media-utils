@@ -29,7 +29,7 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public class AudioDataManager {
-    private static final int SIMILAR_TRACKS_PER_PAGE_COUNT = 30;
+    private static final int SIMILAR_TRACKS_PER_PAGE_COUNT = 100;
     private static final int GENRES_OF_COUNTRY_MAX_COUNT = 150;
 
     private AudioDataBase localAudioDataBase;

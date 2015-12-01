@@ -20,8 +20,8 @@ import java.util.concurrent.Executors;
  * Created by stykhonenko on 28.10.15.
  */
 public abstract class SongsYouMayLikeService extends Service {
-    private static final int MAX_SONGS_YOU_MAY_LIKE_COUNT = 500;
-    private static final int SIMILAR_TRACKS_PER_PAGE_COUNT = 30;
+    private static final int MAX_SONGS_YOU_MAY_LIKE_COUNT = 3000;
+    private static final int SIMILAR_TRACKS_PER_PAGE_COUNT = 100;
     private SongsYouMayLikeNavigationList navigationList;
     private ExecutorService executor;
     private RequestManager requestManager;
