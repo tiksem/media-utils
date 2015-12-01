@@ -22,4 +22,11 @@ public final class SearchResult<T> implements Serializable{
         searchResult.isLastPage = true;
         return searchResult;
     }
+
+    public static <T> SearchResult<T> single(T item) {
+        SearchResult<T> searchResult = new SearchResult<T>();
+        searchResult.elements = Collections.singletonList(item);
+        searchResult.isLastPage = false;
+        return searchResult;
+    }
 }

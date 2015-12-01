@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.IBinder;
 import com.tiksem.media.data.Audio;
 import com.tiksem.media.search.InternetSearchEngine;
+import com.tiksem.media.search.navigation.songs.TopSongsByGenresNavigationList;
 import com.utils.framework.collections.NavigationList;
 import com.utils.framework.network.RequestExecutor;
 import com.utilsframework.android.Services;
@@ -22,19 +23,16 @@ import java.util.concurrent.Executors;
 public abstract class SongsYouMayLikeService extends Service {
     private static final int MAX_SONGS_YOU_MAY_LIKE_COUNT = 3000;
     private static final int SIMILAR_TRACKS_PER_PAGE_COUNT = 100;
-    private SongsYouMayLikeNavigationList navigationList;
+    private static final int TRACKS_BY_GENRE_PER_PAGE_COUNT = 30;
+
+    private NavigationList<Audio> navigationList;
     private ExecutorService executor;
     private RequestManager requestManager;
+    private boolean searchSongsByGenres = false;
 
     public class Binder extends android.os.Binder implements Services.OnUnbind {
-        public NavigationList<Audio> getSongsYouMayLike() {
+        public NavigationList<Audio> getSuggestedSongs() {
             if (navigationList == null) {
-                SongsYouMayLikeNavigationList.Params params = new SongsYouMayLikeNavigationList.Params();
-                params.internetSearchEngine = new InternetSearchEngine(createRequestExecutor());
-                params.maxCount = MAX_SONGS_YOU_MAY_LIKE_COUNT;
-                params.songsCountPerPage = SIMILAR_TRACKS_PER_PAGE_COUNT;
-                params.userPlaylist = getUserPlayList();
-
                 if (executor == null) {
                     executor = Executors.newSingleThreadExecutor();
                 }
@@ -43,9 +41,21 @@ public abstract class SongsYouMayLikeService extends Service {
                 } else {
                     requestManager.cancelAll();
                 }
-                params.requestManager = requestManager;
+                InternetSearchEngine internetSearchEngine = new InternetSearchEngine(createRequestExecutor());
 
-                navigationList = new SongsYouMayLikeNavigationList(params);
+                if (!searchSongsByGenres) {
+                    SongsYouMayLikeNavigationList.Params params = new SongsYouMayLikeNavigationList.Params();
+                    params.internetSearchEngine = internetSearchEngine;
+                    params.maxCount = MAX_SONGS_YOU_MAY_LIKE_COUNT;
+                    params.songsCountPerPage = SIMILAR_TRACKS_PER_PAGE_COUNT;
+                    params.userPlaylist = getUserPlayList();
+                    params.requestManager = requestManager;
+
+                    navigationList = new SongsYouMayLikeNavigationList(params);
+                } else {
+                    navigationList = new TopSongsByGenresNavigationList(requestManager,
+                            internetSearchEngine, TRACKS_BY_GENRE_PER_PAGE_COUNT, MAX_SONGS_YOU_MAY_LIKE_COUNT);
+                }
             }
 
             return navigationList;
@@ -75,7 +85,15 @@ public abstract class SongsYouMayLikeService extends Service {
                 navigationList = null;
             }
 
-            return getSongsYouMayLike();
+            return getSuggestedSongs();
+        }
+
+        public void setSearchSongsByGenres(boolean value) {
+            searchSongsByGenres = value;
+        }
+
+        public boolean searchSongsByGenres() {
+            return searchSongsByGenres;
         }
     }
 

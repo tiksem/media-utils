@@ -157,6 +157,15 @@ public class InternetSearchEngine {
         }
     }
 
+    public SearchQueue<Audio> getSongsByTagSearchQueue(final String tag, final int itemsPerPage) {
+        return new SearchQueue<Audio>() {
+            @Override
+            protected SearchResult<Audio> loadData(int pageNumber) throws IOException {
+                return getSongsByTag(tag, itemsPerPage, pageNumber);
+            }
+        };
+    }
+
     public SearchResult<Artist> getArtistsByTag(String tag, int maxCount, int page) throws IOException {
         LastFMSearchParams searchParams = new LastFMSearchParams();
         searchParams.page = page;
