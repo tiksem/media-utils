@@ -1,9 +1,6 @@
 package com.tiksem.media.search.parsers;
 
-import com.tiksem.media.data.Album;
-import com.tiksem.media.data.ArtCollection;
-import com.tiksem.media.data.Artist;
-import com.tiksem.media.data.Audio;
+import com.tiksem.media.data.*;
 import com.tiksem.media.search.SearchResult;
 import com.utils.framework.Primitive;
 import com.utils.framework.parsers.json.ExtendedJSONObject;
@@ -120,8 +117,7 @@ public class LastFmResultParser {
     }
 
     public ArtCollection getArtsOfAudio(String response) throws JSONException {
-        JSONObject jsonObject = new JSONObject(response);
-        JSONObject album = jsonObject.getJSONObject("track").getJSONObject("album");
+        JSONObject album = getAlbumJSONFromAudioInfo(response);
         ArtCollection artCollection = new ArtCollection(-1, false);
         LastFmArtCollectionParser.fillAlbumArtsOf(album, artCollection);
         return artCollection;
@@ -173,5 +169,16 @@ public class LastFmResultParser {
         ExtendedJSONObject jsonObject = new ExtendedJSONObject(response);
         LastFmTagParser parser = new LastFmTagParser();
         return jsonObject.parseJsonArrayFromPath(parser, "toptags", "tag");
+    }
+
+    public String getSmallArtOfAudio(String response) throws JSONException {
+        JSONObject album = getAlbumJSONFromAudioInfo(response);
+        JSONArray albumArts = album.getJSONArray("image");
+        return LastFmArtCollectionParser.getAlbumArtUrlByIndex(albumArts, ArtSize.SMALL.ordinal());
+    }
+
+    private JSONObject getAlbumJSONFromAudioInfo(String response) throws JSONException {
+        JSONObject jsonObject = new JSONObject(response);
+        return jsonObject.getJSONObject("track").getJSONObject("album");
     }
 }

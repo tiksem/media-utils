@@ -76,9 +76,7 @@ public abstract class ArtUpdatingService extends Service {
         requestManager.execute(new ThrowingRunnable<IOException>() {
             @Override
             public void run() throws IOException {
-                updateAudioArts();
-                updateArtistArts();
-                updateAlbumArts();
+                updateArts();
             }
         }, new OnFinish<IOException>() {
             @Override
@@ -87,6 +85,12 @@ public abstract class ArtUpdatingService extends Service {
                 stopSelf();
             }
         });
+    }
+
+    protected void updateArts() {
+        updateAudioArts();
+        updateArtistArts();
+        updateAlbumArts();
     }
 
     private interface Updater<T extends ArtCollection> {
@@ -113,21 +117,20 @@ public abstract class ArtUpdatingService extends Service {
         }
     }
 
-    private void updateAudioArts() {
-        updateArts(audioDatabase.getSongs(), new Updater<Audio>() {
-            @Override
-            public ArtCollection getArts(Audio item) throws IOException {
-                return internetSearchEngine.getArts(item);
+    protected final void updateAudioArts() {
+        for (Audio audio : audioDatabase.getSongs()) {
+            if (audio.getArtUrl(ArtSize.SMALL) == null) {
+                try {
+                    String smallArt = internetSearchEngine.getSmallArt(audio);
+                    audioDatabase.downloadAndSaveAudioArt(audio, smallArt, ArtSize.SMALL);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-
-            @Override
-            public void save(String artUrl, ArtSize artSize, Audio item) throws IOException {
-                audioDatabase.downloadAndSaveAudioArt(item, artUrl, artSize);
-            }
-        });
+        }
     }
 
-    private void updateArtistArts() {
+    protected final void updateArtistArts() {
         List<Artist> artists = audioDatabase.getArtists();
 
         updateArts(artists, new Updater<Artist>() {
@@ -143,7 +146,7 @@ public abstract class ArtUpdatingService extends Service {
         });
     }
 
-    private void updateAlbumArts() {
+    protected final void updateAlbumArts() {
         List<Album> albums = audioDatabase.getAlbums();
 
         updateArts(albums, new Updater<Album>() {

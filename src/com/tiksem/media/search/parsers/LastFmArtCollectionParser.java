@@ -14,7 +14,7 @@ import org.json.JSONObject;
  * Time: 5:20 PM
  */
 abstract class LastFmArtCollectionParser<T> extends JsonArrayElementParser<T> {
-    private final static int[] ALBUM_ART_INDEXING_MAP = new int[]{3,3,5};
+    private final static int[] ALBUM_ART_INDEXING_MAP = new int[]{2,3,5};
 
     public static String getAlbumArtUrlByIndex(JSONArray albumArts, int index) throws JSONException{
         index = ALBUM_ART_INDEXING_MAP[index];

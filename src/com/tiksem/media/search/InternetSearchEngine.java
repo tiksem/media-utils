@@ -182,6 +182,15 @@ public class InternetSearchEngine {
         return false;
     }
 
+    public String getSmallArt(Audio audio) throws IOException {
+        String response = lastFMSearcher.getTrackInfoByNameAndArtistName(audio.getName(), audio.getArtistName());
+        try {
+            return lastFmResultParser.getSmallArtOfAudio(response);
+        } catch (JSONException e) {
+            throw new RequestJsonException(e);
+        }
+    }
+
     public ArtCollection getArts(Audio audio) throws IOException {
         String response = lastFMSearcher.getTrackInfoByNameAndArtistName(audio.getName(), audio.getArtistName());
         try {
