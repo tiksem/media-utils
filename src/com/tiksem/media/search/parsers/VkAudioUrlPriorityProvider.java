@@ -216,6 +216,10 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
                 return false;
             }
 
+            if (containsBassBooster(input) != containsBassBooster(vk)) {
+                return false;
+            }
+
             return containsMinus(vk) == containsMinus(input);
         }
 
@@ -250,6 +254,10 @@ public class VkAudioUrlPriorityProvider implements CollectionUtils.PrioritiesPro
 
     private boolean containsRadioRip(String input) {
         return input.contains("radiorip") || input.contains("radio rip") || input.contains("записывал с радио");
+    }
+
+    private boolean containsBassBooster(String input) {
+        return input.contains("bassbooster");
     }
 
     private Priority getPriorityFromFristTwoGroups() {
