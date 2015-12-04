@@ -6,7 +6,7 @@ import android.content.ContextWrapper;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import com.tiksem.media.data.*;
-import com.utils.framework.io.IOUtilities;
+import com.utils.framework.io.Network;
 import com.utils.framework.strings.Strings;
 
 import java.io.File;
@@ -319,7 +319,7 @@ public class FlyingDogAudioDatabase extends AndroidAudioDataBase {
     private void saveArt(ArtCollection artCollection, String artUrl,
                          ArtSize artSize, String path)
             throws IOException {
-        IOUtilities.downloadFile(artUrl, path);
+        Network.downloadFile(artUrl, path);
         artCollection.setArtUrl(artSize, "file://" + path);
     }
 
