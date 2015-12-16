@@ -18,6 +18,7 @@ public class Audio extends ArtCollection{
     transient private long artistId;
     private int duration;
     private String mbid;
+    private String lastFMUrl;
     transient private float totalListeningDuration = 1;
 
     private Audio(boolean local) {
@@ -186,4 +187,12 @@ public class Audio extends ArtCollection{
             return new Audio[size];
         }
     };
+
+    public String getLastFMUrl() {
+        return lastFMUrl;
+    }
+
+    public void setLastFMUrl(String lastFMUrl) {
+        this.lastFMUrl = lastFMUrl;
+    }
 }

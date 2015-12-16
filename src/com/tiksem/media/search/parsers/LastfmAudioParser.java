@@ -1,5 +1,6 @@
 package com.tiksem.media.search.parsers;
 
+import com.tiksem.media.Config;
 import com.tiksem.media.data.Audio;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +31,10 @@ class LastFmAudioParser extends LastFmArtCollectionInPageParser<Audio>{
         audio.setDuration(duration);
         audio.setName(name);
         audio.setArtistName(artistName);
+
+        if (Config.SONGS_YOU_MAY_LIKE) {
+            audio.setLastFMUrl(jsonObject.optString("url"));
+        }
 
         String mbid = jsonObject.optString("mbid");
         audio.setMbid(mbid);
