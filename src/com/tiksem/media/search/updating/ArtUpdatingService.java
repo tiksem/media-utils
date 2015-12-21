@@ -99,16 +99,14 @@ public abstract class ArtUpdatingService extends Service {
     }
 
 
-    private <T extends ArtCollection> void updateArts(List<T> items, Updater<T> updater) {
+    private <T extends ArtCollection> void updateArts(List<T> items, ArtSize artSize, Updater<T> updater) {
         for (T item : items) {
             if (item.getArtUrl(ArtSize.SMALL) == null) {
                 try {
                     ArtCollection arts = updater.getArts(item);
                     if (arts != null) {
-                        for (ArtSize artSize : ArtSize.values()) {
-                            String artUrl = arts.getArtUrl(artSize);
-                            updater.save(artUrl, artSize, item);
-                        }
+                        String artUrl = arts.getArtUrl(artSize);
+                        updater.save(artUrl, artSize, item);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -133,7 +131,7 @@ public abstract class ArtUpdatingService extends Service {
     protected final void updateArtistArts() {
         List<Artist> artists = audioDatabase.getArtists();
 
-        updateArts(artists, new Updater<Artist>() {
+        updateArts(artists, ArtSize.MEDIUM, new Updater<Artist>() {
             @Override
             public ArtCollection getArts(Artist item) throws IOException {
                 return internetSearchEngine.getArts(item);
@@ -149,7 +147,7 @@ public abstract class ArtUpdatingService extends Service {
     protected final void updateAlbumArts() {
         List<Album> albums = audioDatabase.getAlbums();
 
-        updateArts(albums, new Updater<Album>() {
+        updateArts(albums, ArtSize.MEDIUM, new Updater<Album>() {
             @Override
             public ArtCollection getArts(Album item) throws IOException {
                 return internetSearchEngine.getArts(item);
